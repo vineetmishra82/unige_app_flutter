@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class ApplicationData extends StatelessWidget {
@@ -10,9 +11,8 @@ class ApplicationData extends StatelessWidget {
   static double screenHeight = getScreenHeight();
 
   static String countryCodeISO = "";
-  static bool showVideoPlayer = false;
-  static String? imgPath;
-  static String? videoPath;
+  static String imgPath = "";
+  static String videoPath = "";
   @override
   Widget build(BuildContext context) {
     return Container();

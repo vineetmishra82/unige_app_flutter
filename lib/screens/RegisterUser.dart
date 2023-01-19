@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-// import 'package:intl_phone_field/intl_phone_field.dart';
+import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:modal_progress_hud_nsn/modal_progress_hud_nsn.dart';
 import 'package:unige_app/screens/ApplicationData.dart';
 import 'package:unige_app/screens/LoginScreen.dart';
@@ -8,8 +8,6 @@ import 'package:unige_app/screens/OTPVerify.dart';
 
 import '../Other_data/Apis.dart';
 import '../Other_data/Countries.dart';
-import '../Other_data/Country.dart';
-import '../Other_data/IntlPhoneField.dart';
 
 class RegisterUser extends StatefulWidget {
   static String id = "RegisterUser";
@@ -26,10 +24,10 @@ class _RegisterUserState extends State<RegisterUser> {
       countryCodeISO = "";
 
   bool showSpinner = false;
-  late Size size;
+
   @override
   Widget build(BuildContext context) {
-    size = MediaQuery.of(context).size;
+    String? dropdownValue = "Gurugram";
     return Scaffold(
       backgroundColor: Colors.white,
       body: ModalProgressHUD(
@@ -234,8 +232,8 @@ class _RegisterUserState extends State<RegisterUser> {
                   ),
                 ),
                 Padding(
-                  padding: EdgeInsets.symmetric(
-                      vertical: 5.0, horizontal: size.width * .22),
+                  padding: const EdgeInsets.symmetric(
+                      vertical: 5.0, horizontal: 100.0),
                   child: InkWell(
                     child: const Text(
                       'Back to login',
@@ -277,7 +275,7 @@ class _RegisterUserState extends State<RegisterUser> {
   checkSavedCountryCode() {
     if (ApplicationData.countryCodeISO == "") {
       ApplicationData.countryCodeISO = "CH";
-      countryCode = "41";
+      countryCode = "+41";
       return "CH";
     } else {
       return ApplicationData.countryCodeISO;

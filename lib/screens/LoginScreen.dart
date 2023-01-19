@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-// import 'package:intl_phone_field/intl_phone_field.dart';
+import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:modal_progress_hud_nsn/modal_progress_hud_nsn.dart';
 import 'package:unige_app/Other_data/Countries.dart';
 
 import '../Other_data/Apis.dart';
-import '../Other_data/Country.dart';
-import '../Other_data/IntlPhoneField.dart';
 import 'ApplicationData.dart';
 import 'OTPVerify.dart';
 import 'RegisterUser.dart';
@@ -28,7 +26,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    Size size = MediaQuery.of(context).size;
     return Scaffold(
       backgroundColor: Colors.white,
       body: ModalProgressHUD(
@@ -94,23 +91,15 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         enabled: true,
                         onCountryChanged: (country) {
-                          setState(() {
-                            LoginScreen.countryCode = country.dialCode;
-                            LoginScreen.countryCodeISO = country.code;
-                            ApplicationData.countryCodeISO =
-                                LoginScreen.countryCodeISO;
-                          });
-
+                          LoginScreen.countryCode = country.dialCode;
+                          LoginScreen.countryCodeISO = country.code;
                           print(
                               "New country code - " + LoginScreen.countryCode);
                         },
                         onChanged: (phone) {
-                          setState(() {
-                            LoginScreen.mobile =
-                                LoginScreen.countryCode + phone.number;
-                          });
-
-                          print("Entered num is ${LoginScreen.mobile}");
+                          LoginScreen.mobile =
+                              LoginScreen.countryCode + phone.number;
+                          print("Entered num is " + LoginScreen.mobile);
                         },
                       ),
                       const SizedBox(
@@ -126,6 +115,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           elevation: 5.0,
                           child: MaterialButton(
                             onPressed: () async {
+                              print("Width - " +
+                                  ApplicationData.screenWidth.toString() +
+                                  " And height - " +
+                                  ApplicationData.screenHeight.toString());
                               showSpinner = true;
                               if (LoginScreen.mobile.isNotEmpty) {
                                 setState(() {});
@@ -138,9 +131,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                 if (response.body == "true") {
                                   setState(() {
                                     showSpinner = false;
-                                    ApplicationData.mobile = LoginScreen.mobile;
                                   });
-
+                                  ApplicationData.mobile = LoginScreen.mobile;
                                   Navigator.push(
                                       context,
                                       MaterialPageRoute(
@@ -234,13 +226,13 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   checkSavedCountryCode() {
-    print("LoginScreen.countryCode is " + LoginScreen.countryCode);
-    if (LoginScreen.countryCode == "") {
-      LoginScreen.countryCode = "41";
-      LoginScreen.countryCodeISO = "CH";
+    print(
+        "ApplicationData.countryCodeISO is " + ApplicationData.countryCodeISO);
+    if (ApplicationData.countryCodeISO == "") {
+      LoginScreen.countryCode = "+41";
       return "CH";
     } else {
-      return LoginScreen.countryCodeISO;
+      return ApplicationData.countryCodeISO;
     }
   }
 }
