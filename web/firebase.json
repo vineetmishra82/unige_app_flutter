@@ -1,0 +1,11 @@
+{
+  "hosting": {
+    "public": "public",
+    "site": "unige-c5714",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ]
+  }
+}
