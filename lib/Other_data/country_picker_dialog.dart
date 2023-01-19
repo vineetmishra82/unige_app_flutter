@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:intl_phone_field/countries.dart';
+// import 'package:intl_phone_field/countries.dart';
 import 'package:unige_app/Other_data/helpers.dart';
+
+import 'Country.dart';
 
 class PickerDialogStyle {
   final Color? backgroundColor;
@@ -89,7 +91,8 @@ class _CountryPickerDialogState extends State<CountryPickerDialog> {
         child: Column(
           children: <Widget>[
             Padding(
-              padding: widget.style?.searchFieldPadding ?? const EdgeInsets.all(0),
+              padding:
+                  widget.style?.searchFieldPadding ?? const EdgeInsets.all(0),
               child: TextField(
                 cursorColor: widget.style?.searchFieldCursorColor,
                 decoration: widget.style?.searchFieldInputDecoration ??
@@ -121,7 +124,6 @@ class _CountryPickerDialogState extends State<CountryPickerDialog> {
                     ListTile(
                       leading: Image.asset(
                         'assets/flags/${_filteredCountries[index].code.toLowerCase()}.png',
-                        package: 'intl_phone_field',
                         width: 32,
                       ),
                       contentPadding: widget.style?.listTilePadding,
@@ -141,7 +143,8 @@ class _CountryPickerDialogState extends State<CountryPickerDialog> {
                         Navigator.of(context).pop();
                       },
                     ),
-                    widget.style?.listTileDivider ?? const Divider(thickness: 1),
+                    widget.style?.listTileDivider ??
+                        const Divider(thickness: 1),
                   ],
                 ),
               ),

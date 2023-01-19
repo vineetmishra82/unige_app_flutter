@@ -15,6 +15,7 @@ void main() async {
 }
 
 Future<bool> checkIfUserLoggedIn() async {
+  await logout();
   SharedPreferences loginCheck = await SharedPreferences.getInstance();
   // bool? result = loginCheck.getBool('isLoggedIn');
 
@@ -24,6 +25,17 @@ Future<bool> checkIfUserLoggedIn() async {
   ApplicationData.countryCodeISO = loginCheck.get("CountryCodeISO").toString();
 
   return phoneLength;
+}
+
+Future<void> logout() async {
+  SharedPreferences loginCheck = await SharedPreferences.getInstance();
+
+  loginCheck.setBool("isLoggedIn", false);
+  loginCheck.setString("LoginMobileInThisSuperliciousApp", "");
+  loginCheck.setString("CountryCodeISO", "");
+
+  ApplicationData.mobile = "";
+  ApplicationData.countryCodeISO = "";
 }
 
 class Unige_App extends StatelessWidget {
