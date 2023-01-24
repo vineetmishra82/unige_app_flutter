@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:unige_app/screens/ApplicationData.dart';
 
 class Apis extends StatelessWidget {
   static String baseUrl = "https://unige-geneva.herokuapp.com/";
-  // static String baseUrl = "http://10.0.2.2:8080/";
 
   @override
   Widget build(BuildContext context) {
@@ -29,9 +29,9 @@ class Apis extends StatelessWidget {
     return "${baseUrl}getFeatures?prodName=$productSelected";
   }
 
-  static String registerProduct(String productName, String mobile) {
+  static String registerProduct(String productName) {
     String value =
-        "${baseUrl}registerProduct?userMobile=$mobile&productName=$productName";
+        "${baseUrl}registerProduct?userMobile=${ApplicationData.mobile}&productName=$productName";
 
     return value;
   }
@@ -52,8 +52,8 @@ class Apis extends StatelessWidget {
     return "${baseUrl}generateAndGetDefectSurveys?userMobile=$mobile&product=$product";
   }
 
-  static String deleteProductFromUser(product, String mobile) {
-    return "${baseUrl}deleteUserProduct?userMobile=${mobile}&userProduct=" +
+  static String deleteProductFromUser(product) {
+    return "${baseUrl}deleteUserProduct?userMobile=${ApplicationData.mobile}&userProduct=" +
         product;
   }
 
