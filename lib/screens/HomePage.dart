@@ -49,7 +49,7 @@ class _HomePageState extends State<HomePage>
 
   var myProductSelected;
   String? productSelected, month, year, type, minutes, seconds, fileType;
-  int index = 0;
+  int superIndex = 0;
   var products = <String>[];
   var productsObjects = [];
   List<dynamic> myProducts = [];
@@ -1229,6 +1229,7 @@ class _HomePageState extends State<HomePage>
 
               if (surveys[0]["feedbackQuestion"][questionIndex]["question"] ==
                   "I complained to the manufacturer/retailer") {
+                print("questionIndex is " + questionIndex.toString());
                 updateCurrentSurveyWithComplaintStatus(responses[index1]);
               }
             },
@@ -1305,6 +1306,9 @@ class _HomePageState extends State<HomePage>
         ],
       );
     } else if (answerType == "Multimedia/Descriptive") {
+      setState(() {
+        superIndex = index;
+      });
       if (surveys[0]["feedbackQuestion"][index]["answer"].toString().isEmpty) {
         surveys[0]["feedbackQuestion"][index]
             ["answer"] = {"text": "", "image": "", "audio": "", "video": ""};
@@ -1454,26 +1458,24 @@ class _HomePageState extends State<HomePage>
             ],
           ),
           checkForAudioFileStatus(index),
-          checkForImageFileStatus(),
-          checkForVideoFileStatus(),
+          checkForImageFileStatus(index),
+          checkForVideoFileStatus(index),
         ],
       );
     } else if (answerType == "Audio/Descriptive") {
-      print("in aud/desc - " +
-          surveys[0]["feedbackQuestion"][index]["answer"].toString());
+      print(surveys[0]["feedbackQuestion"][index]["answer"]);
       if (surveys[0]["feedbackQuestion"][index]["answer"].toString().isEmpty) {
         surveys[0]["feedbackQuestion"][index]
             ["answer"] = {"text": "", "image": "", "audio": "", "video": ""};
       }
-      print("in aud/desc - " +
-          surveys[0]["feedbackQuestion"][index]["answer"].toString());
       return Column(
         children: [
           Padding(
             padding: const EdgeInsets.only(left: 8.0, right: 8.0, top: 8.0),
             child: TextFormField(
               initialValue: surveys[0]["feedbackQuestion"][index]["answer"]
-                  ["text"],
+                      ["text"]
+                  .toString(),
               maxLines: 3,
               onChanged: (String value) {
                 setState(() {
@@ -1522,6 +1524,7 @@ class _HomePageState extends State<HomePage>
                   setState(() {
                     showFeedback = false;
                     showRecording = true;
+                    superIndex = index;
                   });
                 }),
                 child: Image.asset(
@@ -1696,13 +1699,13 @@ class _HomePageState extends State<HomePage>
                   onPressed: () {
                     if (surveys[0]["surveyId"] == "ReplacementSurvey") {
                       ProcessReplacementSurveyResponse(
-                          surveys[0]["feedbackQuestion"][index]["answer"]);
+                          surveys[0]["feedbackQuestion"][superIndex]["answer"]);
                     } else if ((surveys[0]["surveyId"] !=
                         "ReplacementSurvey")) {
                       setState(() {
                         showThankyouMessage = true;
                         questionIndex = 0;
-                        index = 0;
+                        superIndex = 0;
                         setNextSurvey(true);
                       });
                     }
@@ -2140,6 +2143,12 @@ class _HomePageState extends State<HomePage>
       return DataCell(MaterialButton(
         color: Colors.white60,
         onPressed: () {
+          if (product["currentMainSurvey"]["surveyId"] == "QS2") {
+            setState(() {
+              ApplicationData.audioMessage =
+                  "Voice record your reason for not complaining. Limit 02 minutes";
+            });
+          }
           if (product["currentMainSurvey"]["surveyId"] == "QS1") {
             setState(() {
               myProductSelected = product;
@@ -2186,6 +2195,8 @@ class _HomePageState extends State<HomePage>
           setBrand(myProductSelected);
           startSurveyProcess(myProductSelected["currentDefectSurvey"]);
           isDefectSurvey = true;
+          ApplicationData.audioMessage =
+              "Voice record your issue in detail. Limit 02 minutes";
         });
         print('product is ' + product["productName"]);
       },
@@ -2299,7 +2310,8 @@ class _HomePageState extends State<HomePage>
         InkResponse(
           onTap: (() {
             AudioPlayer(
-              source: surveys[0]["feedbackQuestion"][index]["answer"]["audio"]!,
+              source: surveys[0]["feedbackQuestion"][superIndex]["answer"]
+                  ["audio"]!,
               onDelete: () {},
             );
           }),
@@ -2557,9 +2569,9 @@ class _HomePageState extends State<HomePage>
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
+            children: [
               Text(
-                "Voice record your issue in detail. Limit 02 minutes",
+                ApplicationData.audioMessage,
                 style: TextStyle(fontSize: 16, color: Colors.red),
                 overflow: TextOverflow.clip,
               )
@@ -2572,8 +2584,8 @@ class _HomePageState extends State<HomePage>
               onStop: (path) {
                 if (kDebugMode) print('Recorded file path: $path');
                 setState(() {
-                  surveys[0]["feedbackQuestion"][index]["answer"]["audio"] =
-                      path;
+                  surveys[0]["feedbackQuestion"][superIndex]["answer"]
+                      ["audio"] = path.toString();
                 });
               },
             ),
@@ -2619,12 +2631,12 @@ class _HomePageState extends State<HomePage>
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 25),
               child: AudioPlayer(
-                source: surveys[0]["feedbackQuestion"][index]["answer"]
+                source: surveys[0]["feedbackQuestion"][superIndex]["answer"]
                     ["audio"]!,
                 onDelete: () {
                   setState(() {
-                    surveys[0]["feedbackQuestion"][index]["answer"]["audio"] =
-                        "";
+                    surveys[0]["feedbackQuestion"][superIndex]["answer"]
+                        ["audio"] = "";
                     showAudioPlayer = false;
                     showFeedback = true;
                   });
@@ -2710,7 +2722,7 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-  Widget checkForImageFileStatus() {
+  Widget checkForImageFileStatus(int index) {
     if (surveys[0]["feedbackQuestion"][index]["answer"]["image"]
         .toString()
         .isEmpty) {
@@ -2791,7 +2803,7 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-  Widget checkForVideoFileStatus() {
+  Widget checkForVideoFileStatus(int index) {
     if (surveys[0]["feedbackQuestion"][index]["answer"]["video"]
         .toString()
         .isEmpty) {
@@ -2858,7 +2870,8 @@ class _HomePageState extends State<HomePage>
             print("Path is $path");
 
             setState(() {
-              surveys[0]["feedbackQuestion"][index]["answer"]["image"] = path;
+              surveys[0]["feedbackQuestion"][superIndex]["answer"]["image"] =
+                  path;
               ApplicationData.showVideoPlayer = false;
               showFeedback = true;
             });
@@ -2874,7 +2887,8 @@ class _HomePageState extends State<HomePage>
           print('::::::::::::::::::::::::;; $path');
 
           setState(() {
-            surveys[0]["feedbackQuestion"][index]["answer"]["video"] = path;
+            surveys[0]["feedbackQuestion"][superIndex]["answer"]["video"] =
+                path;
             ApplicationData.showVideoPlayer = false;
             showFeedback = true;
           });
@@ -2926,10 +2940,10 @@ class _HomePageState extends State<HomePage>
     setState(() {
       if (_paths != null) {
         if (fileType == "image") {
-          surveys[0]["feedbackQuestion"][index]["answer"]["image"] =
+          surveys[0]["feedbackQuestion"][superIndex]["answer"]["image"] =
               _paths![0].path.toString();
         } else {
-          surveys[0]["feedbackQuestion"][index]["answer"]["video"] =
+          surveys[0]["feedbackQuestion"][superIndex]["answer"]["video"] =
               _paths![0].path.toString();
         }
       }
@@ -2938,7 +2952,7 @@ class _HomePageState extends State<HomePage>
 
   void setAnswerAsValue(String ansType, String value) {
     List<String> values = List.filled(
-        4, surveys[0]["feedbackQuestion"][index]["answer"].split("-"),
+        4, surveys[0]["feedbackQuestion"][superIndex]["answer"].split("-"),
         growable: false);
 
     //  values = surveys[0]["feedbackQuestion"][index]["answer"].split("-");
@@ -2962,9 +2976,9 @@ class _HomePageState extends State<HomePage>
 
     //Joining it back to answer separated by '-'
     for (int i = 0; i < 4; i++) {
-      surveys[0]["feedbackQuestion"][index]["answer"] += values[i];
+      surveys[0]["feedbackQuestion"][superIndex]["answer"] += values[i];
       if (i < 3) {
-        surveys[0]["feedbackQuestion"][index]["answer"] += "-";
+        surveys[0]["feedbackQuestion"][superIndex]["answer"] += "-";
       }
     }
   }

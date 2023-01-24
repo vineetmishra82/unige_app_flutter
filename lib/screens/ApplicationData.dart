@@ -13,6 +13,7 @@ class ApplicationData extends StatelessWidget {
   static bool showVideoPlayer = false;
   static String? imgPath;
   static String? videoPath;
+  static String audioMessage = "";
   @override
   Widget build(BuildContext context) {
     return Container();
