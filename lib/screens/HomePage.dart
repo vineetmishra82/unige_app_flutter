@@ -138,80 +138,78 @@ class _HomePageState extends State<HomePage>
           child: Scaffold(
             backgroundColor: Colors.white,
             appBar: PreferredSize(
-              preferredSize: Size.fromHeight(size.height * .2),
-              child: AppBar(
-                backgroundColor: Colors.white,
-                title: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    Hero(
-                      tag: 'logo',
-                      child: Container(
-                        height: kToolbarHeight,
-                        margin:
-                            EdgeInsets.only(top: 20.0, left: size.width * .1),
-                        child: Image.asset(
-                          'images/logo.png',
-                          alignment: Alignment.center,
-                          height: kToolbarHeight,
-                        ),
-                      ),
-                    ),
-                    InkWell(
-                      onTap: () {
-                        logout();
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => LoginScreen()));
-                      },
-                      child: Container(
-                        margin: EdgeInsets.only(left: size.width * .2),
-                        child: Image.asset(
-                          'images/logout.png',
-                          alignment: Alignment.bottomRight,
-                          height: 40,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                bottom: TabBar(
-                  controller: tabController,
-                  indicatorSize: TabBarIndicatorSize.label,
-                  indicatorColor: Colors.red,
-                  tabs: [
-                    Tab(
-                      child: Container(
-                        child: const Text(
-                          "My Products",
-                          style: TextStyle(color: Colors.blue, fontSize: 16),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    ),
-                    Tab(
-                      child: Container(
-                        child: const Text(
-                          "My Feedback",
-                          style: TextStyle(color: Colors.blue, fontSize: 16),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    ),
-                    Tab(
-                      child: Container(
-                        child: const Text(
-                          "My Profile",
-                          style: TextStyle(
-                            color: Colors.blue,
-                            fontSize: 16,
+              preferredSize: Size.fromHeight(size.height * .15),
+              child: SafeArea(
+                child: AppBar(
+                  backgroundColor: Colors.white,
+                  toolbarHeight: 100,
+                  title: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Hero(
+                        tag: 'logo',
+                        child: ClipOval(
+                          child: SizedBox.fromSize(
+                            size: Size.fromRadius(80), // Image radius
+                            child: Image.asset(
+                              'images/logo.png',
+                              fit: BoxFit.scaleDown,
+                            ),
                           ),
+                        ),
+                      ),
+                      InkWell(
+                        onTap: () {
+                          logout();
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => LoginScreen()));
+                        },
+                        child: Container(
+                          margin: EdgeInsets.only(left: size.width * .2),
+                          child: Image.asset(
+                            'images/logout.png',
+                            alignment: Alignment.bottomRight,
+                            height: 30,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  bottom: TabBar(
+                    controller: tabController,
+                    unselectedLabelColor: Colors.redAccent,
+                    labelStyle: GoogleFonts.roboto(fontSize: 15),
+                    indicatorSize: TabBarIndicatorSize.tab,
+                    indicator: BoxDecoration(
+                        gradient: LinearGradient(
+                            colors: [Colors.redAccent, Colors.orangeAccent]),
+                        borderRadius: BorderRadius.circular(50),
+                        color: Colors.redAccent),
+                    tabs: [
+                      Tab(
+                        child: Align(
+                          child: Text(
+                            "My Products",
+                          ),
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                      Tab(
+                        child: Text(
+                          "My Feedback",
                           textAlign: TextAlign.center,
                         ),
                       ),
-                    ),
-                  ],
+                      Tab(
+                        child: Text(
+                          "My Profile",
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -248,54 +246,100 @@ class _HomePageState extends State<HomePage>
       onWillPop: () async => false,
       child: ModalProgressHUD(
         inAsyncCall: showSpinnerMyProfile,
-        child: Padding(
-          padding: EdgeInsets.only(left: size.width * .3),
-          child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  "Profile details",
-                  style: TextStyle(
-                      fontSize: 20.0,
-                      color: Colors.red,
-                      fontWeight: FontWeight.bold),
+        child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text(
+                "Profile details",
+                style: GoogleFonts.ebGaramond(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.deepPurple),
+              ),
+              const SizedBox(
+                height: 50.0,
+              ),
+              Padding(
+                padding: EdgeInsets.only(left: 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Image.asset(
+                      'images/profile.png',
+                      height: 60.0,
+                    ),
+                    SizedBox(width: 20),
+                    Text(
+                      "$name",
+                      style: GoogleFonts.robotoCondensed(
+                        fontSize: 25,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.orange,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(
-                  height: 50.0,
+              ),
+              const SizedBox(
+                height: 18.0,
+              ),
+              Padding(
+                padding: EdgeInsets.only(left: 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Image.asset(
+                      'images/mobile.png',
+                      height: 60.0,
+                    ),
+                    SizedBox(
+                      width: 20,
+                    ),
+                    Text(
+                      "$mobile",
+                      style: GoogleFonts.robotoCondensed(
+                        fontSize: 25,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.orange,
+                      ),
+                    ),
+                  ],
                 ),
-                Text(
-                  "Name - $name",
-                  style: const TextStyle(
-                      fontSize: 16.0,
-                      color: Colors.green,
-                      fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(
+                height: 18.0,
+              ),
+              Padding(
+                padding: EdgeInsets.only(left: 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Image.asset(
+                      'images/email.png',
+                      height: 60.0,
+                    ),
+                    SizedBox(
+                      width: 20,
+                    ),
+                    Text(
+                      "$email",
+                      style: GoogleFonts.robotoCondensed(
+                        fontSize: 25,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.orange,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(
-                  height: 28.0,
-                ),
-                Text(
-                  "Mobile - $mobile",
-                  style: const TextStyle(
-                      fontSize: 16.0,
-                      color: Colors.green,
-                      fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(
-                  height: 28.0,
-                ),
-                Text(
-                  "Email - $email",
-                  style: const TextStyle(
-                      fontSize: 16.0,
-                      color: Colors.green,
-                      fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(
-                  height: 28.0,
-                )
-              ]),
-        ),
+              ),
+              const SizedBox(
+                height: 28.0,
+              )
+            ]),
       ),
     );
   }
@@ -399,33 +443,36 @@ class _HomePageState extends State<HomePage>
       return ModalProgressHUD(
         inAsyncCall: showSpinner,
         child: SingleChildScrollView(
-          child: Column(
-            children: [
-              DataTable(columns: [
-                const DataColumn(
-                  label: Text(
-                    "",
-                    style: TextStyle(fontSize: 12.0, color: Colors.red),
+          child: Padding(
+            padding: const EdgeInsets.only(right: 20),
+            child: Column(
+              children: [
+                DataTable(columns: [
+                  const DataColumn(
+                    label: Text(
+                      "",
+                      style: TextStyle(fontSize: 12.0, color: Colors.red),
+                    ),
                   ),
-                ),
-                const DataColumn(label: Text("")),
-                const DataColumn(label: Text(""))
-              ], rows: [
-                for (var product in myProducts)
-                  if (product["active"] == true)
-                    DataRow(cells: [
-                      DataCell(Text(
-                        product["productName"],
-                        style: const TextStyle(
-                            color: Colors.deepPurpleAccent, fontSize: 13.0),
-                      )),
-                      if (product["active"] == true)
-                        checkForActiveFeedbackAndGetDataCell(product),
-                      if (product["active"] == true)
-                        SetDefectReportAndGetDataCell(product),
-                    ])
-              ])
-            ],
+                  const DataColumn(label: Text("")),
+                  const DataColumn(label: Text(""))
+                ], rows: [
+                  for (var product in myProducts)
+                    if (product["active"] == true)
+                      DataRow(cells: [
+                        DataCell(Text(
+                          product["productName"],
+                          style: GoogleFonts.courierPrime(
+                              fontSize: 14, color: Color(0xff184B2A)),
+                        )),
+                        if (product["active"] == true)
+                          checkForActiveFeedbackAndGetDataCell(product),
+                        if (product["active"] == true)
+                          SetDefectReportAndGetDataCell(product),
+                      ])
+                ])
+              ],
+            ),
           ),
         ),
       );
@@ -447,8 +494,12 @@ class _HomePageState extends State<HomePage>
                       padding: EdgeInsets.only(left: size.width * .6),
                       child: Material(
                         child: ElevatedButton(
+                            style: const ButtonStyle(
+                              backgroundColor:
+                                  MaterialStatePropertyAll(Colors.white),
+                            ),
                             child: const Icon(Icons.home,
-                                color: Colors.deepPurpleAccent),
+                                size: 35, color: Colors.deepPurpleAccent),
                             onPressed: () {
                               setState(() {
                                 showRegistrationPage = false;
@@ -466,17 +517,20 @@ class _HomePageState extends State<HomePage>
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
                           DropdownButton(
-                            style: const TextStyle(
-                              color: Colors.red,
-                            ),
+                            style: GoogleFonts.arimaMadurai(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w900,
+                                color: const Color(0xff3AB7A6)),
                             icon: const Icon(Icons.keyboard_arrow_down),
                             iconSize: 24,
-                            iconEnabledColor: Colors.red,
+                            iconEnabledColor: Color(0xff3AB7A6),
                             disabledHint: null,
-                            hint: const Text(
+                            hint: Text(
                               "Select Category",
-                              style: TextStyle(
-                                  color: Colors.blueAccent, fontSize: 18),
+                              style: GoogleFonts.arimaMadurai(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w900,
+                                  color: Color(0xff3AB7A6)),
                             ),
                             items: products.map((String prod) {
                               return DropdownMenuItem(
@@ -586,6 +640,10 @@ class _HomePageState extends State<HomePage>
                                     actions: [
                                       TextButton(
                                           onPressed: () {
+                                            setState(() {
+                                              month = null;
+                                              year = null;
+                                            });
                                             tabController.animateTo(1);
                                             Navigator.pop(context);
                                           },
@@ -851,9 +909,10 @@ class _HomePageState extends State<HomePage>
         crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          const Text(
+          Text(
             "Month & Year of Purchase",
-            style: TextStyle(color: Colors.blue, fontSize: 18),
+            style: GoogleFonts.titilliumWeb(
+                fontSize: 18, color: Color(0xff673AB7)),
           ),
           DropdownButton(
             style: const TextStyle(
@@ -862,18 +921,18 @@ class _HomePageState extends State<HomePage>
             icon: const Icon(Icons.keyboard_arrow_down),
             iconSize: 18,
             iconEnabledColor: Colors.red,
-            hint: const Text(
+            hint: Text(
               "MM",
-              style: TextStyle(
-                color: Colors.blueAccent,
-              ),
+              style: GoogleFonts.titilliumWeb(
+                  fontSize: 17, color: Color(0xff673AB7)),
             ),
             items: months.map((String prod) {
               return DropdownMenuItem(
                 value: prod,
                 child: Text(
                   prod,
-                  style: const TextStyle(fontSize: 18),
+                  style: GoogleFonts.titilliumWeb(
+                      fontSize: 17, color: Color(0xff673AB7)),
                 ),
               );
             }).toList(),
@@ -886,17 +945,15 @@ class _HomePageState extends State<HomePage>
             value: month,
           ),
           DropdownButton(
-            style: const TextStyle(
-              color: Colors.blue,
-            ),
+            style: GoogleFonts.titilliumWeb(
+                fontSize: 17, color: Color(0xff673AB7)),
             icon: const Icon(Icons.keyboard_arrow_down),
             iconSize: 18,
             iconEnabledColor: Colors.red,
-            hint: const Text(
+            hint: Text(
               "YY",
-              style: TextStyle(
-                color: Colors.blueAccent,
-              ),
+              style: GoogleFonts.titilliumWeb(
+                  fontSize: 18, color: Color(0xff673AB7)),
             ),
             items: years.map<DropdownMenuItem<String>>((String prod) {
               return DropdownMenuItem(
@@ -935,10 +992,8 @@ class _HomePageState extends State<HomePage>
             decoration: InputDecoration(
               enabled: true,
               labelText: featureList.keys.elementAt(i),
-              labelStyle: const TextStyle(
-                color: Colors.blue,
-                fontSize: 25.0,
-              ),
+              labelStyle: GoogleFonts.titilliumWeb(
+                  fontSize: 24, color: Color(0xff673AB7)),
               floatingLabelBehavior: FloatingLabelBehavior.always,
               contentPadding:
                   const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
@@ -946,8 +1001,7 @@ class _HomePageState extends State<HomePage>
                 borderRadius: BorderRadius.all(Radius.circular(32.0)),
               ),
               enabledBorder: const OutlineInputBorder(
-                borderSide:
-                    BorderSide(color: Colors.lightBlueAccent, width: 2.0),
+                borderSide: BorderSide(color: Color(0xff673AB7), width: 2.0),
                 borderRadius: BorderRadius.all(Radius.circular(32.0)),
               ),
             ),
@@ -962,22 +1016,23 @@ class _HomePageState extends State<HomePage>
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           DropdownButton(
-            style: const TextStyle(
-              color: Colors.blue,
-            ),
+            style: GoogleFonts.titilliumWeb(
+                fontSize: 24, color: Color(0xff673AB7)),
             icon: const Icon(Icons.keyboard_arrow_down),
-            hint: const Text(
+            hint: Text(
               "Purchase Type",
-              style: TextStyle(color: Colors.blueAccent, fontSize: 18),
+              style: GoogleFonts.titilliumWeb(
+                  fontSize: 18, color: Color(0xff673AB7)),
             ),
             iconSize: 18,
-            iconEnabledColor: Colors.red,
+            iconEnabledColor: Color(0xff673AB7),
             items: ['New Product', 'Used Product'].map((String prod) {
               return DropdownMenuItem(
                 value: prod,
                 child: Text(
                   prod,
-                  style: const TextStyle(fontSize: 18, color: Colors.red),
+                  style: GoogleFonts.titilliumWeb(
+                      fontSize: 17, color: Color(0xff673AB7)),
                 ),
               );
             }).toList(),
@@ -1004,14 +1059,13 @@ class _HomePageState extends State<HomePage>
           onChanged: (value) {
             featureList[featureList.keys.elementAt(i)] = value;
           },
-          style: const TextStyle(color: Colors.brown),
+          style:
+              GoogleFonts.titilliumWeb(fontSize: 24, color: Color(0xff673AB7)),
           decoration: InputDecoration(
             enabled: true,
             labelText: featureList.keys.elementAt(i),
-            labelStyle: const TextStyle(
-              color: Colors.blue,
-              fontSize: 25.0,
-            ),
+            labelStyle: GoogleFonts.titilliumWeb(
+                fontSize: 24, color: Color(0xff673AB7)),
             floatingLabelBehavior: FloatingLabelBehavior.always,
             contentPadding:
                 const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
@@ -1019,7 +1073,7 @@ class _HomePageState extends State<HomePage>
               borderRadius: BorderRadius.all(Radius.circular(32.0)),
             ),
             enabledBorder: const OutlineInputBorder(
-              borderSide: BorderSide(color: Colors.lightBlueAccent, width: 2.0),
+              borderSide: BorderSide(color: Color(0xff673AB7), width: 2.0),
               borderRadius: BorderRadius.all(Radius.circular(32.0)),
             ),
           ),
@@ -1107,11 +1161,10 @@ class _HomePageState extends State<HomePage>
           child: Container(
             child: Text(
               surveys[0]["feedbackQuestion"][questionIndex]["mainScreentitle"],
-              style: const TextStyle(
-                overflow: TextOverflow.clip,
-                fontSize: 16,
-                color: Colors.deepPurple,
-              ),
+              style: GoogleFonts.ebGaramond(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.deepPurple),
             ),
           ),
         ),
@@ -1130,16 +1183,19 @@ class _HomePageState extends State<HomePage>
           height: 20,
         ),
         Padding(
-          padding: const EdgeInsets.all(8.0),
+          padding: const EdgeInsets.all(10.0),
           child: Container(
-            child: Text(
-              processQuestion(surveys[0]["feedbackQuestion"][questionIndex]
-                  ["questionTitle"]),
-              overflow: TextOverflow.clip,
-              style: const TextStyle(
+            child: Align(
+              alignment: Alignment.center,
+              child: Text(
+                processQuestion(surveys[0]["feedbackQuestion"][questionIndex]
+                    ["questionTitle"]),
                 overflow: TextOverflow.clip,
-                fontSize: 14,
-                color: Colors.redAccent,
+                style: GoogleFonts.robotoCondensed(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.brown,
+                ),
               ),
             ),
           ),
@@ -1158,10 +1214,10 @@ class _HomePageState extends State<HomePage>
                   child: Text(
                     processQuestion(currentSurvey[i]["question"]),
                     overflow: TextOverflow.clip,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Colors.redAccent,
-                    ),
+                    style: GoogleFonts.robotoCondensed(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.redAccent),
                   ),
                 ),
               ],
@@ -1172,7 +1228,7 @@ class _HomePageState extends State<HomePage>
             height: 20,
           ),
         ],
-        getBottomButtonSet(),
+        getBottomButtonSet()
       ],
     );
   }
@@ -1218,6 +1274,7 @@ class _HomePageState extends State<HomePage>
                     : responses.indexOf(
                         surveys[0]["feedbackQuestion"][index]["answer"]),
             activeFgColor: Colors.white,
+            activeBgColor: [Colors.deepPurpleAccent],
             inactiveBgColor: Colors.grey,
             inactiveFgColor: Colors.grey[900],
             totalSwitches: 2,
@@ -1539,70 +1596,123 @@ class _HomePageState extends State<HomePage>
         ],
       );
     } else if (answerType.contains("Rating")) {
-      try {
-        getRatingsArray(answerType, index);
-        var responses = responseArray;
+      getRatingsArray(answerType, index);
+      var responses = responseArray;
 
-        surveys[0]["feedbackQuestion"][index]["answer"] =
-            surveys[0]["feedbackQuestion"][index]["answer"] == ""
-                ? ""
-                : surveys[0]["feedbackQuestion"][index]["answer"];
+      surveys[0]["feedbackQuestion"][index]["answer"] =
+          surveys[0]["feedbackQuestion"][index]["answer"] == ""
+              ? ""
+              : surveys[0]["feedbackQuestion"][index]["answer"];
 
-        return Center(
-            child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const SizedBox(
-              height: 15.0,
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              crossAxisAlignment: CrossAxisAlignment.center,
+      return Column(
+        children: [
+          Padding(
+            padding: EdgeInsets.only(left: 20.0, top: 10, right: 20, bottom: 0),
+            child: Row(
               children: [
-                for (int i = 0; i < responses.length; i++)
-                  InkWell(
-                    onTap: (() {
-                      setState(() {
-                        for (int j = 0; j < isSelected[index]!.length; j++) {
-                          isSelected[index]![j] = j == i;
-                          surveys[0]["feedbackQuestion"][index]["answer"] =
-                              i.toString();
-                        }
-                      });
-                    }),
-                    child: SizedBox(
-                      width: getWidth(
-                          responses[i],
-                          GoogleFonts.roboto(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12.0,
-                              color: color)),
-                      child: Text(responses[i],
-                          style: GoogleFonts.roboto(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12.0,
-                              color: surveys[0]["feedbackQuestion"][index]
-                                          ["answer"] ==
-                                      i.toString()
-                                  ? Colors.green
-                                  : Colors.orange)),
-                    ),
-                  ),
-                const SizedBox(
-                  height: 25,
-                )
+                Text(
+                  responseArray[0],
+                  style: GoogleFonts.roboto(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15.0,
+                      color: Colors.red),
+                ),
+                Spacer(),
+                Text(responseArray[responseArray.length - 1],
+                    style: GoogleFonts.roboto(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15.0,
+                        color: Colors.deepPurple))
               ],
-            )
-          ],
-        ));
-      } on Exception catch (_) {
-        print(
-            "Exception index - $index Current isSelected[index] - ${isSelected[index]} responses - $responseArray");
-      } catch (error) {
-        print(
-            "Exception index - $index Current isSelected[index] - ${isSelected[index]} responses - $responseArray");
-      }
+            ),
+          ),
+          Slider(
+            thumbColor: Colors.blue,
+            activeColor: Colors.green,
+            inactiveColor: Colors.red,
+            label: val.toString(),
+            divisions: (responses.length <= 1 ? 5 : responses.length - 1),
+            value: surveys[0]["feedbackQuestion"][index]["answer"] == ""
+                ? 1
+                : double.parse(surveys[0]["feedbackQuestion"][index]["answer"]),
+            onChanged: (double value) {
+              setState(() {
+                val = value.toInt();
+                surveys[0]["feedbackQuestion"][index]["answer"] =
+                    value.toString();
+              });
+            },
+            min: 1,
+            max: ((responses.length).toDouble() <= 1
+                ? 5
+                : (responses.length).toDouble()),
+          ),
+        ],
+      );
+      // try {
+      //   getRatingsArray(answerType, index);
+      //   var responses = responseArray;
+      //
+      //   surveys[0]["feedbackQuestion"][index]["answer"] =
+      //       surveys[0]["feedbackQuestion"][index]["answer"] == ""
+      //           ? ""
+      //           : surveys[0]["feedbackQuestion"][index]["answer"];
+      //
+      //   return Center(
+      //       child: Column(
+      //     mainAxisSize: MainAxisSize.min,
+      //     mainAxisAlignment: MainAxisAlignment.center,
+      //     children: [
+      //       const SizedBox(
+      //         height: 15.0,
+      //       ),
+      //       Row(
+      //         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      //         crossAxisAlignment: CrossAxisAlignment.center,
+      //         children: [
+      //           for (int i = 0; i < responses.length; i++)
+      //             InkWell(
+      //               onTap: (() {
+      //                 setState(() {
+      //                   for (int j = 0; j < isSelected[index]!.length; j++) {
+      //                     isSelected[index]![j] = j == i;
+      //                     surveys[0]["feedbackQuestion"][index]["answer"] =
+      //                         i.toString();
+      //                   }
+      //                 });
+      //               }),
+      //               child: SizedBox(
+      //                 width: getWidth(
+      //                     responses[i],
+      //                     GoogleFonts.roboto(
+      //                         fontWeight: FontWeight.bold,
+      //                         fontSize: 12.0,
+      //                         color: color)),
+      //                 child: Text(responses[i],
+      //                     style: GoogleFonts.roboto(
+      //                         fontWeight: FontWeight.bold,
+      //                         fontSize: 12.0,
+      //                         color: surveys[0]["feedbackQuestion"][index]
+      //                                     ["answer"] ==
+      //                                 i.toString()
+      //                             ? Colors.green
+      //                             : Colors.orange)),
+      //               ),
+      //             ),
+      //           const SizedBox(
+      //             height: 25,
+      //           )
+      //         ],
+      //       )
+      //     ],
+      //   ));
+      // } on Exception catch (_) {
+      //   print(
+      //       "Exception index - $index Current isSelected[index] - ${isSelected[index]} responses - $responseArray");
+      // } catch (error) {
+      //   print(
+      //       "Exception index - $index Current isSelected[index] - ${isSelected[index]} responses - $responseArray");
+      // }
     }
 
     // for (int i = 0; i < responses.length; i++)
@@ -1616,6 +1726,142 @@ class _HomePageState extends State<HomePage>
     //   ),
 
     return Container();
+  }
+
+  Widget getBottomButtonSetWithFooter() {
+    if (surveys[0]["feedbackQuestion"] == null) {
+      return Container();
+    }
+
+    var arraySize = surveys[0]["feedbackQuestion"].length;
+    if (questionIndex <= 1 && questionIndex < arraySize - 1) {
+      return BottomNavigationBar(
+        items: [
+          BottomNavigationBarItem(
+            icon: InkWell(
+                child: Image.asset(
+                  "images/right.png",
+                  width: 40,
+                  height: 30,
+                ),
+                onTap: () {
+                  setState(() {
+                    questionIndex++;
+                    ratingsArrayLoaded = false;
+                  });
+                }),
+          ),
+        ],
+      );
+    } else if (questionIndex > 0 && questionIndex < arraySize - 1) {
+      return BottomNavigationBar(
+        items: [
+          BottomNavigationBarItem(
+            icon: InkWell(
+                child: Image.asset(
+                  "images/left.png",
+                  width: 40,
+                  height: 30,
+                ),
+                onTap: () {
+                  setState(() {
+                    questionIndex = questionIndex - endIndex;
+                    ratingsArrayLoaded = false;
+                  });
+                }),
+          ),
+          BottomNavigationBarItem(
+              icon: InkWell(
+                  child: Image.asset(
+                    "images/right.png",
+                    width: 35,
+                    height: 30,
+                  ),
+                  onTap: () {
+                    setState(() {
+                      questionIndex++;
+                      ratingsArrayLoaded = false;
+                    });
+                  })),
+        ],
+      );
+    } else if (questionIndex == arraySize - 1) {
+      return BottomNavigationBar(
+        items: [
+          BottomNavigationBarItem(
+            icon: InkWell(
+                child: Image.asset(
+                  "images/left.png",
+                  width: 40,
+                  height: 30,
+                ),
+                onTap: () {
+                  setState(() {
+                    questionIndex -= endIndex;
+                    lastTitle = "LoadLastLine";
+                    questionIndex = 0;
+                  });
+                }),
+          ),
+          BottomNavigationBarItem(
+              icon: Container(
+            height: 50.0,
+            margin: EdgeInsets.all(10),
+            child: ElevatedButton(
+              onPressed: () {
+                if (surveys[0]["surveyId"] == "ReplacementSurvey") {
+                  ProcessReplacementSurveyResponse(
+                      surveys[0]["feedbackQuestion"][superIndex]["answer"]);
+                } else if ((surveys[0]["surveyId"] != "ReplacementSurvey")) {
+                  setState(() {
+                    showThankyouMessage = true;
+                    questionIndex = 0;
+                    superIndex = 0;
+                    setNextSurvey(true);
+                  });
+                }
+              },
+              style: ButtonStyle(
+                  shape: MaterialStateProperty.all<OutlinedBorder>(
+                      RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(80.0))),
+                  padding: MaterialStateProperty.all<EdgeInsetsGeometry>(
+                    EdgeInsets.all(0.0),
+                  )),
+              child: Ink(
+                decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Color(0xff374ABE), Color(0xff64B6FF)],
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                    ),
+                    borderRadius: BorderRadius.circular(30.0)),
+                child: Container(
+                  constraints: BoxConstraints(maxWidth: 150.0, minHeight: 50.0),
+                  alignment: Alignment.center,
+                  child: Text(
+                    "Submit",
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.roboto(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ))
+        ],
+      );
+    }
+    return Container(
+      child: Text(
+        processQuestion(
+            "Thank you very much for completing your first experience check-in!Your feedback will help to improve the quality and functionality of future \"products\".  We will contact you for an update of your experience in …. months."),
+        style: const TextStyle(color: Colors.red, fontSize: 14),
+      ),
+    );
   }
 
   getBottomButtonSet() {
@@ -1654,7 +1900,7 @@ class _HomePageState extends State<HomePage>
                   ratingsArrayLoaded = false;
                 });
               }),
-          SizedBox(width: size.width * .71),
+          SizedBox(width: size.width * .77),
           InkWell(
               child: Image.asset(
                 "images/right.png",
@@ -1689,13 +1935,12 @@ class _HomePageState extends State<HomePage>
                     });
                   }),
               SizedBox(
-                width: size.width * .30,
+                width: size.width * .20,
               ),
-              Material(
-                color: Colors.blue,
-                borderRadius: const BorderRadius.all(Radius.circular(30.0)),
-                elevation: 2.0,
-                child: MaterialButton(
+              Container(
+                height: 50.0,
+                margin: EdgeInsets.all(10),
+                child: ElevatedButton(
                   onPressed: () {
                     if (surveys[0]["surveyId"] == "ReplacementSurvey") {
                       ProcessReplacementSurveyResponse(
@@ -1710,11 +1955,35 @@ class _HomePageState extends State<HomePage>
                       });
                     }
                   },
-                  minWidth: 50.0,
-                  height: 32.0,
-                  child: const Text(
-                    'Submit',
-                    style: TextStyle(fontSize: 14),
+                  style: ButtonStyle(
+                      shape: MaterialStateProperty.all<OutlinedBorder>(
+                          RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(80.0))),
+                      padding: MaterialStateProperty.all<EdgeInsetsGeometry>(
+                        EdgeInsets.all(0.0),
+                      )),
+                  child: Ink(
+                    decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Color(0xff374ABE), Color(0xff64B6FF)],
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
+                        ),
+                        borderRadius: BorderRadius.circular(30.0)),
+                    child: Container(
+                      constraints:
+                          BoxConstraints(maxWidth: 150.0, minHeight: 50.0),
+                      alignment: Alignment.center,
+                      child: Text(
+                        "Submit",
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.roboto(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -1823,67 +2092,69 @@ class _HomePageState extends State<HomePage>
           const SizedBox(height: 10.0),
           Padding(
             padding: EdgeInsets.only(left: size.width * .7),
-            child: InkWell(
-              onTap: () async {
-                setState(() {
-                  AlertDialog alert = AlertDialog(
-                    title: const Text("Warning"),
-                    content: const Text(
-                        "You are leaving the survey while its not complete.If you proceed, it may reset and not"
-                        " get recorded.\n\nDo you wish to abort feedback ?"),
-                    actions: [
-                      TextButton(
-                          onPressed: () {
-                            setState(() {
-                              showThankyouMessage = false;
-                              showFeedback = false;
-                              showRegistrationPage = false;
-                              showSpinnerMyProducts = true;
-                              goToHome = true;
-                            });
+            child: Material(
+              child: ElevatedButton(
+                  style: const ButtonStyle(
+                    backgroundColor: MaterialStatePropertyAll(Colors.white),
+                  ),
+                  child: const Icon(Icons.home,
+                      size: 35, color: Colors.deepPurpleAccent),
+                  onPressed: () async {
+                    setState(() {
+                      AlertDialog alert = AlertDialog(
+                        title: const Text("Warning"),
+                        content: const Text(
+                            "You are leaving the survey while its not complete.If you proceed, it may reset and not"
+                            " get recorded.\n\nDo you wish to abort feedback ?"),
+                        actions: [
+                          TextButton(
+                              onPressed: () {
+                                setState(() {
+                                  showThankyouMessage = false;
+                                  showFeedback = false;
+                                  showRegistrationPage = false;
+                                  showSpinnerMyProducts = true;
+                                  goToHome = true;
+                                });
 
-                            //saving data from survey in myProduct selected
-                            if (isDefectSurvey) {
-                              setState(() {
-                                myProductSelected["currentDefectSurvey"] =
-                                    surveys[0];
-                              });
-                            } else {
-                              setState(() {
-                                myProductSelected["currentMainSurvey"] =
-                                    surveys[0];
-                                print(myProductSelected["currentMainSurvey"]);
-                              });
-                            }
+                                //saving data from survey in myProduct selected
+                                if (isDefectSurvey) {
+                                  setState(() {
+                                    myProductSelected["currentDefectSurvey"] =
+                                        surveys[0];
+                                  });
+                                } else {
+                                  setState(() {
+                                    myProductSelected["currentMainSurvey"] =
+                                        surveys[0];
+                                    print(
+                                        myProductSelected["currentMainSurvey"]);
+                                  });
+                                }
 
-                            Navigator.pop(context);
-                            questionIndex = 0;
+                                Navigator.pop(context);
+                                questionIndex = 0;
 
-                            setState(() {
-                              showSpinnerMyProducts = false;
-                            });
-                          },
-                          child: const Text("Continue")),
-                      TextButton(
-                          onPressed: () {
-                            Navigator.pop(context);
-                          },
-                          child: const Text("Cancel"))
-                    ],
-                  );
+                                setState(() {
+                                  showSpinnerMyProducts = false;
+                                });
+                              },
+                              child: const Text("Continue")),
+                          TextButton(
+                              onPressed: () {
+                                Navigator.pop(context);
+                              },
+                              child: const Text("Cancel"))
+                        ],
+                      );
 
-                  showDialog(
-                      context: context,
-                      builder: (BuildContext context) {
-                        return alert;
-                      });
-                });
-              },
-              child: const Icon(
-                Icons.home,
-                size: 35,
-                color: Colors.deepPurple,
-              ),
+                      showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return alert;
+                          });
+                    });
+                  }),
             ),
           ),
           Container(
@@ -1892,28 +2163,6 @@ class _HomePageState extends State<HomePage>
               children: [
                 const SizedBox(
                   height: 20,
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    Text(
-                      "Survey id - " + surveys[0]["surveyId"],
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.brown,
-                      ),
-                    ),
-                    Text(
-                      "Product - $productSelected",
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.brown,
-                      ),
-                    ),
-                    const SizedBox(
-                      height: 20,
-                    ),
-                  ],
                 ),
                 const SizedBox(
                   height: 20,
@@ -1940,38 +2189,63 @@ class _HomePageState extends State<HomePage>
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        Padding(
-                          padding: EdgeInsets.only(left: size.width * .6),
-                          child: Row(
-                            children: [
-                              Material(
-                                color: Colors.blue,
-                                borderRadius: const BorderRadius.all(
-                                    Radius.circular(5.0)),
-                                child: MaterialButton(
-                                    child: const Text(
-                                      "Register Product",
-                                      style: TextStyle(
-                                          fontSize: 14, color: Colors.red),
-                                    ),
-                                    onPressed: () {
-                                      setState(() {
-                                        for (int i = 0;
-                                            i < featureList.keys.length;
-                                            i++) {
-                                          featureList[featureList.keys
-                                              .elementAt(i)] = "";
-                                        }
-                                        year = null;
-                                        month = null;
-                                        type = null;
-                                        showRegistrationPage = true;
-                                        isFirstRegistration = true;
-                                      });
-                                    }),
+                        Container(
+                          height: 50.0,
+                          margin: EdgeInsets.all(10),
+                          child: ElevatedButton(
+                            onPressed: () {
+                              setState(() {
+                                for (int i = 0;
+                                    i < featureList.keys.length;
+                                    i++) {
+                                  featureList[featureList.keys.elementAt(i)] =
+                                      "";
+                                }
+                                year = null;
+                                month = null;
+                                type = null;
+                                showRegistrationPage = true;
+                                isFirstRegistration = true;
+                              });
+                            },
+                            style: ButtonStyle(
+                                shape:
+                                    MaterialStateProperty.all<OutlinedBorder>(
+                                        RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(80.0))),
+                                padding: MaterialStateProperty.all<
+                                    EdgeInsetsGeometry>(
+                                  EdgeInsets.all(0.0),
+                                )),
+                            child: Ink(
+                              decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      Color(0xff374ABE),
+                                      Color(0xff64B6FF)
+                                    ],
+                                    begin: Alignment.centerLeft,
+                                    end: Alignment.centerRight,
+                                  ),
+                                  borderRadius: BorderRadius.circular(30.0)),
+                              child: Container(
+                                constraints: BoxConstraints(
+                                    maxWidth: 150.0, minHeight: 50.0),
+                                alignment: Alignment.center,
+                                child: Text(
+                                  "Register Product",
+                                  textAlign: TextAlign.center,
+                                  style: GoogleFonts.roboto(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
                               ),
-                            ],
+                            ),
                           ),
                         ),
                       ],
@@ -1983,9 +2257,12 @@ class _HomePageState extends State<HomePage>
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      const Text(
-                        "Registerd Products",
-                        style: TextStyle(color: Colors.blue, fontSize: 16),
+                      Text(
+                        "Registered Products",
+                        style: GoogleFonts.ebGaramond(
+                            fontSize: 25,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.deepPurple),
                       ),
                     ],
                   ),
@@ -1997,23 +2274,23 @@ class _HomePageState extends State<HomePage>
                     child: DataTable(
                       columnSpacing: 3.0,
                       columns: [
-                        const DataColumn(
+                        DataColumn(
                             label: Text(
-                          "Product",
-                          style: TextStyle(
-                              color: Colors.pink,
+                          "Products",
+                          style: GoogleFonts.courierPrime(
+                              fontSize: 15,
                               fontWeight: FontWeight.bold,
-                              fontSize: 14.0),
+                              color: Color(0xffB7673A)),
                         )),
-                        const DataColumn(
+                        DataColumn(
                             label: Text(
-                          "Purchased\nOn",
-                          style: TextStyle(
-                              color: Colors.pink,
+                          "Purchased On",
+                          style: GoogleFonts.courierPrime(
+                              fontSize: 15,
                               fontWeight: FontWeight.bold,
-                              fontSize: 14.0),
+                              color: Color(0xffB7673A)),
                         )),
-                        const DataColumn(
+                        DataColumn(
                             label: Text(
                           "",
                           style: TextStyle(
@@ -2021,7 +2298,7 @@ class _HomePageState extends State<HomePage>
                               fontWeight: FontWeight.bold,
                               fontSize: 14.0),
                         )),
-                        const DataColumn(
+                        DataColumn(
                             label: Text(
                           "",
                           style: TextStyle(
@@ -2035,15 +2312,13 @@ class _HomePageState extends State<HomePage>
                           DataRow(cells: [
                             DataCell(Text(
                               product["productName"].toString(),
-                              style: const TextStyle(
-                                  color: Colors.deepPurpleAccent,
-                                  fontSize: 13.0),
+                              style: GoogleFonts.courierPrime(
+                                  fontSize: 15, color: Color(0xff184B2A)),
                             )),
                             DataCell(Text(
                               product["features"]["Purchase Date"].toString(),
-                              style: const TextStyle(
-                                  color: Colors.deepPurpleAccent,
-                                  fontSize: 13.0),
+                              style: GoogleFonts.courierPrime(
+                                  fontSize: 15, color: Color(0xff184B2A)),
                             )),
                             DataCell(InkWell(
                               child: const Icon(
@@ -2084,7 +2359,7 @@ class _HomePageState extends State<HomePage>
                             DataCell(InkWell(
                               child: const Icon(
                                 Icons.info,
-                                color: Colors.blue,
+                                color: Colors.deepPurple,
                               ),
                               onTap: () {
                                 AlertDialog alert = AlertDialog(
@@ -2141,7 +2416,7 @@ class _HomePageState extends State<HomePage>
   DataCell checkForActiveFeedbackAndGetDataCell(product) {
     if (product["currentMainSurvey"]["next"]) {
       return DataCell(MaterialButton(
-        color: Colors.white60,
+        color: Color(0xff3AB7A6),
         onPressed: () {
           if (product["currentMainSurvey"]["surveyId"] == "QS2") {
             setState(() {
@@ -2171,14 +2446,14 @@ class _HomePageState extends State<HomePage>
         },
         child: const Text(
           "Pending Feedback",
-          style: TextStyle(color: Colors.pink, fontSize: 12.0),
+          style: TextStyle(color: Colors.deepPurple, fontSize: 12.0),
         ),
       ));
     }
     return const DataCell(
       Text(
         "No Pending Feedback",
-        style: TextStyle(color: Colors.pink, fontSize: 12.0),
+        style: TextStyle(color: Colors.deepPurple, fontSize: 12.0),
       ),
     );
   }
@@ -2188,7 +2463,7 @@ class _HomePageState extends State<HomePage>
     setBrand(myProductSelected);
 
     return DataCell(MaterialButton(
-      color: Colors.white60,
+      color: Color(0xff3AB7A6),
       onPressed: () {
         setState(() {
           myProductSelected = product;
@@ -2202,7 +2477,7 @@ class _HomePageState extends State<HomePage>
       },
       child: const Text(
         "Report a problem",
-        style: TextStyle(color: Colors.pink, fontSize: 12.0),
+        style: TextStyle(color: Colors.deepPurple, fontSize: 12.0),
       ),
     ));
   }
@@ -2572,8 +2847,11 @@ class _HomePageState extends State<HomePage>
             children: [
               Text(
                 ApplicationData.audioMessage,
-                style: TextStyle(fontSize: 16, color: Colors.red),
-                overflow: TextOverflow.clip,
+                style: const TextStyle(
+                    fontSize: 16,
+                    color: Colors.red,
+                    overflow: TextOverflow.ellipsis),
+                overflow: TextOverflow.ellipsis,
               )
             ],
           ),
@@ -2590,12 +2868,11 @@ class _HomePageState extends State<HomePage>
               },
             ),
           ),
-          Material(
-            color: Colors.blue,
-            borderRadius: const BorderRadius.all(Radius.circular(30.0)),
-            elevation: 2.0,
-            child: MaterialButton(
-              onPressed: () async {
+          Container(
+            height: 50.0,
+            margin: EdgeInsets.all(10),
+            child: ElevatedButton(
+              onPressed: () {
                 setState(() {
                   setState(() {
                     showFeedback = true;
@@ -2604,11 +2881,34 @@ class _HomePageState extends State<HomePage>
                   //   loadMyProducts();
                 });
               },
-              minWidth: 50.0,
-              height: 32.0,
-              child: const Text(
-                'Back',
-                style: TextStyle(fontSize: 14),
+              style: ButtonStyle(
+                  shape: MaterialStateProperty.all<OutlinedBorder>(
+                      RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(80.0))),
+                  padding: MaterialStateProperty.all<EdgeInsetsGeometry>(
+                    EdgeInsets.all(0.0),
+                  )),
+              child: Ink(
+                decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Color(0xff374ABE), Color(0xff64B6FF)],
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                    ),
+                    borderRadius: BorderRadius.circular(30.0)),
+                child: Container(
+                  constraints: BoxConstraints(maxWidth: 150.0, minHeight: 50.0),
+                  alignment: Alignment.center,
+                  child: Text(
+                    "Back",
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.roboto(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
               ),
             ),
           ),

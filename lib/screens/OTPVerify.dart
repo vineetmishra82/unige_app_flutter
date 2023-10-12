@@ -50,17 +50,22 @@ class _OTPVerifyState extends State<OTPVerify> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
                 const SizedBox(
-                  height: 48.0,
+                  height: 5.0,
                 ),
                 Hero(
                   tag: 'logo',
-                  child: SizedBox(
-                    height: 100.0,
-                    child: Image.asset('images/logo.png'),
+                  child: ClipOval(
+                    child: SizedBox.fromSize(
+                      size: Size.fromRadius(120), // Image radius
+                      child: Image.asset(
+                        'images/logo.png',
+                        fit: BoxFit.scaleDown,
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(
-                  height: 100.0,
+                  height: 20.0,
                 ),
                 Center(
                   child: TextField(
