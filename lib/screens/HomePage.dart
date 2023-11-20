@@ -8,6 +8,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:googleapis/drive/v3.dart' as drive;
+import 'package:googleapis_auth/auth_io.dart';
 import 'package:http/http.dart' as http;
 import 'package:modal_progress_hud_nsn/modal_progress_hud_nsn.dart';
 import 'package:record/record.dart';
@@ -45,7 +47,8 @@ class _HomePageState extends State<HomePage>
       mobile = ApplicationData.mobile,
       myProductBrand = "",
       feedbackType = "Next Feedback",
-      lastTitle = "LoadLastLine";
+      lastTitle = "LoadLastLine",
+      goingForwardMessage = "";
 
   var myProductSelected;
   String? productSelected, month, year, type, minutes, seconds, fileType;
@@ -118,6 +121,7 @@ class _HomePageState extends State<HomePage>
     //   year = currentYear.year.toString();
 //    getMonths();
     tabController = TabController(length: 3, vsync: this);
+    obtainAuthenticatedClient();
   }
 
   @override
@@ -410,7 +414,7 @@ class _HomePageState extends State<HomePage>
                       showThankyouMessage = false;
                       showFeedback = false;
                       showRegistrationPage = false;
-                      showSpinnerMyProducts = true;
+                      showSpinnerMyProducts = false;
                       goToHome = true;
                     });
                     //   loadMyProducts();
@@ -435,6 +439,7 @@ class _HomePageState extends State<HomePage>
       return startFeedback();
     } else if (goToHome) {
       tabController.animateTo(0);
+
       goToHome = false;
       return (MyFeedback(context));
     } else if (ApplicationData.showVideoPlayer) {
@@ -447,15 +452,15 @@ class _HomePageState extends State<HomePage>
             padding: const EdgeInsets.only(right: 20),
             child: Column(
               children: [
-                DataTable(columns: [
-                  const DataColumn(
+                DataTable(columns: const [
+                  DataColumn(
                     label: Text(
                       "",
                       style: TextStyle(fontSize: 12.0, color: Colors.red),
                     ),
                   ),
-                  const DataColumn(label: Text("")),
-                  const DataColumn(label: Text(""))
+                  DataColumn(label: Text("")),
+                  DataColumn(label: Text(""))
                 ], rows: [
                   for (var product in myProducts)
                     if (product["active"] == true)
@@ -1228,7 +1233,7 @@ class _HomePageState extends State<HomePage>
             height: 20,
           ),
         ],
-        getBottomButtonSet()
+        getBottomButtonSet(currentSurvey)
       ],
     );
   }
@@ -1286,7 +1291,7 @@ class _HomePageState extends State<HomePage>
 
               if (surveys[0]["feedbackQuestion"][questionIndex]["question"] ==
                   "I complained to the manufacturer/retailer") {
-                print("questionIndex is " + questionIndex.toString());
+                print("questionIndex is $questionIndex");
                 updateCurrentSurveyWithComplaintStatus(responses[index1]);
               }
             },
@@ -1601,7 +1606,7 @@ class _HomePageState extends State<HomePage>
 
       surveys[0]["feedbackQuestion"][index]["answer"] =
           surveys[0]["feedbackQuestion"][index]["answer"] == ""
-              ? ""
+              ? "1"
               : surveys[0]["feedbackQuestion"][index]["answer"];
 
       return Column(
@@ -1617,7 +1622,7 @@ class _HomePageState extends State<HomePage>
                       fontSize: 15.0,
                       color: Colors.red),
                 ),
-                Spacer(),
+                const Spacer(),
                 Text(responseArray[responseArray.length - 1],
                     style: GoogleFonts.roboto(
                         fontWeight: FontWeight.bold,
@@ -1810,8 +1815,6 @@ class _HomePageState extends State<HomePage>
             child: ElevatedButton(
               onPressed: () {
                 if (surveys[0]["surveyId"] == "ReplacementSurvey") {
-                  ProcessReplacementSurveyResponse(
-                      surveys[0]["feedbackQuestion"][superIndex]["answer"]);
                 } else if ((surveys[0]["surveyId"] != "ReplacementSurvey")) {
                   setState(() {
                     showThankyouMessage = true;
@@ -1864,7 +1867,8 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-  getBottomButtonSet() {
+  getBottomButtonSet(currentSurvey) {
+    print("current questions are - ${currentSurvey.length}");
     var arraySize = surveys[0]["feedbackQuestion"].length;
     if (questionIndex <= 1 && questionIndex < arraySize - 1) {
       return Row(
@@ -1877,10 +1881,47 @@ class _HomePageState extends State<HomePage>
                 height: 30,
               ),
               onTap: () {
-                setState(() {
-                  questionIndex++;
-                  ratingsArrayLoaded = false;
-                });
+                if (!GetValidResponses(currentSurvey)) {
+                  AlertDialog alert = AlertDialog(
+                    title: const Text("Alert"),
+                    content: Text(goingForwardMessage),
+                    actions: [
+                      currentSurvey[0]["answerType"].contains("Rating") ||
+                              (currentSurvey[0]["answerType"]
+                                      .contains("Multimedia/Descriptive") &&
+                                  goingForwardMessage.contains("options")) ||
+                              (currentSurvey[0]["answerType"]
+                                      .contains("Audio/Descriptive") &&
+                                  goingForwardMessage.contains("options"))
+                          ? TextButton(
+                              onPressed: () {
+                                setState(() {
+                                  questionIndex++;
+                                  ratingsArrayLoaded = false;
+                                });
+                                Navigator.pop(context);
+                              },
+                              child: const Text("Continue"))
+                          : const Text(""),
+                      TextButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                          child: const Text("Cancel"))
+                    ],
+                  );
+
+                  showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return alert;
+                      });
+                } else {
+                  setState(() {
+                    questionIndex++;
+                    ratingsArrayLoaded = false;
+                  });
+                }
               }),
         ],
       );
@@ -1908,10 +1949,48 @@ class _HomePageState extends State<HomePage>
                 height: 30,
               ),
               onTap: () {
-                setState(() {
-                  questionIndex++;
-                  ratingsArrayLoaded = false;
-                });
+                print("current question - ${currentSurvey[0]["answerType"]}");
+                if (!GetValidResponses(currentSurvey)) {
+                  AlertDialog alert = AlertDialog(
+                    title: const Text("Alert"),
+                    content: Text(goingForwardMessage),
+                    actions: [
+                      currentSurvey[0]["answerType"].contains("Rating") ||
+                              (currentSurvey[0]["answerType"]
+                                      .contains("Multimedia/Descriptive") &&
+                                  goingForwardMessage.contains("options")) ||
+                              (currentSurvey[0]["answerType"]
+                                      .contains("Audio/Descriptive") &&
+                                  goingForwardMessage.contains("options"))
+                          ? TextButton(
+                              onPressed: () {
+                                setState(() {
+                                  questionIndex++;
+                                  ratingsArrayLoaded = false;
+                                });
+                                Navigator.pop(context);
+                              },
+                              child: const Text("Continue"))
+                          : Text(""),
+                      TextButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                          child: const Text("Cancel"))
+                    ],
+                  );
+
+                  showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return alert;
+                      });
+                } else {
+                  setState(() {
+                    questionIndex++;
+                    ratingsArrayLoaded = false;
+                  });
+                }
               })
         ],
       );
@@ -1943,16 +2022,78 @@ class _HomePageState extends State<HomePage>
                 child: ElevatedButton(
                   onPressed: () {
                     if (surveys[0]["surveyId"] == "ReplacementSurvey") {
-                      ProcessReplacementSurveyResponse(
-                          surveys[0]["feedbackQuestion"][superIndex]["answer"]);
+                      if (!GetValidResponses(currentSurvey)) {
+                        AlertDialog alert = AlertDialog(
+                          title: const Text("Alert"),
+                          content: Text(goingForwardMessage),
+                          actions: [
+                            TextButton(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                },
+                                child: const Text("Cancel")),
+                          ],
+                        );
+
+                        showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return alert;
+                            });
+                      } else {
+                        ProcessReplacementSurveyResponse(surveys[0]
+                            ["feedbackQuestion"][superIndex]["answer"]);
+                      }
                     } else if ((surveys[0]["surveyId"] !=
                         "ReplacementSurvey")) {
-                      setState(() {
-                        showThankyouMessage = true;
-                        questionIndex = 0;
-                        superIndex = 0;
-                        setNextSurvey(true);
-                      });
+                      if (!GetValidResponses(currentSurvey)) {
+                        AlertDialog alert = AlertDialog(
+                          title: const Text("Alert"),
+                          content: Text(goingForwardMessage),
+                          actions: [
+                            currentSurvey[0]["answerType"].contains("Rating") ||
+                                    (currentSurvey[0]["answerType"].contains(
+                                            "Multimedia/Descriptive") &&
+                                        goingForwardMessage
+                                            .contains("options")) ||
+                                    (currentSurvey[0]["answerType"]
+                                            .contains("Audio/Descriptive") &&
+                                        goingForwardMessage.contains("options"))
+                                ? TextButton(
+                                    onPressed: () {
+                                      setState(() {
+                                        showThankyouMessage = true;
+                                        questionIndex = 0;
+                                        superIndex = 0;
+                                        setNextSurvey(true);
+                                        showSpinner = false;
+                                      });
+                                      Navigator.pop(context);
+                                    },
+                                    child: const Text("Continue"))
+                                : Text(""),
+                            TextButton(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                },
+                                child: const Text("Cancel"))
+                          ],
+                        );
+
+                        showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return alert;
+                            });
+                      } else {
+                        setState(() {
+                          showThankyouMessage = true;
+                          questionIndex = 0;
+                          superIndex = 0;
+                          setNextSurvey(true);
+                          showSpinner = false;
+                        });
+                      }
                     }
                   },
                   style: ButtonStyle(
@@ -2646,6 +2787,19 @@ class _HomePageState extends State<HomePage>
         myProductSelected["productName"], surveyId, isReplacementSurvey));
     print(url);
 
+    for (var i = 0; i < currentSurvey["feedbackQuestion"].length; i++) {
+      var question = currentSurvey["feedbackQuestion"][i];
+      if (question["answerType"] == "Audio/Descriptive" ||
+          question["answerType"] == "Multimedia/Descriptive") {
+        setState(() {
+          currentSurvey["feedbackQuestion"][i]["answer"] =
+              getStringFormatForMultimedia(
+                  currentSurvey["feedbackQuestion"][i]["answer"]);
+        });
+        //print(currentSurvey["feedbackQuestion"][i]["answer"]);
+      }
+    }
+
     var response = await http.post(Uri.parse(url),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
@@ -2783,7 +2937,7 @@ class _HomePageState extends State<HomePage>
       surveys[0]["feedbackQuestion"].add(element);
     }
     setState(() {
-      getBottomButtonSet();
+      getBottomButtonSet(null);
       loadRatingsIsSelected();
     });
   }
@@ -2859,12 +3013,22 @@ class _HomePageState extends State<HomePage>
             height: ApplicationData.screenHeight * .25,
             width: ApplicationData.screenWidth,
             child: AudioRecorder(
-              onStop: (path) {
+              onStop: (path) async {
                 if (kDebugMode) print('Recorded file path: $path');
+
+                setState(() {
+                  showSpinner = true;
+                });
+                var link = await uploadMediaToDrive(path);
+
                 setState(() {
                   surveys[0]["feedbackQuestion"][superIndex]["answer"]
-                      ["audio"] = path.toString();
+                      ["audio"] = "https://drive.google.com/uc?id=$link";
+
+                  showSpinner = false;
                 });
+                print('Recorded file path: ' +
+                    (surveys[0]["feedbackQuestion"][superIndex]["answer"]));
               },
             ),
           ),
@@ -3164,34 +3328,47 @@ class _HomePageState extends State<HomePage>
       debugShowCheckedModeBanner: false,
       home: Camera(
         color: Colors.blueAccent,
-        onImageCaptured: (value) {
+        onImageCaptured: (value) async {
           final String path = value.path;
+          setState(() {
+            ApplicationData.showVideoPlayer = false;
+            showSpinner = true;
+          });
+          var link = await uploadMediaToDrive(path);
           if (path.contains('jpg')) {
             print("Path is $path");
-
             setState(() {
               surveys[0]["feedbackQuestion"][superIndex]["answer"]["image"] =
-                  path;
-              ApplicationData.showVideoPlayer = false;
+                  "https://drive.google.com/uc?id=$link";
+
               showFeedback = true;
+              showSpinner = false;
             });
+            print(surveys[0]["feedbackQuestion"][superIndex]["answer"]);
           } else {
             setState(() {
               ApplicationData.showVideoPlayer = false;
               showFeedback = true;
+              showSpinner = false;
             });
           }
         },
-        onVideoRecorded: (value) {
+        onVideoRecorded: (value) async {
           final path = value.path;
+          setState(() {
+            ApplicationData.showVideoPlayer = false;
+            showSpinner = true;
+          });
           print('::::::::::::::::::::::::;; $path');
-
+          var link = await uploadMediaToDrive(path);
           setState(() {
             surveys[0]["feedbackQuestion"][superIndex]["answer"]["video"] =
-                path;
-            ApplicationData.showVideoPlayer = false;
+                "https://drive.google.com/uc?id=$link";
+
             showFeedback = true;
+            showSpinner = false;
           });
+          print(surveys[0]["feedbackQuestion"][superIndex]["answer"]);
 
           ///Show video preview .mp4
         },
@@ -3237,17 +3414,24 @@ class _HomePageState extends State<HomePage>
       }
     }
     if (!mounted) return;
+
+    setState(() {
+      showSpinner = true;
+    });
+    var link = await uploadMediaToDrive(_paths![0].path.toString());
     setState(() {
       if (_paths != null) {
         if (fileType == "image") {
           surveys[0]["feedbackQuestion"][superIndex]["answer"]["image"] =
-              _paths![0].path.toString();
+              "https://drive.google.com/uc?id=$link";
         } else {
           surveys[0]["feedbackQuestion"][superIndex]["answer"]["video"] =
-              _paths![0].path.toString();
+              "https://drive.google.com/uc?id=$link";
         }
+        showSpinner = false;
       }
     });
+    print("link is " + surveys[0]["feedbackQuestion"][superIndex]["answer"]);
   }
 
   void setAnswerAsValue(String ansType, String value) {
@@ -3315,5 +3499,181 @@ class _HomePageState extends State<HomePage>
           "days", "${myProductSelected['surveyGapDays']} days");
     }
     return thankText;
+  }
+
+  bool GetValidResponses(currentSurvey) {
+    print(currentSurvey);
+    for (var i = 0; i < currentSurvey.length; i++) {
+      if (currentSurvey[i]["answerType"].contains("Rating")) {
+        print("before " + currentSurvey[i]["answer"]);
+        if (currentSurvey[i]["answer"] == "1") {
+          setState(() {
+            goingForwardMessage = "For one or more rating, your response is "
+                "same as default value. Are you sure you wish to continue ?";
+          });
+
+          return false;
+        }
+      }
+      if (currentSurvey[i]["answerType"].contains("Yes")) {
+        if (currentSurvey[i]["answer"] == "") {
+          setState(() {
+            goingForwardMessage =
+                "A response is needed to continue, select any one for Yes or No";
+          });
+
+          return false;
+        }
+      }
+
+      if (currentSurvey[i]["answerType"].contains("Multimedia/Descriptive")) {
+        if (currentSurvey[i]["answer"]["text"] == "" &&
+            currentSurvey[i]["answer"]["image"] == "" &&
+            currentSurvey[i]["answer"]["audio"] == "" &&
+            currentSurvey[i]["answer"]["video"] == "") {
+          setState(() {
+            goingForwardMessage =
+                "A response is needed to continue, you can record audio/video, upload pic "
+                " and give detailed problem.";
+          });
+
+          return false;
+        } else if (currentSurvey[i]["answer"]["text"] == "" ||
+            currentSurvey[i]["answer"]["image"] == "" ||
+            currentSurvey[i]["answer"]["audio"] == "" ||
+            currentSurvey[i]["answer"]["video"] == "") {
+          setState(() {
+            goingForwardMessage =
+                "You have not used all given options to response, you can record audio/video, upload pic "
+                " and give detailed problem. Are you sure you want to continue? ";
+          });
+
+          return false;
+        }
+      }
+      if (currentSurvey[i]["answerType"].contains("Audio/Descriptive")) {
+        if (currentSurvey[i]["answer"]["text"] == "" &&
+            currentSurvey[i]["answer"]["audio"] == "") {
+          setState(() {
+            goingForwardMessage =
+                "A response is needed to continue, you can record audio or state detailed problem.";
+          });
+
+          return false;
+        } else if (currentSurvey[i]["answer"]["text"] == "" ||
+            currentSurvey[i]["answer"]["audio"] == "") {
+          setState(() {
+            goingForwardMessage =
+                "You have not used all given options to response, you can record audio and state detailed problem. Are you sure you want to continue? ";
+          });
+
+          return false;
+        }
+      }
+    }
+
+    return true;
+  }
+
+  Future<AuthClient> obtainAuthenticatedClient() async {
+    final accountCredentials = ServiceAccountCredentials.fromJson({
+      "private_key_id": "fb11ed5a9d0b9dd255657950da6c7e631551d745",
+      "private_key":
+          "-----BEGIN PRIVATE KEY-----\nMIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQDlY9wkERKvIfVJ\ne2Rz3mC0FmIkzsYb/HGcYXKBOM57s3aezgCjmYyDtQEpPn25Dy0cmGYsDUZu0YDB\n52aSBbEH3zISSVKAk2iWPdHgb+JGwfFfLIxYT5Gg03M6JrB+3N8v7Rb6Yu47h6gJ\n1Ttw8/KCWxkBW4eNDXPgAEwIDcFJaXkPlraQ9Wy6vGll/KIWnnwt79epAPzWJys8\nqevH5IqkGUy3bi0Cu5pgq8abdceSaUfgMJ7OkyDQhu0n9sbdpBc6BMP44U+w3sn0\nRwCXSCF13M/sG/oWNcZUxaPWguviJ1O0ILUdnWwNwcwW+bi1pItufpJIIzDFAOBT\ns6Wnz5YfAgMBAAECggEAIvCVR8/AlyPGrHz6ra9x7rGjcf8mK9Ma1vqnf0lQzNoR\nYlpMZ0mXHo9Dxa16vDpfNlt8Nzovv+dyA5b53O9i/1Oe2Swz6y5eICxQZdgvkMmF\nDhMcrsLdPVrtJ9lcHtFeaXq6ekRMDI3lftdCKOVEy1g8NHm66YrisHw7GIBH2voc\n3RQtYUZ3zE3mjpQ30neUFvbNN1x0tgJJKL7S99sfXg0ttNDJ/pNhd6ylTvRTTxey\nsG/vIUv5TqrTu2qK0n2keu9YjiOOfgXdTf2M6OBOZbFCyejCY0wJTz2ksu9IX0zt\neAwxg07TxoMQWQNS89wEphgbi2QD6DKCCLu4UB6e+QKBgQD+zWLia9jKzA1duYBx\nBmMNl0MCX3kZjr8gGjpXLZKn6VqCaZZeDE06TmzLJiZisonkv8fxGPWCT0IBkQib\nY0vi7h/km7bsV6IuO9W5dqW7Yhu7r/seXwOenUJsk5oKgtC1Y9y96NlUvDdkU3u1\nHnmLa20H4KV+KIUdC3iu7AqV2wKBgQDmd+Tl1CC74fivdUJraiAzEaoM35/FMZC0\nP1arTG7IPfDzO/A8d59h4dMk6UvQZQF5tUXAj7WSz7TKvYCdkrIXgfNDmVf8gSyo\nNHVXReiXazR2R/QxkOwX/TnsUcsBFtk10W615nqu/BYH0GRGi7JcK3dT3GtT+YFj\n6wzV03wODQKBgQCA2HMMc+SoiA6qOkeM3+Hu2XJ1HLosBlb3cMvXkZ/7cLDoCWSU\nIjxbI5U4FQ6MEiRQm/oLHMfpIRMLn79udAPHuQo/m84gLSBBqNgmdKzR2IaVniOp\n8/nslzEjnm/iqMvJLbpN/hUIGDUacmy35bUonyX/OcX1yZ+mVEquiYXAyQKBgQDV\nG1gVDKmYEcOauprIKEHN9y9+5+kctlBP26GQlAR8NIpw36OsxhAiumY7Y14vPLa4\ni94LyNblAhryvXgIPHVhN1Bx2YF6gxeAEcHPCV2hZggEt1Qd4RvussC0vI0yXKZN\nFXOBz7TxyTe10gRnFxW+FJMqgE7eP4BdnCMqNXwooQKBgQD3mpWfOwiJvP9tjvRf\nvk467QBypAS1szi0gJJCw7ZhFhGvfwcQLD/OG1253F+obzW0bajjR/cYb7FRY+tv\nBXSc4RaExXRPyzAGFMjSXDJ4SpVQHg1YrCP9lpt7PXcIx8ZHRdJIgH0lnoEPqD7G\nrBUoo5DmU4hSjmtT/VjEVib0dQ==\n-----END PRIVATE KEY-----\n",
+      "client_email": "unige-369@subtle-signal-357112.iam.gserviceaccount.com",
+      "client_id": "110071210451244334789",
+      "type": "service_account"
+    });
+    var scopes = [drive.DriveApi.driveFileScope];
+
+    AuthClient client =
+        await clientViaServiceAccount(accountCredentials, scopes);
+
+    print("client is $client");
+    return client; // Remember to close the client when you are finished with it.
+  }
+
+  Future<String> uploadMediaToDrive(path) async {
+    File file = File(path);
+    final client = await obtainAuthenticatedClient();
+
+    try {
+      final driveApi = drive.DriveApi(client);
+
+      // Create a file on Google Drive
+      final driveFile = drive.File()
+        ..name = 'example_image.jpg'
+        ..parents = ['116UnsCfRtRQp4ABdmqspsnI6WH4VQrUb'];
+
+      final uploadedFile = await driveApi.files.create(driveFile,
+          uploadMedia: drive.Media(file.openRead(), file.lengthSync()));
+
+      print('Image uploaded successfully. File ID: ${uploadedFile.id}');
+      print("start waiting 5secs");
+      await Future.delayed(Duration(seconds: 3));
+      print("wait ends");
+      // Add view permission for anyone with the link
+      final permission = drive.Permission()
+        ..role = 'reader'
+        ..type = 'anyone';
+
+      return uploadedFile.id.toString();
+    } catch (error, stackTrace) {
+      print('Error uploading image: $error');
+      print('Stack trace: $stackTrace');
+      return '';
+    } finally {
+      client.close();
+    }
+  }
+
+  Future<String?> getShareableLink(String fileId) async {
+    final client = await obtainAuthenticatedClient();
+
+    try {
+      final driveApi = drive.DriveApi(client);
+      final file = await driveApi.files.get(fileId) as drive.File;
+
+      print(file.permissions);
+      // Check if the file is accessible to anyone with the link
+      if (file.permissions != null) {
+        final linkPermission = file.permissions!.firstWhere(
+          (permission) =>
+              permission.role == 'reader' && permission.type == 'anyone',
+          orElse: () => drive.Permission(),
+        );
+
+        if (linkPermission.id != null) {
+          // Construct the shareable link
+          final shareableLink =
+              'https://drive.google.com/uc?id=${file.id}&export=download';
+          return shareableLink;
+        }
+      }
+
+      print('File is not accessible with a shareable link.');
+      return null;
+    } catch (error, stackTrace) {
+      print('Error getting shareable link: $error');
+      print('Stack trace: $stackTrace');
+      return null;
+    } finally {
+      client.close();
+    }
+  }
+
+  getStringFormatForMultimedia(survey) {
+    print('survey["text"] - ' + survey["text"]);
+    print('survey["image"] - ' + survey["image"]);
+    print('survey["audio"] - ' + survey["audio"]);
+    print('survey["video"] - ' + survey["video"]);
+    return "text - " +
+        survey["text"] +
+        ",image - " +
+        survey["image"] +
+        ",audio - " +
+        survey["audio"] +
+        ",video - " +
+        survey["video"];
   }
 }
