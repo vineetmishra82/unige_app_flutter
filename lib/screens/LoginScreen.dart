@@ -41,22 +41,17 @@ class _LoginScreenState extends State<LoginScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
                 const SizedBox(
-                  height: 35.0,
+                  height: 48.0,
                 ),
                 Hero(
                   tag: 'logo',
-                  child: ClipOval(
-                    child: SizedBox.fromSize(
-                      size: Size.fromRadius(80), // Image radius
-                      child: Image.asset(
-                        'images/logo.png',
-                        fit: BoxFit.scaleDown,
-                      ),
-                    ),
+                  child: SizedBox(
+                    height: 100.0,
+                    child: Image.asset('images/logo.png'),
                   ),
                 ),
                 const SizedBox(
-                  height: 20.0,
+                  height: 100.0,
                 ),
                 Padding(
                   padding: const EdgeInsets.all(0),
@@ -131,7 +126,6 @@ class _LoginScreenState extends State<LoginScreen> {
                           elevation: 5.0,
                           child: MaterialButton(
                             onPressed: () async {
-                              print(Colors.blue);
                               showSpinner = true;
                               if (LoginScreen.mobile.isNotEmpty) {
                                 setState(() {});

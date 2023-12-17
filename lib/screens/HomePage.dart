@@ -15,14 +15,10 @@ import 'package:modal_progress_hud_nsn/modal_progress_hud_nsn.dart';
 import 'package:record/record.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:toggle_switch/toggle_switch.dart';
-import 'package:unige_app/Other_data/VideoPlayer.dart';
 import 'package:unige_app/screens/ApplicationData.dart';
 import 'package:unige_app/screens/LoginScreen.dart';
-import 'package:unige_app/screens/trySupport.dart';
 
 import '../Other_data/Apis.dart';
-import '../Other_data/AudioRecorder.dart';
-import '../Other_data/Camera.dart';
 
 class HomePage extends StatefulWidget {
   static String id = "HomePage";
