@@ -51,7 +51,14 @@ class _HomePageState extends State<HomePage>
       goingForwardMessage = "";
 
   var myProductSelected;
-  String? productSelected, month, year, type, minutes, seconds, fileType;
+  String? productSelected,
+      month,
+      year,
+      type,
+      minutes,
+      seconds,
+      fileType,
+      dropdownResponse;
   int superIndex = 0;
   var products = <String>[];
   var productsObjects = [];
@@ -452,7 +459,7 @@ class _HomePageState extends State<HomePage>
             padding: const EdgeInsets.only(right: 20),
             child: Column(
               children: [
-                DataTable(columns: const [
+                DataTable(columnSpacing: 40, columns: const [
                   DataColumn(
                     label: Text(
                       "",
@@ -465,10 +472,13 @@ class _HomePageState extends State<HomePage>
                   for (var product in myProducts)
                     if (product["active"] == true)
                       DataRow(cells: [
-                        DataCell(Text(
-                          product["productName"],
-                          style: GoogleFonts.courierPrime(
-                              fontSize: 14, color: Color(0xff184B2A)),
+                        DataCell(Container(
+                          width: 100,
+                          child: Text(
+                            product["productName"],
+                            style: GoogleFonts.courierPrime(
+                                fontSize: 14, color: Color(0xff184B2A)),
+                          ),
                         )),
                         if (product["active"] == true)
                           checkForActiveFeedbackAndGetDataCell(product),
@@ -551,7 +561,6 @@ class _HomePageState extends State<HomePage>
                             onChanged: (String? newValue) {
                               setState(() {
                                 productSelected = newValue!;
-
                                 loadFeaturesListForSelectedProduct();
                               });
                             },
@@ -1654,81 +1663,105 @@ class _HomePageState extends State<HomePage>
           ),
         ],
       );
-      // try {
-      //   getRatingsArray(answerType, index);
-      //   var responses = responseArray;
-      //
-      //   surveys[0]["feedbackQuestion"][index]["answer"] =
-      //       surveys[0]["feedbackQuestion"][index]["answer"] == ""
-      //           ? ""
-      //           : surveys[0]["feedbackQuestion"][index]["answer"];
-      //
-      //   return Center(
-      //       child: Column(
-      //     mainAxisSize: MainAxisSize.min,
-      //     mainAxisAlignment: MainAxisAlignment.center,
-      //     children: [
-      //       const SizedBox(
-      //         height: 15.0,
-      //       ),
-      //       Row(
-      //         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      //         crossAxisAlignment: CrossAxisAlignment.center,
-      //         children: [
-      //           for (int i = 0; i < responses.length; i++)
-      //             InkWell(
-      //               onTap: (() {
-      //                 setState(() {
-      //                   for (int j = 0; j < isSelected[index]!.length; j++) {
-      //                     isSelected[index]![j] = j == i;
-      //                     surveys[0]["feedbackQuestion"][index]["answer"] =
-      //                         i.toString();
-      //                   }
-      //                 });
-      //               }),
-      //               child: SizedBox(
-      //                 width: getWidth(
-      //                     responses[i],
-      //                     GoogleFonts.roboto(
-      //                         fontWeight: FontWeight.bold,
-      //                         fontSize: 12.0,
-      //                         color: color)),
-      //                 child: Text(responses[i],
-      //                     style: GoogleFonts.roboto(
-      //                         fontWeight: FontWeight.bold,
-      //                         fontSize: 12.0,
-      //                         color: surveys[0]["feedbackQuestion"][index]
-      //                                     ["answer"] ==
-      //                                 i.toString()
-      //                             ? Colors.green
-      //                             : Colors.orange)),
-      //               ),
-      //             ),
-      //           const SizedBox(
-      //             height: 25,
-      //           )
-      //         ],
-      //       )
-      //     ],
-      //   ));
-      // } on Exception catch (_) {
-      //   print(
-      //       "Exception index - $index Current isSelected[index] - ${isSelected[index]} responses - $responseArray");
-      // } catch (error) {
-      //   print(
-      //       "Exception index - $index Current isSelected[index] - ${isSelected[index]} responses - $responseArray");
-      // }
-    }
+    } else if (answerType.contains("NumberBox")) {
+      surveys[0]["feedbackQuestion"][index]["answer"] =
+          surveys[0]["feedbackQuestion"][index]["answer"] == ""
+              ? 0
+              : surveys[0]["feedbackQuestion"][index]["answer"];
 
-    // for (int i = 0; i < responses.length; i++)
-    //   Text(
-    //     responses[i],
-    //     style: GoogleFonts.roboto(
-    //         fontWeight: FontWeight.bold,
-    //         fontSize: 12.0,
-    //         color: Colors.orange),
-    //     maxLines: 2,
-    //   ),
+      return Padding(
+        padding: const EdgeInsets.only(left: 30, right: 30, top: 30),
+        child: Center(
+          child: TextField(
+            onChanged: (value) {
+              surveys[0]["feedbackQuestion"][index]["answer"] = value;
+            },
+            style: const TextStyle(
+              color: Colors.black54,
+              fontSize: 18.0,
+            ),
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(32.0)),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderSide:
+                    BorderSide(color: Colors.lightBlueAccent, width: 2.0),
+                borderRadius: BorderRadius.all(Radius.circular(32.0)),
+              ),
+              labelText: "Enter Number",
+              labelStyle: TextStyle(
+                color: Colors.blue,
+                fontSize: 18.0,
+              ),
+              floatingLabelBehavior: FloatingLabelBehavior.always,
+              contentPadding:
+                  EdgeInsets.symmetric(vertical: 10.0, horizontal: 80.0),
+            ),
+          ),
+        ),
+      );
+    } else if (answerType.contains("Dropdown")) {
+      surveys[0]["feedbackQuestion"][index]["answer"] =
+          surveys[0]["feedbackQuestion"][index]["answer"] == ""
+              ? ""
+              : surveys[0]["feedbackQuestion"][index]["answer"];
+
+      var dropDowns = <String>[];
+      var values = <String>[];
+      values = answerType.split("-");
+
+      for (var item in values) {
+        if (item != "Dropdown") {
+          dropDowns.add(item);
+        }
+      }
+      return Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            DropdownButton(
+              style: GoogleFonts.arimaMadurai(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w900,
+                  color: const Color(0xff3AB7A6)),
+              icon: const Icon(Icons.keyboard_arrow_down),
+              iconSize: 24,
+              iconEnabledColor: Color(0xff3AB7A6),
+              disabledHint: null,
+              hint: Text(
+                "Select Response",
+                style: GoogleFonts.arimaMadurai(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                    color: Color(0xff3AB7A6)),
+              ),
+              items: dropDowns.map((String item) {
+                return DropdownMenuItem(
+                  value: item,
+                  child: Text(
+                    item,
+                    style: const TextStyle(
+                      fontSize: 18,
+                    ),
+                  ),
+                );
+              }).toList(),
+              onChanged: (String? newValue) {
+                setState(() {
+                  dropdownResponse = newValue!;
+                  surveys[0]["feedbackQuestion"][index]["answer"] =
+                      dropdownResponse;
+                });
+              },
+              value: dropdownResponse,
+            ),
+          ],
+        ),
+      );
+    }
 
     return Container();
   }
@@ -2431,7 +2464,7 @@ class _HomePageState extends State<HomePage>
                               fontWeight: FontWeight.bold,
                               color: Color(0xffB7673A)),
                         )),
-                        DataColumn(
+                        const DataColumn(
                             label: Text(
                           "",
                           style: TextStyle(
@@ -2439,7 +2472,7 @@ class _HomePageState extends State<HomePage>
                               fontWeight: FontWeight.bold,
                               fontSize: 14.0),
                         )),
-                        DataColumn(
+                        const DataColumn(
                             label: Text(
                           "",
                           style: TextStyle(
@@ -2451,10 +2484,13 @@ class _HomePageState extends State<HomePage>
                       rows: [
                         for (var product in myProducts)
                           DataRow(cells: [
-                            DataCell(Text(
-                              product["productName"].toString(),
-                              style: GoogleFonts.courierPrime(
-                                  fontSize: 15, color: Color(0xff184B2A)),
+                            DataCell(Container(
+                              width: 100,
+                              child: Text(
+                                product["productName"].toString(),
+                                style: GoogleFonts.courierPrime(
+                                    fontSize: 15, color: Color(0xff184B2A)),
+                              ),
                             )),
                             DataCell(Text(
                               product["features"]["Purchase Date"].toString(),
