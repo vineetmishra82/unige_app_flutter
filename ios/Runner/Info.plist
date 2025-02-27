@@ -4,12 +4,6 @@
 <dict>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
-	<key>NSMicrophoneUsageDescription</key>
-<string>We need access to your microphone for recording audio.</string>
-	<key>NSCameraUsageDescription</key>
-<string>We need access to your camera to capture photos and videos.</string>
-<key>NSFileProviderDomainUsageDescription</key>
-<string>We need access to your files to save and retrieve data.</string>
 	<key>CFBundleDisplayName</key>
 	<string>Unige App Flutter</string>
 	<key>CFBundleExecutable</key>
@@ -47,8 +41,6 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
-	<key>UIViewControllerBasedStatusBarAppearance</key>
-	<false/>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>

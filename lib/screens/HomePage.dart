@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-
+import 'dart:math';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
@@ -12,13 +12,22 @@ import 'package:googleapis/drive/v3.dart' as drive;
 import 'package:googleapis_auth/auth_io.dart';
 import 'package:http/http.dart' as http;
 import 'package:modal_progress_hud_nsn/modal_progress_hud_nsn.dart';
+import 'package:month_picker_dialog/month_picker_dialog.dart';
 import 'package:record/record.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:toggle_switch/toggle_switch.dart';
 import 'package:unige_app/screens/ApplicationData.dart';
 import 'package:unige_app/screens/LoginScreen.dart';
+import 'package:url_launcher/url_launcher.dart';
+
 
 import '../Other_data/Apis.dart';
+import '../Other_data/AudioPlayer.dart';
+import '../Other_data/AudioRecorder.dart';
+import '../Other_data/Camera.dart';
+import '../Other_data/VideoPlayer.dart';
+import 'EVLandingPage.dart';
+import 'LandingPage.dart';
 
 class HomePage extends StatefulWidget {
   static String id = "HomePage";
@@ -36,7 +45,8 @@ class _HomePageState extends State<HomePage>
       showSpinnerMyProfile = false,
       showSpinnerMyProducts = false;
   Color color = Colors.orange;
-  final recorder = Record();
+  final recorder = Record;
+ 
 
   String name = "",
       email = "",
@@ -47,14 +57,7 @@ class _HomePageState extends State<HomePage>
       goingForwardMessage = "";
 
   var myProductSelected;
-  String? productSelected,
-      month,
-      year,
-      type,
-      minutes,
-      seconds,
-      fileType,
-      dropdownResponse;
+  String? productSelected, month, year, type, minutes, seconds, fileType;
   int superIndex = 0;
   var products = <String>[];
   var productsObjects = [];
@@ -94,6 +97,8 @@ class _HomePageState extends State<HomePage>
       showAudioPlayer = false,
       showCamera = false;
 
+  int urlId = 1;
+
   bool showTitleLineNow = true;
   late TabController tabController;
   Map<int, List<bool>> isSelected = {};
@@ -101,11 +106,14 @@ class _HomePageState extends State<HomePage>
   late Size size;
   int _recordDuration = 0;
   Timer? _timer;
-  final _audioRecorder = Record();
+  final _audioRecorder = Record;
 
   bool goToHome = false;
 
   bool isRecording = false;
+
+  //Navigation icon sizes
+  double leftWidth = 40,leftHeight=40,rightWidth = 40, rightHeight=40;
 
   @override
   void initState() {
@@ -143,26 +151,21 @@ class _HomePageState extends State<HomePage>
           length: 3,
           initialIndex: 0,
           child: Scaffold(
-            backgroundColor: Colors.white,
+           backgroundColor: Colors.white,
             appBar: PreferredSize(
-              preferredSize: Size.fromHeight(size.height * .15),
+              preferredSize: Size.fromHeight(size.height * .08),
               child: SafeArea(
                 child: AppBar(
                   backgroundColor: Colors.white,
-                  toolbarHeight: 100,
+                  toolbarHeight: 50,
                   title: Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      Hero(
-                        tag: 'logo',
-                        child: ClipOval(
-                          child: SizedBox.fromSize(
-                            size: Size.fromRadius(80), // Image radius
-                            child: Image.asset(
-                              'images/logo.png',
-                              fit: BoxFit.scaleDown,
-                            ),
-                          ),
+                      ClipOval(
+                        child: Image.asset(
+                          'images/logo.png',
+                          height: 50,
+                          width: size.width * 0.4,// Ensures proper scaling
                         ),
                       ),
                       InkWell(
@@ -184,39 +187,6 @@ class _HomePageState extends State<HomePage>
                       ),
                     ],
                   ),
-                  bottom: TabBar(
-                    controller: tabController,
-                    unselectedLabelColor: Colors.redAccent,
-                    labelStyle: GoogleFonts.roboto(fontSize: 15),
-                    indicatorSize: TabBarIndicatorSize.tab,
-                    indicator: BoxDecoration(
-                        gradient: LinearGradient(
-                            colors: [Colors.redAccent, Colors.orangeAccent]),
-                        borderRadius: BorderRadius.circular(50),
-                        color: Colors.redAccent),
-                    tabs: [
-                      Tab(
-                        child: Align(
-                          child: Text(
-                            "My Products",
-                          ),
-                          alignment: Alignment.center,
-                        ),
-                      ),
-                      Tab(
-                        child: Text(
-                          "My Feedback",
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                      Tab(
-                        child: Text(
-                          "My Profile",
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    ],
-                  ),
                 ),
               ),
             ),
@@ -228,6 +198,34 @@ class _HomePageState extends State<HomePage>
                   MyProductsPage(context),
                   MyFeedback(context),
                   MyProfile(context)
+                ],
+              ),
+            ),
+            bottomNavigationBar: Container(
+              color: const Color(0xff003060),
+              child: TabBar(
+                controller: tabController,
+                labelStyle: GoogleFonts.roboto(fontSize: MediaQuery.textScalerOf(context).scale(14)),
+                indicatorSize: TabBarIndicatorSize.tab,
+                tabs: [
+                  Tab(
+                    child: Align(
+                      alignment: Alignment.center,
+                      child: Image.asset("images/myProducts.png"),
+                    ),
+                  ),
+                  Tab(
+                    child: Align(
+                      alignment: Alignment.center,
+                      child: Image.asset("images/myFeedback.png"),
+                    ),
+                  ),
+                  Tab(
+                    child: Align(
+                      alignment: Alignment.center,
+                      child: Image.asset("images/myProfile.png"),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -254,18 +252,47 @@ class _HomePageState extends State<HomePage>
       child: ModalProgressHUD(
         inAsyncCall: showSpinnerMyProfile,
         child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text(
-                "Profile details",
-                style: GoogleFonts.ebGaramond(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.deepPurple),
+              Container(
+                width: double.infinity, // Full width (end-to-end)
+                height: 15, // Line weight (thickness)
+                color: Color(0xFF2296F3), // Line color
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    width: 20,
+                  ),
+                  Text(
+                    "Settings",
+                    style: GoogleFonts.poppins(
+                      fontSize: MediaQuery.textScalerOf(context).scale(25),
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xff003060),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(
-                height: 50.0,
+                height: 20.0,
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    "Profile details",
+                    style: GoogleFonts.poppins(
+                      fontSize: MediaQuery.textScalerOf(context).scale(15),
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xff003060)),
+                  ),
+                ],
+              ),
+              const SizedBox(
+                height: 20.0,
               ),
               Padding(
                 padding: EdgeInsets.only(left: 20),
@@ -275,15 +302,14 @@ class _HomePageState extends State<HomePage>
                   children: [
                     Image.asset(
                       'images/profile.png',
-                      height: 60.0,
+                      height: 40.0,
                     ),
                     SizedBox(width: 20),
                     Text(
-                      "$name",
-                      style: GoogleFonts.robotoCondensed(
-                        fontSize: 25,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.orange,
+                      name,
+                      style: GoogleFonts.poppins(
+                          fontSize: MediaQuery.textScalerOf(context).scale(18),
+                          color: Color(0xff003060),
                       ),
                     ),
                   ],
@@ -300,17 +326,16 @@ class _HomePageState extends State<HomePage>
                   children: [
                     Image.asset(
                       'images/mobile.png',
-                      height: 60.0,
+                      height: 40.0,
                     ),
                     SizedBox(
                       width: 20,
                     ),
                     Text(
-                      "$mobile",
-                      style: GoogleFonts.robotoCondensed(
-                        fontSize: 25,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.orange,
+                      "+$mobile",
+                      style: GoogleFonts.poppins(
+                        fontSize: MediaQuery.textScalerOf(context).scale(18),
+                        color: Color(0xff003060),
                       ),
                     ),
                   ],
@@ -327,17 +352,16 @@ class _HomePageState extends State<HomePage>
                   children: [
                     Image.asset(
                       'images/email.png',
-                      height: 60.0,
+                      height: 40.0,
                     ),
                     SizedBox(
                       width: 20,
                     ),
                     Text(
-                      "$email",
-                      style: GoogleFonts.robotoCondensed(
-                        fontSize: 25,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.orange,
+                      email,
+                      style: GoogleFonts.poppins(
+                        fontSize: MediaQuery.textScalerOf(context).scale(18),
+                        color: Color(0xff003060),
                       ),
                     ),
                   ],
@@ -345,16 +369,157 @@ class _HomePageState extends State<HomePage>
               ),
               const SizedBox(
                 height: 28.0,
-              )
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    "About QualTrack",
+                    style: GoogleFonts.poppins(
+                        fontSize: MediaQuery.textScalerOf(context).scale(15),
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xff003060)),
+                  ),
+
+                ],
+              ),
+              const SizedBox(
+                height: 20.0,
+              ),
+              GestureDetector(
+                onTap: (){
+                  Navigator.push(  context,
+                      MaterialPageRoute(builder: (context) => LandingPageDetail()));
+                },
+                child: Padding(
+                  padding: EdgeInsets.only(left: 20),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Image.asset(
+                        'images/info.png',
+                        height: 40.0,
+                      ),
+                      SizedBox(width: 20),
+                      Text(
+                        "About Us",
+                        style: GoogleFonts.poppins(
+                          fontSize: MediaQuery.textScalerOf(context).scale(18),
+                          color: Color(0xff003060),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(
+                height: 20.0,
+              ),
+              GestureDetector(
+                onTap: (){
+                  setState(() {
+                    urlId = 1;
+                  });
+                  _launchUrl();
+                },
+                child: Padding(
+                  padding: EdgeInsets.only(left: 20),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Image.asset(
+                        'images/question.png',
+                        height: 40.0,
+                      ),
+                      SizedBox(width: 20),
+                      Text(
+                        "Frequently Asked Questions",
+                        style: GoogleFonts.poppins(
+                          fontSize: MediaQuery.textScalerOf(context).scale(18),
+                          color: Color(0xff003060),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(
+                height: 20.0,
+              ),
+              GestureDetector(
+                onTap: (){
+                  setState(() {
+                    urlId = 2;
+                  });
+                  _launchUrl();
+                },
+                child: Padding(
+                  padding: EdgeInsets.only(left: 20),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Image.asset(
+                        'images/dataPrivacy.png',
+                        height: 40.0,
+                      ),
+                      SizedBox(width: 20),
+                      Text(
+                        "Data Privacy",
+                        style: GoogleFonts.poppins(
+                          fontSize: MediaQuery.textScalerOf(context).scale(18),
+                          color: Color(0xff003060),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(
+                height: 20.0,
+              ),
+              GestureDetector(
+                onTap: (){
+                  setState(() {
+                    urlId = 3;
+                  });
+                  _launchUrl();
+                },
+                child: Padding(
+                  padding: EdgeInsets.only(left: 20),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Image.asset(
+                        'images/feedback.png',
+                        height: 40.0,
+                      ),
+                      SizedBox(width: 20),
+                      Text(
+                        "Help Us Improve",
+                        style: GoogleFonts.poppins(
+                          fontSize: MediaQuery.textScalerOf(context).scale(18),
+                          color: Color(0xff003060),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ]),
       ),
     );
   }
 
   getUserDetails() async {
-    String mobile = ApplicationData.mobile;
 
-    if (mobile.isNotEmpty) {
+    String mobile = ApplicationData.mobile;
+    print("Getting user details as condition is ${mobile.isNotEmpty && (name.isEmpty || email.isEmpty)}");
+    if (name.isEmpty || email.isEmpty) {
+
       setState(() {
         showSpinnerMyProfile = true;
       });
@@ -362,17 +527,21 @@ class _HomePageState extends State<HomePage>
       var url = Uri.parse(Apis.getUser(mobile));
       var response = await http.get(url);
 
+      Map<String, dynamic> values = json.decode(response.body);
+
       setState(() {
+        name = values["name"];
+        email = values["email"];
         showSpinnerMyProfile = false;
       });
 
-      Map<String, dynamic> values = json.decode(response.body);
-      name = values["name"];
-      email = values["email"];
     }
+
+
   }
 
   Future<void> loadProducts() async {
+    print("before loading products is $products");
     setState(() {
       showSpinnerMyProducts = true;
     });
@@ -385,17 +554,17 @@ class _HomePageState extends State<HomePage>
         products.add(productsObjects[i]["productName"].toString());
       }
     }
-
+    print("after loading products is $products");
     // productSelected = products[0];
     setState(() {
-      //  productSelected = products[0];
+      products = products.toSet().toList(); // ✅ Ensure uniqueness
 
       showSpinnerMyProducts = false;
     });
   }
 
   MyFeedback(BuildContext context) {
-    if (showThankyouMessage) {
+   if (showThankyouMessage) {
       return Padding(
         padding: const EdgeInsets.all(10.0),
         child: (Column(
@@ -404,7 +573,7 @@ class _HomePageState extends State<HomePage>
           children: [
             Text(
               processThankYouText(surveys[0]["thankYouText"]),
-              style: const TextStyle(fontSize: 18, color: Colors.pink),
+              style: TextStyle(fontSize: MediaQuery.textScalerOf(context).scale(18), color: Colors.pink),
             ),
             Material(
               color: Colors.blue,
@@ -425,9 +594,9 @@ class _HomePageState extends State<HomePage>
                 },
                 minWidth: 50.0,
                 height: 32.0,
-                child: const Text(
+                child: Text(
                   'Continue',
-                  style: TextStyle(fontSize: 14),
+                  style: TextStyle(fontSize: MediaQuery.textScalerOf(context).scale(14)),
                 ),
               ),
             ),
@@ -451,42 +620,108 @@ class _HomePageState extends State<HomePage>
       return ModalProgressHUD(
         inAsyncCall: showSpinner,
         child: SingleChildScrollView(
+          physics: BouncingScrollPhysics(),
           child: Padding(
             padding: const EdgeInsets.only(right: 20),
             child: Column(
               children: [
-                DataTable(columnSpacing: 40, columns: const [
-                  DataColumn(
-                    label: Text(
-                      "",
-                      style: TextStyle(fontSize: 12.0, color: Colors.red),
+                SizedBox(
+                  height: 30,
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Text(
+                      "My Feedback",
+                      style: GoogleFonts.poppins(
+                          fontSize: MediaQuery.textScalerOf(context).scale(25),
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xff003060)),
+                    ),
+
+                  ],
+                ),
+                const SizedBox(
+                  height: 10.0,
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Text("In this section, you can check the status of your feedback or report a recent issue."
+                    "\nTo submit an unusual report, simply click on the report icon."
+                    ,style: GoogleFonts.poppins(
+                      color: Color(0xff003060),
+                      fontSize: MediaQuery.textScalerOf(context).scale(14),
                     ),
                   ),
-                  DataColumn(label: Text("")),
-                  DataColumn(label: Text(""))
-                ], rows: [
-                  for (var product in myProducts)
-                    if (product["active"] == true)
-                      DataRow(cells: [
-                        DataCell(Container(
-                          width: 100,
-                          child: Text(
-                            product["productName"],
-                            style: GoogleFonts.courierPrime(
-                                fontSize: 14, color: Color(0xff184B2A)),
-                          ),
-                        )),
-                        if (product["active"] == true)
-                          checkForActiveFeedbackAndGetDataCell(product),
-                        if (product["active"] == true)
-                          SetDefectReportAndGetDataCell(product),
-                      ])
-                ])
+                ),
+                // Header Row
+               SizedBox(
+                 height: 10,
+               ),
+                // Product Rows
+                Column(
+                  children: [
+                    for (var product in myProducts)
+                      if (product["active"] == true)
+                        Column(
+                          children: [
+                            Container(
+                              color: Color(0xff003060),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  // Product Name
+                                  Expanded(
+                                    flex: 2,
+                                    child: SizedBox(
+                                      width: 100, // Ensure proper width for wrapping
+                                      child: Text(
+                                        product["productName"],
+                                        style: GoogleFonts.poppins(
+                                          fontSize: MediaQuery.textScalerOf(context).scale(11),
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                        ),
+                                        softWrap: true, // Enable text wrapping
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    width: 10,
+                                  ),
+
+                                  // Check for Active Feedback
+                                  if (product["active"] == true)
+                                    Expanded(
+                                      flex: 1,
+                                      child: SetDefectReportAndGetWidget(product),
+                                    ),
+                                  SizedBox(
+                                    width: 5,
+                                  ),
+
+                                  // Defect Report
+                                  if (product["active"] == true)
+                                    Expanded(
+                                      flex: 1,
+                                      child: checkForActiveFeedbackAndGetWidget(product),
+                                    ),
+                                ],
+                              ),
+                            ),
+                            SizedBox(
+                              height: 10,
+                            ) // Divider between rows
+                          ],
+                        ),
+                  ],
+                ),
               ],
             ),
           ),
         ),
       );
+
     }
   }
 
@@ -496,21 +731,21 @@ class _HomePageState extends State<HomePage>
         body: ModalProgressHUD(
           inAsyncCall: showSpinnerRegisterProduct,
           child: SingleChildScrollView(
+            physics: BouncingScrollPhysics(),
             child: Column(children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 20),
-                child: Column(
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.only(left: size.width * .6),
-                      child: Material(
+              Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Material(
                         child: ElevatedButton(
                             style: const ButtonStyle(
                               backgroundColor:
                                   MaterialStatePropertyAll(Colors.white),
                             ),
                             child: const Icon(Icons.home,
-                                size: 35, color: Colors.deepPurpleAccent),
+                                size: 35, color: Colors.blue),
                             onPressed: () {
                               setState(() {
                                 showRegistrationPage = false;
@@ -519,54 +754,88 @@ class _HomePageState extends State<HomePage>
                               });
                             }),
                       ),
-                    ),
-                    const SizedBox(
-                      height: 20.0,
-                    ),
-                    SingleChildScrollView(
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          DropdownButton(
-                            style: GoogleFonts.arimaMadurai(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w900,
-                                color: const Color(0xff3AB7A6)),
-                            icon: const Icon(Icons.keyboard_arrow_down),
-                            iconSize: 24,
-                            iconEnabledColor: Color(0xff3AB7A6),
-                            disabledHint: null,
-                            hint: Text(
-                              "Select Category",
-                              style: GoogleFonts.arimaMadurai(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w900,
-                                  color: Color(0xff3AB7A6)),
+                    ],
+                  ),
+                  const SizedBox(
+                    height: 20.0,
+                  ),
+                  SingleChildScrollView(
+                    physics: BouncingScrollPhysics(),
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            SizedBox(
+                            width: 55,
                             ),
-                            items: products.map((String prod) {
-                              return DropdownMenuItem(
-                                value: prod,
-                                child: Text(
-                                  prod,
-                                  style: const TextStyle(
-                                    fontSize: 18,
-                                  ),
-                                ),
-                              );
-                            }).toList(),
-                            onChanged: (String? newValue) {
-                              setState(() {
-                                productSelected = newValue!;
-                                loadFeaturesListForSelectedProduct();
-                              });
-                            },
-                            value: productSelected,
+                            Text("Product",style: GoogleFonts.poppins(
+                              color: Color(0xff003060),
+                                fontSize: MediaQuery.textScalerOf(context).scale(16),
+                                fontWeight: FontWeight.bold
+                            ),)
+                          ],
+                        ),
+                        Container(
+                          width: 300,
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.black, width: 1), // Black thin border
+                            borderRadius: BorderRadius.circular(6), // Slightly rounded corners
                           ),
-                        ],
-                      ),
+                          padding: EdgeInsets.symmetric(horizontal: 10, vertical: 1), // Padding inside the box
+                          child: DropdownButtonHideUnderline( // Removes the default underline
+                            child: DropdownButton<String>(
+                              isExpanded: true, // ✅ Prevents UI overflow
+                              style: GoogleFonts.poppins(
+                                fontSize: MediaQuery.textScalerOf(context).scale(15),
+                                color: const Color(0xff003060),
+                              ),
+                              icon: const Icon(Icons.keyboard_arrow_down),
+                              iconSize: 24,
+                              iconEnabledColor: Color(0xff3AB7A6),
+
+                              hint: Text(
+                                "Please Select",
+                                style: GoogleFonts.poppins(
+                                  fontSize: MediaQuery.textScalerOf(context).scale(15),
+                                  color: Color(0xff003060),
+                                ),
+                              ),
+
+                              // ✅ Ensure non-null and unique list
+                              items: (products.isEmpty
+                                  ? ["Loading..."]
+                                  : products.toSet().toList()) // ✅ Ensure uniqueness
+                                  .map((String prod) {
+                                return DropdownMenuItem(
+                                  value: prod,
+                                  child: Text(
+                                    prod,
+                                    style: GoogleFonts.poppins(
+                                      fontSize: MediaQuery.textScalerOf(context).scale(15),
+                                      color: Color(0xff003060),
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+
+                              onChanged: (String? newValue) {
+                                setState(() {
+                                  productSelected = newValue;
+                                  loadFeaturesListForSelectedProduct();
+                                });
+                              },
+
+                              // ✅ Only set `productSelected` if it's in the list
+                              value: products.contains(productSelected) ? productSelected : null,
+                            ),
+
+                          ),
+                        )
+
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
               generateFeaturesList(),
             ]),
@@ -590,103 +859,182 @@ class _HomePageState extends State<HomePage>
           Padding(
               padding: const EdgeInsets.symmetric(horizontal: 50.0),
               child: Material(
-                color: Colors.blue,
-                borderRadius: const BorderRadius.all(Radius.circular(30.0)),
+                color: Color(0xff003060),
+                borderRadius: const BorderRadius.all(Radius.circular(8.0)),
                 elevation: 5.0,
                 child: MaterialButton(
                   onPressed: () async {
                     if (allRegisterFieldsOk()) {
                       AlertDialog alert = AlertDialog(
-                        title: const Text("Confirm"),
-                        content: const Text(
-                            "Please check all fields before registering your product. You will not"
-                            " be able to change it later.\n\n Do you wish to register the product ?"),
+                        backgroundColor: Colors.blue,
+                        title: Text("Confirm"),
+                        content: Text(
+                          "Please check all fields before registering your product. You will not"
+                              " be able to change it later.\n\n Do you wish to register the product ?",
+                          style: GoogleFonts.poppins(),
+                        ),
                         actions: [
-                          TextButton(
-                              onPressed: () async {
-                                Navigator.pop(context);
-                                setState(() {
-                                  showSpinnerRegisterProduct = true;
-                                });
-                                var url = Uri.parse(Apis.registerProduct(
-                                    productSelected.toString(), mobile));
-                                print(url);
-                                print(jsonEncode(featureList));
-                                var response = await http.post(url,
-                                    headers: <String, String>{
-                                      'Content-Type':
-                                          'application/json; charset=UTF-8',
-                                    },
-                                    body: jsonEncode(featureList));
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly, // Space buttons evenly
+                            children: [
+                              GestureDetector(
+                                onTap: () async {
+                                  Navigator.pop(context);
+                                  setState(() {
+                                    showSpinnerRegisterProduct = true;
+                                  });
+                                  var url = Uri.parse(Apis.registerProduct(
+                                      productSelected.toString(), mobile));
+                                  print(url);
+                                  print(jsonEncode(featureList));
+                                  var response = await http.post(url,
+                                      headers: <String, String>{
+                                        'Content-Type': 'application/json; charset=UTF-8',
+                                      },
+                                      body: jsonEncode(featureList));
 
-                                if (response.body == "true") {
-                                  await loadMyProducts();
-                                  if (isFirstRegistration) {
-                                    //After first registry, QS1 should start for that product
-                                    var prodName = "$productSelected-" +
-                                        featureList["Brand"];
-                                    setState(() {
-                                      myProductSelected = getProduct(prodName);
-                                      print(
-                                          "myProductSelected is$myProductSelected");
-                                      //setBrand(myProductSelected);
-                                      startSurveyProcess(myProductSelected[
-                                          "currentMainSurvey"]);
-                                      isDefectSurvey = false;
-                                      isFirstRegistration = false;
-                                    });
-                                  } else {
-                                    setState(() {
-                                      showThankyouMessage = false;
-                                      showFeedback = false;
-                                      showRegistrationPage = false;
-                                    });
-                                  }
+                                  if (response.body == "true") {
+                                    await loadMyProducts();
+                                    var prodName = "$productSelected-" + featureList["Brand"];
+                                    bool isElectricTwoWheeler = productSelected.toString().toLowerCase().contains("electric two".toLowerCase());
+                                    if (isFirstRegistration) {
+                                      setState(() {
+                                        myProductSelected = getProduct(prodName);
+                                        print("myProductSelected is $myProductSelected");
+                                        if (!isElectricTwoWheeler) {
+                                          startSurveyProcess(myProductSelected["currentMainSurvey"]);
+                                          isDefectSurvey = false;
+                                          isFirstRegistration = false;
+                                        }
 
-                                  AlertDialog alert = AlertDialog(
-                                    title: const Text("Success"),
-                                    content: Text(
-                                        "Thank you for registering your ${productSelected.toString().toLowerCase()}"),
-                                    actions: [
-                                      TextButton(
-                                          onPressed: () {
+                                      });
+                                    } else {
+                                      setState(() {
+                                        showThankyouMessage = false;
+                                        showFeedback = false;
+                                        showRegistrationPage = false;
+                                      });
+                                    }
+
+                                    AlertDialog successAlert = AlertDialog(
+                                      backgroundColor: Colors.blue, // ✅ Set background color
+                                      title: Text(
+                                        "Success",
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white, // ✅ Title text color
+                                        ),
+                                      ),
+                                      content: Text(
+                                        "Thank you for registering your ${productSelected.toString().toLowerCase()}",
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 16,
+                                          color: Colors.white, // ✅ Content text color
+                                        ),
+                                      ),
+                                      actions: [
+                                        GestureDetector(
+                                          onTap: () async {
                                             setState(() {
                                               month = null;
                                               year = null;
                                             });
+
                                             tabController.animateTo(1);
                                             Navigator.pop(context);
-                                          },
-                                          child: const Text("Continue"))
-                                    ],
-                                  );
 
-                                  showDialog(
-                                      context: context,
-                                      builder: (BuildContext context) {
-                                        return alert;
-                                      });
-                                  setState(() {
-                                    showSpinnerRegisterProduct = false;
-                                  });
-                                } else {
-                                  // getPopUpToContinue(
-                                  //     "Error",
-                                  //     "Could not register product, try again !",
-                                  //     "Continue");
-                                  setState(() {
-                                    showSpinner = false;
-                                  });
-                                }
-                              },
-                              child: const Text("Register")),
-                          TextButton(
-                              onPressed: () {
-                                Navigator.pop(context);
-                              },
-                              child: const Text("Cancel"))
+                                            if (isElectricTwoWheeler) {
+                                              final result = await Navigator.push(
+                                                context,
+                                                MaterialPageRoute(builder: (context) => const EVLandingPage()),
+                                              );
+
+                                              if (result == true && isFirstRegistration) {
+                                                setState(() {
+                                                  startSurveyProcess(myProductSelected["currentMainSurvey"]);
+                                                  isDefectSurvey = false;
+                                                  isFirstRegistration = false;
+                                                });
+                                              }
+                                            }
+                                          },
+                                          child: Container(
+                                            padding: EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                                            decoration: BoxDecoration(
+                                              color: Color(0xff003060), // ✅ Button color
+                                              borderRadius: BorderRadius.circular(20), // ✅ Rounded corners
+                                            ),
+                                            child: Text(
+                                              "Continue",
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.white, // ✅ Button text color
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    );
+
+
+                                    showDialog(
+                                        context: context,
+                                        builder: (BuildContext context) {
+                                          return successAlert;
+                                        });
+
+                                    setState(() {
+                                      showSpinnerRegisterProduct = false;
+                                    });
+                                  } else {
+                                    setState(() {
+                                      showSpinner = false;
+                                    });
+                                  }
+                                },
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                                  decoration: BoxDecoration(
+                                    color: Color(0xff003060), // Button color
+                                    borderRadius: BorderRadius.circular(20), // Rounded corners
+                                  ),
+                                  child: Text(
+                                    "Register",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              GestureDetector(
+                                onTap: () {
+                                  Navigator.pop(context);
+                                },
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                                  decoration: BoxDecoration(
+                                    color: Color(0xff003060), // Button color
+                                    borderRadius: BorderRadius.circular(20), // Rounded corners
+                                  ),
+                                  child: Text(
+                                    "Cancel",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ],
                       );
+
 
                       showDialog(
                           context: context,
@@ -695,15 +1043,15 @@ class _HomePageState extends State<HomePage>
                           });
                     } else {
                       AlertDialog alert = AlertDialog(
-                        title: const Text("Error"),
+                        title: Text("Error"),
                         content:
-                            const Text("All fields are mandatory to register!"),
+                            Text("All fields are mandatory to register!"),
                         actions: [
                           TextButton(
                               onPressed: () {
                                 Navigator.pop(context);
                               },
-                              child: const Text("Back"))
+                              child: Text("Back"))
                         ],
                       );
 
@@ -715,10 +1063,10 @@ class _HomePageState extends State<HomePage>
                     }
                   },
                   minWidth: 200.0,
-                  height: 42.0,
-                  child: const Text(
+                  height: 52.0,
+                  child: Text(
                     'Register',
-                    style: TextStyle(fontSize: 18, color: Colors.red),
+                    style: TextStyle(fontSize: MediaQuery.textScalerOf(context).scale(18), color: Colors.white),
                   ),
                 ),
               ))
@@ -726,10 +1074,10 @@ class _HomePageState extends State<HomePage>
       );
     }
     if (products.length <= 0) {
-      return Column(mainAxisAlignment: MainAxisAlignment.end, children: const [
+      return Column(mainAxisAlignment: MainAxisAlignment.end, children:  [
         Text(
           "No values to input",
-          style: TextStyle(color: Colors.red, fontSize: 18),
+          style: TextStyle(color: Colors.red, fontSize: MediaQuery.textScalerOf(context).scale(18)),
         ),
       ]);
     }
@@ -813,9 +1161,10 @@ class _HomePageState extends State<HomePage>
 
       if (surveys.isEmpty) {
         return Container(
-          child: const Text(
+          color: Color(0xff003060),
+          child: Text(
             "No pending feedback~~",
-            style: TextStyle(color: Colors.red, fontSize: 18),
+            style: GoogleFonts.poppins(color: Colors.white, fontSize: MediaQuery.textScalerOf(context).scale(14)),
           ),
         );
       }
@@ -826,10 +1175,10 @@ class _HomePageState extends State<HomePage>
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                const Text(
+               Text(
                   "You have a pending feedback.",
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: MediaQuery.textScalerOf(context).scale(14),
                     color: Colors.blue,
                   ),
                 ),
@@ -841,9 +1190,9 @@ class _HomePageState extends State<HomePage>
                     onPressed: () async {},
                     minWidth: 50.0,
                     height: 32.0,
-                    child: const Text(
+                    child: Text(
                       'Start Feedback',
-                      style: TextStyle(fontSize: 14),
+                      style: TextStyle(fontSize: MediaQuery.textScalerOf(context).scale(14)),
                     ),
                   ),
                 ),
@@ -874,9 +1223,9 @@ class _HomePageState extends State<HomePage>
 
       if (surveys.isEmpty) {
         return Container(
-          child: const Text(
+          child: Text(
             "No pending feedback",
-            style: TextStyle(color: Colors.red, fontSize: 18),
+            style: TextStyle(color: Colors.red, fontSize: MediaQuery.textScalerOf(context).scale(18)),
           ),
         );
       }
@@ -895,9 +1244,9 @@ class _HomePageState extends State<HomePage>
                     onPressed: () async {},
                     minWidth: 50.0,
                     height: 32.0,
-                    child: const Text(
+                    child: Text(
                       'Start Defect Reporting',
-                      style: TextStyle(fontSize: 14),
+                      style: TextStyle(fontSize: MediaQuery.textScalerOf(context).scale(14)),
                     ),
                   ),
                 ),
@@ -914,183 +1263,280 @@ class _HomePageState extends State<HomePage>
 
   getChildOfFeaturesList(int i) {
     if (featureList.keys.elementAt(i).toString().contains("Purchase Date")) {
-      featureList[featureList.keys.elementAt(i)] = "$month-$year";
-      return Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+     String selectedMonthYear = "MM-YY";
+      return Column(
         children: [
-          Text(
-            "Month & Year of Purchase",
-            style: GoogleFonts.titilliumWeb(
-                fontSize: 18, color: Color(0xff673AB7)),
-          ),
-          DropdownButton(
-            style: const TextStyle(
-              color: Colors.blue,
-            ),
-            icon: const Icon(Icons.keyboard_arrow_down),
-            iconSize: 18,
-            iconEnabledColor: Colors.red,
-            hint: Text(
-              "MM",
-              style: GoogleFonts.titilliumWeb(
-                  fontSize: 17, color: Color(0xff673AB7)),
-            ),
-            items: months.map((String prod) {
-              return DropdownMenuItem(
-                value: prod,
-                child: Text(
-                  prod,
-                  style: GoogleFonts.titilliumWeb(
-                      fontSize: 17, color: Color(0xff673AB7)),
+          Row(
+            children: [
+              SizedBox(width: 55),
+              Text(
+                featureList.keys.elementAt(i),
+                style: GoogleFonts.poppins(
+                  color: Color(0xff003060),
+                  fontSize: MediaQuery.textScalerOf(context).scale(16),
+                  fontWeight: FontWeight.bold,
                 ),
-              );
-            }).toList(),
-            onChanged: (String? newValue) {
-              setState(() {
-                month = newValue!;
-              });
-              featureList[featureList.keys.elementAt(i)] = "$month-$year";
-            },
-            value: month,
+              ),
+            ],
           ),
-          DropdownButton(
-            style: GoogleFonts.titilliumWeb(
-                fontSize: 17, color: Color(0xff673AB7)),
-            icon: const Icon(Icons.keyboard_arrow_down),
-            iconSize: 18,
-            iconEnabledColor: Colors.red,
-            hint: Text(
-              "YY",
-              style: GoogleFonts.titilliumWeb(
-                  fontSize: 18, color: Color(0xff673AB7)),
-            ),
-            items: years.map<DropdownMenuItem<String>>((String prod) {
-              return DropdownMenuItem(
-                value: prod,
-                child: Text(
-                  prod,
-                  style: const TextStyle(fontSize: 18),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 54.0),
+            child: GestureDetector(
+              onTap: () {
+                _pickMonthYear(context,i,selectedMonthYear); // Open Month-Year Picker when tapped
+              },
+              child: Container(
+                width: double.infinity,
+                padding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Color(0xff003060), width: 1.0),
+                  borderRadius: BorderRadius.circular(5.0),
                 ),
-              );
-            }).toList(),
-            onChanged: (String? newValue) {
-              setState(() {
-                year = newValue!;
-                getMonths();
-              });
-              featureList[featureList.keys.elementAt(i)] = "$month-$year";
-            },
-            value: year,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      featureList[featureList.keys.elementAt(i)]=="" ?  "Select Date" : featureList[featureList.keys.elementAt(i)], // Display selected month-year
+                      style: GoogleFonts.poppins(
+                        fontSize: MediaQuery.textScalerOf(context).scale(15),
+                        color: Color(0xff003060),
+                      ),
+                    ),
+                    Icon(Icons.calendar_today, color: Color(0xff003060), size: 20), // Calendar Icon
+                  ],
+                ),
+              ),
+            ),
           ),
         ],
       );
     } else if (featureList.keys.elementAt(i).toString().contains("Price")) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 54.0),
-        child: GestureDetector(
-          onTap: () {
-            print('Clicked outside');
-            FocusScope.of(context).unfocus();
-          },
-          child: TextField(
-            keyboardType: TextInputType.number,
-            onChanged: (value) {
-              featureList[featureList.keys.elementAt(i)] = value;
-            },
-            style: const TextStyle(color: Colors.brown),
-            decoration: InputDecoration(
-              enabled: true,
-              labelText: featureList.keys.elementAt(i),
-              labelStyle: GoogleFonts.titilliumWeb(
-                  fontSize: 24, color: Color(0xff673AB7)),
-              floatingLabelBehavior: FloatingLabelBehavior.always,
-              contentPadding:
-                  const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
-              border: const OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(32.0)),
+      return Column(
+        children: [
+          Row(
+            children: [
+              SizedBox(
+                width: 55,
               ),
-              enabledBorder: const OutlineInputBorder(
-                borderSide: BorderSide(color: Color(0xff673AB7), width: 2.0),
-                borderRadius: BorderRadius.all(Radius.circular(32.0)),
+              Text(featureList.keys.elementAt(i),style: GoogleFonts.poppins(
+                  color: Color(0xff003060),
+                  fontSize: MediaQuery.textScalerOf(context).scale(16),
+                  fontWeight: FontWeight.bold
+              ),),
+            ],
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 54.0),
+            child: GestureDetector(
+              onTap: () {
+                print('Clicked outside');
+                FocusScope.of(context).unfocus();
+              },
+              child: TextField(
+                keyboardType: TextInputType.number,
+                onChanged: (value) {
+                  featureList[featureList.keys.elementAt(i)] = value;
+                },
+                style:
+                GoogleFonts.poppins(fontSize: MediaQuery.textScalerOf(context).scale(15), color: Color(0xff003060)),
+                decoration: InputDecoration(
+                  enabled: true,
+                  contentPadding:
+                  const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+                  border: const OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(5.0)),
+                  ),
+                  enabledBorder: const OutlineInputBorder(
+                    borderSide: BorderSide(color: Color(0xff003060), width: 1.0),
+                    borderRadius: BorderRadius.all(Radius.circular(5.0)),
+                  ),
+                ),
               ),
             ),
           ),
-        ),
+        ],
       );
     } else if (featureList.keys
         .elementAt(i)
         .toString()
         .contains("Purchase Type")) {
-      return Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      return Column(
         children: [
-          DropdownButton(
-            style: GoogleFonts.titilliumWeb(
-                fontSize: 24, color: Color(0xff673AB7)),
-            icon: const Icon(Icons.keyboard_arrow_down),
-            hint: Text(
-              "Purchase Type",
-              style: GoogleFonts.titilliumWeb(
-                  fontSize: 18, color: Color(0xff673AB7)),
-            ),
-            iconSize: 18,
-            iconEnabledColor: Color(0xff673AB7),
-            items: ['New Product', 'Used Product'].map((String prod) {
-              return DropdownMenuItem(
-                value: prod,
-                child: Text(
-                  prod,
-                  style: GoogleFonts.titilliumWeb(
-                      fontSize: 17, color: Color(0xff673AB7)),
-                ),
-              );
-            }).toList(),
-            onChanged: (String? newValue) {
-              setState(() {
-                type = newValue!;
-              });
-              featureList[featureList.keys.elementAt(i)] = type;
-            },
-            value: type,
+          Row(
+            children: [
+              SizedBox(
+                width: 55,
+              ),
+              Text("Purchase Type",style: GoogleFonts.poppins(
+                  color: Color(0xff003060),
+                  fontSize: MediaQuery.textScalerOf(context).scale(16),
+                  fontWeight: FontWeight.bold
+              ),)
+            ],
           ),
+          Container(
+            width: 300,
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.black, width: 1), // Black thin border
+              borderRadius: BorderRadius.circular(6), // Slightly rounded corners
+            ),
+            padding: EdgeInsets.symmetric(horizontal: 10, vertical: 1), // Padding inside the box
+            child: DropdownButtonHideUnderline( // Removes the default underline
+              child: DropdownButton(
+                style: GoogleFonts.poppins(
+                  fontSize: MediaQuery.textScalerOf(context).scale(16),
+                  color: const Color(0xff003060),
+                ),
+                icon: const Icon(Icons.keyboard_arrow_down),
+                iconSize: 24,
+                iconEnabledColor: Color(0xff003060),
+                hint: Text(
+                  "Please Select",
+                  style: GoogleFonts.poppins(
+                    fontSize: MediaQuery.textScalerOf(context).scale(15),
+                    color: Color(0xff003060),
+                  ),
+                ),
+                items: ['New Product', 'Used Product'].map((String prod) {
+                  return DropdownMenuItem(
+                    value: prod,
+                    child: Text(
+                      prod,
+                      style: GoogleFonts.poppins(
+                          fontSize: MediaQuery.textScalerOf(context).scale(15), color: Color(0xff003060)),
+                    ),
+                  );
+                }).toList(),
+                onChanged: (String? newValue) {
+                  setState(() {
+                    type = newValue!;
+                  });
+                  featureList[featureList.keys.elementAt(i)] = type;
+                },
+                value: type,
+              ),
+            ),
+          ),
+
+
         ],
       );
     }
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 54.0),
-      child: GestureDetector(
-        onTap: () {
-          print('Clicked outside');
-          FocusScope.of(context).unfocus();
-        },
-        child: TextField(
-          keyboardType: TextInputType.text,
-          onChanged: (value) {
-            featureList[featureList.keys.elementAt(i)] = value;
-          },
-          style:
-              GoogleFonts.titilliumWeb(fontSize: 24, color: Color(0xff673AB7)),
-          decoration: InputDecoration(
-            enabled: true,
-            labelText: featureList.keys.elementAt(i),
-            labelStyle: GoogleFonts.titilliumWeb(
-                fontSize: 24, color: Color(0xff673AB7)),
-            floatingLabelBehavior: FloatingLabelBehavior.always,
-            contentPadding:
-                const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
-            border: const OutlineInputBorder(
-              borderRadius: BorderRadius.all(Radius.circular(32.0)),
+    return Column(
+      children: [
+        Column(
+          children: [
+            Row(
+              children: [
+                SizedBox(
+                  width: 55,
+                ),
+                Text(featureList.keys.elementAt(i),style: GoogleFonts.poppins(
+                    color: Color(0xff003060),
+                    fontSize: MediaQuery.textScalerOf(context).scale(16),
+                    fontWeight: FontWeight.bold
+                ),),
+              ],
             ),
-            enabledBorder: const OutlineInputBorder(
-              borderSide: BorderSide(color: Color(0xff673AB7), width: 2.0),
-              borderRadius: BorderRadius.all(Radius.circular(32.0)),
+
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 54.0),
+              child: GestureDetector(
+                onTap: () {
+                  print('Clicked outside');
+                  FocusScope.of(context).unfocus();
+                },
+                child: TextField(
+                  keyboardType: TextInputType.text,
+                  onChanged: (value) {
+                    featureList[featureList.keys.elementAt(i)] = value;
+                  },
+                  style:
+                      GoogleFonts.poppins(fontSize: MediaQuery.textScalerOf(context).scale(14), color: Color(0xff003060)),
+                  decoration: InputDecoration(
+                    enabled: true,
+                  contentPadding:
+                        const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+                    border: const OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(5.0)),
+                    ),
+                    enabledBorder: const OutlineInputBorder(
+                      borderSide: BorderSide(color: Color(0xff003060), width: 1.0),
+                      borderRadius: BorderRadius.all(Radius.circular(5.0)),
+                    ),
+                  ),
+                ),
+              ),
             ),
-          ),
+          ],
         ),
-      ),
+      ],
     );
   }
+
+  void _pickMonthYear(BuildContext context, int i,String selectedMonthYear) {
+    showMonthPicker(
+      context: context,
+      firstDate: DateTime(2000), // Earliest year selectable
+      lastDate: DateTime(2100), // Latest year selectable
+      initialDate: DateTime.now(), // Default selected date
+    ).then((date) {
+      if (date != null) {
+        setState(() {
+          selectedMonthYear = formatMonthYear(date.month, date.year);
+          featureList[featureList.keys.elementAt(i)] = selectedMonthYear; // Store selected value
+        });
+      }
+    });
+  }
+
+  String formatMonthYear(int month, int year) {
+    String monthName;
+
+    switch (month) {
+      case 1:
+        monthName = "Jan";
+        break;
+      case 2:
+        monthName = "Feb";
+        break;
+      case 3:
+        monthName = "Mar";
+        break;
+      case 4:
+        monthName = "Apr";
+        break;
+      case 5:
+        monthName = "May";
+        break;
+      case 6:
+        monthName = "Jun";
+        break;
+      case 7:
+        monthName = "Jul";
+        break;
+      case 8:
+        monthName = "Aug";
+        break;
+      case 9:
+        monthName = "Sep";
+        break;
+      case 10:
+        monthName = "Oct";
+        break;
+      case 11:
+        monthName = "Nov";
+        break;
+      case 12:
+        monthName = "Dec";
+        break;
+      default:
+        monthName = "Invalid";
+    }
+
+    return "$monthName $year";
+  }
+
 
   List<String> getYears() {
     final currentYear = DateTime.parse(DateTime.now().toString());
@@ -1145,6 +1591,9 @@ class _HomePageState extends State<HomePage>
     String questionTitle = surveys[0]["feedbackQuestion"][questionIndex]
             ["questionTitle"]
         .toString();
+
+    String answerType =
+        surveys[0]["feedbackQuestion"][questionIndex]["answerType"];
     endIndex = 0;
     for (int i = 0; i < surveys[0]["feedbackQuestion"].length; i++) {
       String mst =
@@ -1153,6 +1602,9 @@ class _HomePageState extends State<HomePage>
 
       String qst =
           surveys[0]["feedbackQuestion"][i]["questionTitle"].toString();
+
+      String ansType =
+          surveys[0]["feedbackQuestion"][i]["answerType"].toString();
 
       if (mst == mainScreenTitle && ttl == titleLine && qst == questionTitle) {
         currentSurvey.add(surveys[0]["feedbackQuestion"][i]);
@@ -1165,16 +1617,17 @@ class _HomePageState extends State<HomePage>
     questionIndex = startIndex;
 
     return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Padding(
           padding: const EdgeInsets.all(10.0),
           child: Container(
             child: Text(
               surveys[0]["feedbackQuestion"][questionIndex]["mainScreentitle"],
-              style: GoogleFonts.ebGaramond(
-                  fontSize: 28,
+              style: GoogleFonts.poppins(
+                  fontSize: MediaQuery.textScalerOf(context).scale(26),
                   fontWeight: FontWeight.bold,
-                  color: Colors.deepPurple),
+                  color: Color(0xff003060)),
             ),
           ),
         ),
@@ -1201,10 +1654,9 @@ class _HomePageState extends State<HomePage>
                 processQuestion(surveys[0]["feedbackQuestion"][questionIndex]
                     ["questionTitle"]),
                 overflow: TextOverflow.clip,
-                style: GoogleFonts.robotoCondensed(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.brown,
+                style: GoogleFonts.poppins(
+                  fontSize: MediaQuery.textScalerOf(context).scale(16),
+                  color: Color(0xff003060),
                 ),
               ),
             ),
@@ -1224,10 +1676,9 @@ class _HomePageState extends State<HomePage>
                   child: Text(
                     processQuestion(currentSurvey[i]["question"]),
                     overflow: TextOverflow.clip,
-                    style: GoogleFonts.robotoCondensed(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.redAccent),
+                    style: GoogleFonts.poppins(
+                        fontSize: MediaQuery.textScalerOf(context).scale(16),
+                        color: Color(0xff003060)),
                   ),
                 ),
               ],
@@ -1277,7 +1728,7 @@ class _HomePageState extends State<HomePage>
           ToggleSwitch(
             minWidth: 90.0,
             minHeight: 40.0,
-            fontSize: 15.0,
+            fontSize: MediaQuery.textScalerOf(context).scale(15),
             initialLabelIndex:
                 surveys[0]["feedbackQuestion"][index]["answer"] == ""
                     ? -1
@@ -1291,13 +1742,20 @@ class _HomePageState extends State<HomePage>
             radiusStyle: true,
             labels: responses,
             onToggle: (index1) {
-              surveys[0]["feedbackQuestion"][index]["answer"] =
-                  responses[index1!];
+              setState(() {
+                var intResponse = responses[index1!];
+                surveys[0]["feedbackQuestion"][index]["answer"] = intResponse;
+                print("yesNo - " +
+                    surveys[0]["feedbackQuestion"][index]["answer"]);
+                print(surveys[0]["feedbackQuestion"][index]);
+                print(" for index - " + index.toString());
+              });
 
               if (surveys[0]["feedbackQuestion"][questionIndex]["question"] ==
                   "I complained to the manufacturer/retailer") {
                 print("questionIndex is $questionIndex");
-                updateCurrentSurveyWithComplaintStatus(responses[index1]);
+                updateCurrentSurveyWithComplaintStatus(
+                    surveys[0]["feedbackQuestion"][index]["answer"]);
               }
             },
           ),
@@ -1339,9 +1797,9 @@ class _HomePageState extends State<HomePage>
                   }
                 });
               },
-              style: const TextStyle(
+              style: TextStyle(
                 color: Colors.black54,
-                fontSize: 14.0,
+                fontSize: MediaQuery.textScalerOf(context).scale(14),
               ),
               decoration: const InputDecoration(
                 enabled: true,
@@ -1365,7 +1823,7 @@ class _HomePageState extends State<HomePage>
               children: [
                 Text(
                   "${getWordCount(surveys[0]["feedbackQuestion"][index]["answer"])}/10",
-                  style: const TextStyle(color: Colors.red),
+                  style: TextStyle(color: Colors.red),
                 )
               ],
             ),
@@ -1397,21 +1855,26 @@ class _HomePageState extends State<HomePage>
                   }
                 });
               },
-              style: const TextStyle(
-                color: Colors.black54,
-                fontSize: 14.0,
+              style: GoogleFonts.poppins(
+                color: Color(0xff003060),
+                fontSize: MediaQuery.textScalerOf(context).scale(14),
               ),
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 enabled: true,
                 floatingLabelBehavior: FloatingLabelBehavior.always,
                 contentPadding:
-                    EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
-                border: OutlineInputBorder(
+                    const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+                border: const OutlineInputBorder(
                   borderRadius: BorderRadius.all(Radius.circular(0.0)),
                 ),
-                enabledBorder: OutlineInputBorder(
+                enabledBorder: const OutlineInputBorder(
                   borderSide:
                       BorderSide(color: Colors.lightBlueAccent, width: 2.0),
+                ),
+                hintText: "Enter details of the issue...", // ✅ Converted label to hint text
+                hintStyle: GoogleFonts.poppins(
+                  fontSize: MediaQuery.textScalerOf(context).scale(14),
+                  color: const Color(0xff003060), // ✅ Same color as styled input
                 ),
               ),
             ),
@@ -1423,7 +1886,7 @@ class _HomePageState extends State<HomePage>
               children: [
                 Text(
                   "${getWordCount(surveys[0]["feedbackQuestion"][index]["answer"]["text"])}/100",
-                  style: const TextStyle(color: Colors.red),
+                  style: TextStyle(color: Colors.red),
                 )
               ],
             ),
@@ -1441,7 +1904,7 @@ class _HomePageState extends State<HomePage>
                 child: Image.asset(
                   'images/mic.png',
                   height: 40.0,
-                  color: Colors.teal,
+
                 ),
               ),
               InkResponse(
@@ -1458,20 +1921,20 @@ class _HomePageState extends State<HomePage>
                 child: Image.asset(
                   'images/camera.png',
                   height: 40.0,
-                  color: Colors.teal,
+                 
                 ),
               ),
               InkResponse(
                 onTap: (() {
                   AlertDialog alert = AlertDialog(
-                    title: const Text("Select Upload type"),
+                    title: Text("Select Upload type"),
                     content: StatefulBuilder(
                       builder: (BuildContext context, _setState) {
                         return Column(
                           children: [
                             Builder(builder: (context) {
                               return RadioListTile(
-                                title: const Text("Image file"),
+                                title: Text("Image file"),
                                 value: "image",
                                 groupValue: fileType,
                                 onChanged: (value) {
@@ -1485,7 +1948,7 @@ class _HomePageState extends State<HomePage>
                             }),
                             Builder(builder: (context) {
                               return RadioListTile(
-                                title: const Text("Video File"),
+                                title: Text("Video File"),
                                 value: "video",
                                 groupValue: fileType,
                                 onChanged: (value) {
@@ -1505,12 +1968,12 @@ class _HomePageState extends State<HomePage>
                             Navigator.pop(context);
                             _pickFiles(fileType);
                           },
-                          child: const Text("Continue")),
+                          child: Text("Continue")),
                       TextButton(
                           onPressed: () {
                             Navigator.pop(context);
                           },
-                          child: const Text("Cancel"))
+                          child: Text("Cancel"))
                     ],
                   );
 
@@ -1520,7 +1983,7 @@ class _HomePageState extends State<HomePage>
                         return alert;
                       });
                 }),
-                child: const Icon(Icons.upload_file),
+                child: Image.asset("images/upload.png",height: 30 ,),
               )
             ],
           ),
@@ -1552,11 +2015,11 @@ class _HomePageState extends State<HomePage>
                   }
                 });
               },
-              style: const TextStyle(
-                color: Colors.black54,
-                fontSize: 14.0,
+              style: TextStyle(
+                color: Color(0xff003060),
+                fontSize: MediaQuery.textScalerOf(context).scale(14),
               ),
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 enabled: true,
                 floatingLabelBehavior: FloatingLabelBehavior.always,
                 contentPadding:
@@ -1568,6 +2031,11 @@ class _HomePageState extends State<HomePage>
                   borderSide:
                       BorderSide(color: Colors.lightBlueAccent, width: 2.0),
                 ),
+                hintText: "Enter details of the issue...", // ✅ Converted label to hint text
+                hintStyle: GoogleFonts.poppins(
+                  fontSize: MediaQuery.textScalerOf(context).scale(14),
+                  color: const Color(0xff003060), // ✅ Same color as styled input
+                ),
               ),
             ),
           ),
@@ -1578,7 +2046,7 @@ class _HomePageState extends State<HomePage>
               children: [
                 Text(
                   "${getWordCount(surveys[0]["feedbackQuestion"][index]["answer"]["text"])}/100",
-                  style: const TextStyle(color: Colors.red),
+                  style: TextStyle(color: Colors.red),
                 )
               ],
             ),
@@ -1597,7 +2065,7 @@ class _HomePageState extends State<HomePage>
                 child: Image.asset(
                   'images/mic.png',
                   height: 40.0,
-                  color: Colors.teal,
+                 
                 ),
               ),
             ],
@@ -1616,26 +2084,7 @@ class _HomePageState extends State<HomePage>
 
       return Column(
         children: [
-          Padding(
-            padding: EdgeInsets.only(left: 20.0, top: 10, right: 20, bottom: 0),
-            child: Row(
-              children: [
-                Text(
-                  responseArray[0],
-                  style: GoogleFonts.roboto(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 15.0,
-                      color: Colors.red),
-                ),
-                const Spacer(),
-                Text(responseArray[responseArray.length - 1],
-                    style: GoogleFonts.roboto(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 15.0,
-                        color: Colors.deepPurple))
-              ],
-            ),
-          ),
+         getRowOfEndPoints(),
           Slider(
             thumbColor: Colors.blue,
             activeColor: Colors.green,
@@ -1660,48 +2109,53 @@ class _HomePageState extends State<HomePage>
         ],
       );
     } else if (answerType.contains("NumberBox")) {
-      surveys[0]["feedbackQuestion"][index]["answer"] =
-          surveys[0]["feedbackQuestion"][index]["answer"] == ""
-              ? 0
-              : surveys[0]["feedbackQuestion"][index]["answer"];
-
+      TextEditingController textController = TextEditingController();
       return Padding(
-        padding: const EdgeInsets.only(left: 30, right: 30, top: 30),
+        padding: EdgeInsets.only(left: 50, right: 50, top: 10),
         child: Center(
-          child: TextField(
+          child: TextFormField(
+            initialValue: surveys[0]["feedbackQuestion"][index]["answer"],
             onChanged: (value) {
-              surveys[0]["feedbackQuestion"][index]["answer"] = value;
+              setState(() {
+                textController.text = value.toString();
+                surveys[0]["feedbackQuestion"][index]["answer"] =
+                    value.toString();
+                print("after change - "
+                        "surveys[0]['feedbackQuestion'][index]['answer'] - " +
+                    surveys[0]["feedbackQuestion"][index]["answer"]);
+              });
             },
-            style: const TextStyle(
-              color: Colors.black54,
-              fontSize: 18.0,
+            style: GoogleFonts.poppins(
+              fontSize: MediaQuery.textScalerOf(context).scale(14),
+              color: const Color(0xff003060), // ✅ Updated text color
             ),
             keyboardType: TextInputType.number,
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(32.0)),
+            decoration: InputDecoration(
+              hintText: "Enter Number", // ✅ Converted label to hint text
+              hintStyle: GoogleFonts.poppins(
+                fontSize: MediaQuery.textScalerOf(context).scale(14),
+                color: const Color(0xff003060), // ✅ Same color as styled input
               ),
-              enabledBorder: OutlineInputBorder(
-                borderSide:
-                    BorderSide(color: Colors.lightBlueAccent, width: 2.0),
-                borderRadius: BorderRadius.all(Radius.circular(32.0)),
+
+              // ✅ Styled Rectangle Box (No Rounded Corners)
+              contentPadding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+
+              border: const OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(5.0)), // ✅ Rectangular box
               ),
-              labelText: "Enter Number",
-              labelStyle: TextStyle(
-                color: Colors.blue,
-                fontSize: 18.0,
+
+              enabledBorder: const OutlineInputBorder(
+                borderSide: BorderSide(color: Color(0xff003060), width: 1.0), // ✅ Styled border
+                borderRadius: BorderRadius.all(Radius.circular(5.0)), // ✅ No rounded corners
               ),
-              floatingLabelBehavior: FloatingLabelBehavior.always,
-              contentPadding:
-                  EdgeInsets.symmetric(vertical: 10.0, horizontal: 80.0),
             ),
           ),
         ),
       );
     } else if (answerType.contains("Dropdown")) {
-      surveys[0]["feedbackQuestion"][index]["answer"] =
+      String? dropdownResponse =
           surveys[0]["feedbackQuestion"][index]["answer"] == ""
-              ? ""
+              ? null
               : surveys[0]["feedbackQuestion"][index]["answer"];
 
       var dropDowns = <String>[];
@@ -1709,54 +2163,67 @@ class _HomePageState extends State<HomePage>
       values = answerType.split("-");
 
       for (var item in values) {
-        if (item != "Dropdown") {
+        if (item != "Dropdown" && !dropDowns.contains(item)) {
           dropDowns.add(item);
         }
       }
+
       return Padding(
         padding: const EdgeInsets.all(8.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            DropdownButton(
-              style: GoogleFonts.arimaMadurai(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w900,
-                  color: const Color(0xff3AB7A6)),
-              icon: const Icon(Icons.keyboard_arrow_down),
+        child: Container(
+          width: 300, // Set a consistent width
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.black, width: 1), // ✅ Black thin border
+            borderRadius: BorderRadius.circular(6), // ✅ Slightly rounded corners
+          ),
+          padding: EdgeInsets.symmetric(horizontal: 10, vertical: 1), // ✅ Inner padding
+          child: DropdownButtonHideUnderline( // ✅ Removes default underline
+            child: DropdownButton<String>(
+              isExpanded: true, // ✅ Ensures dropdown fills container width
+              style: GoogleFonts.poppins(
+                fontSize: MediaQuery.textScalerOf(context).scale(15),
+                color: const Color(0xff003060),
+              ),
+              icon: const Icon(Icons.keyboard_arrow_down), // ✅ Dropdown icon
               iconSize: 24,
-              iconEnabledColor: Color(0xff3AB7A6),
-              disabledHint: null,
+              iconEnabledColor: const Color(0xff3AB7A6),
+
+              // ✅ Hint Text (Same as before)
               hint: Text(
                 "Select Response",
-                style: GoogleFonts.arimaMadurai(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w900,
-                    color: Color(0xff3AB7A6)),
+                style: GoogleFonts.poppins(
+                  fontSize: MediaQuery.textScalerOf(context).scale(15),
+                  color: const Color(0xff003060),
+                ),
               ),
+
+              // ✅ Dropdown Items (Unchanged)
               items: dropDowns.map((String item) {
                 return DropdownMenuItem(
                   value: item,
                   child: Text(
                     item,
-                    style: const TextStyle(
-                      fontSize: 18,
+                    style: GoogleFonts.poppins(
+                      fontSize: MediaQuery.textScalerOf(context).scale(15),
+                      color: const Color(0xff003060),
                     ),
                   ),
                 );
               }).toList(),
+
+              // ✅ Functionality: Store Selected Value
               onChanged: (String? newValue) {
                 setState(() {
                   dropdownResponse = newValue!;
-                  surveys[0]["feedbackQuestion"][index]["answer"] =
-                      dropdownResponse;
+                  surveys[0]["feedbackQuestion"][index]["answer"] = dropdownResponse;
                 });
               },
               value: dropdownResponse,
             ),
-          ],
+          ),
         ),
       );
+
     }
 
     return Container();
@@ -1768,15 +2235,15 @@ class _HomePageState extends State<HomePage>
     }
 
     var arraySize = surveys[0]["feedbackQuestion"].length;
-    if (questionIndex <= 1 && questionIndex < arraySize - 1) {
+    if (questionIndex <= 0 && questionIndex < arraySize - 1) {
       return BottomNavigationBar(
         items: [
           BottomNavigationBarItem(
             icon: InkWell(
                 child: Image.asset(
                   "images/right.png",
-                  width: 40,
-                  height: 30,
+                  width: rightWidth,
+                  height: rightHeight,
                 ),
                 onTap: () {
                   setState(() {
@@ -1788,36 +2255,50 @@ class _HomePageState extends State<HomePage>
         ],
       );
     } else if (questionIndex > 0 && questionIndex < arraySize - 1) {
-      return BottomNavigationBar(
+      BottomNavigationBar(
         items: [
           BottomNavigationBarItem(
-            icon: InkWell(
+            icon: GestureDetector(
+              onTap: () {
+                setState(() {
+                  questionIndex = questionIndex - endIndex;
+                  ratingsArrayLoaded = false;
+                });
+              },
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: leftWidth, maxHeight: leftHeight),
                 child: Image.asset(
                   "images/left.png",
-                  width: 40,
-                  height: 30,
+                  fit: BoxFit.contain,
                 ),
-                onTap: () {
-                  setState(() {
-                    questionIndex = questionIndex - endIndex;
-                    ratingsArrayLoaded = false;
-                  });
-                }),
+              ),
+            ),
+            label: '',
           ),
           BottomNavigationBarItem(
-              icon: InkWell(
-                  child: Image.asset(
-                    "images/right.png",
-                    width: 35,
-                    height: 30,
-                  ),
-                  onTap: () {
-                    setState(() {
-                      questionIndex++;
-                      ratingsArrayLoaded = false;
-                    });
-                  })),
+            icon: GestureDetector(
+              onTap: () {
+                setState(() {
+                  questionIndex++;
+                  ratingsArrayLoaded = false;
+                });
+              },
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: rightWidth, maxHeight: rightHeight),
+                child: Image.asset(
+                  "images/right.png",
+                  fit: BoxFit.contain,
+                ),
+              ),
+            ),
+            label: '',
+          ),
         ],
+        type: BottomNavigationBarType.fixed,
+        showSelectedLabels: false,
+        showUnselectedLabels: false,
+        elevation: 0, // Optional: reduces extra spacing
+        backgroundColor: Colors.transparent, // Optional: for debugging layout
       );
     } else if (questionIndex == arraySize - 1) {
       return BottomNavigationBar(
@@ -1826,8 +2307,8 @@ class _HomePageState extends State<HomePage>
             icon: InkWell(
                 child: Image.asset(
                   "images/left.png",
-                  width: 40,
-                  height: 30,
+                  width: leftWidth,
+                  height: leftHeight,
                 ),
                 onTap: () {
                   setState(() {
@@ -1875,7 +2356,7 @@ class _HomePageState extends State<HomePage>
                     "Submit",
                     textAlign: TextAlign.center,
                     style: GoogleFonts.roboto(
-                      fontSize: 15,
+                      fontSize: MediaQuery.textScalerOf(context).scale(15),
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                     ),
@@ -1891,28 +2372,36 @@ class _HomePageState extends State<HomePage>
       child: Text(
         processQuestion(
             "Thank you very much for completing your first experience check-in!Your feedback will help to improve the quality and functionality of future \"products\".  We will contact you for an update of your experience in …. months."),
-        style: const TextStyle(color: Colors.red, fontSize: 14),
+        style: TextStyle(color: Colors.red, fontSize: MediaQuery.textScalerOf(context).scale(14)),
       ),
     );
   }
 
   getBottomButtonSet(currentSurvey) {
-    print("current questions are - ${currentSurvey.length}");
+    int ind = 0;
+    for(var item in currentSurvey)
+      {
+        print("Index - $ind -> item - $item");
+        ind++;
+      }
+
     var arraySize = surveys[0]["feedbackQuestion"].length;
-    if (questionIndex <= 1 && questionIndex < arraySize - 1) {
+    print("Question index is $questionIndex & arraySize is ${currentSurvey.length}");
+
+    if (checkIfItsFirstQuestion(currentSurvey) && questionIndex < arraySize - 1) {
       return Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           InkWell(
               child: Image.asset(
                 "images/right.png",
-                width: 40,
-                height: 30,
+                width: rightWidth,
+                height: rightHeight,
               ),
               onTap: () {
                 if (!GetValidResponses(currentSurvey)) {
                   AlertDialog alert = AlertDialog(
-                    title: const Text("Alert"),
+                    title: Text("Alert"),
                     content: Text(goingForwardMessage),
                     actions: [
                       currentSurvey[0]["answerType"].contains("Rating") ||
@@ -1930,13 +2419,13 @@ class _HomePageState extends State<HomePage>
                                 });
                                 Navigator.pop(context);
                               },
-                              child: const Text("Continue"))
-                          : const Text(""),
+                              child: Text("Continue"))
+                          : Text(""),
                       TextButton(
                           onPressed: () {
                             Navigator.pop(context);
                           },
-                          child: const Text("Cancel"))
+                          child: Text("Cancel"))
                     ],
                   );
 
@@ -1961,8 +2450,8 @@ class _HomePageState extends State<HomePage>
           InkWell(
               child: Image.asset(
                 "images/left.png",
-                width: 40,
-                height: 30,
+                width: leftWidth,
+                height: leftHeight,
               ),
               onTap: () {
                 setState(() {
@@ -1974,14 +2463,13 @@ class _HomePageState extends State<HomePage>
           InkWell(
               child: Image.asset(
                 "images/right.png",
-                width: 35,
-                height: 30,
+                width: rightWidth,
+                height: rightHeight,
               ),
               onTap: () {
-                print("current question - ${currentSurvey[0]["answerType"]}");
                 if (!GetValidResponses(currentSurvey)) {
                   AlertDialog alert = AlertDialog(
-                    title: const Text("Alert"),
+                    title: Text("Alert"),
                     content: Text(goingForwardMessage),
                     actions: [
                       currentSurvey[0]["answerType"].contains("Rating") ||
@@ -1999,13 +2487,13 @@ class _HomePageState extends State<HomePage>
                                 });
                                 Navigator.pop(context);
                               },
-                              child: const Text("Continue"))
+                              child: Text("Continue"))
                           : Text(""),
                       TextButton(
                           onPressed: () {
                             Navigator.pop(context);
                           },
-                          child: const Text("Cancel"))
+                          child: Text("Cancel"))
                     ],
                   );
 
@@ -2032,8 +2520,8 @@ class _HomePageState extends State<HomePage>
               InkWell(
                   child: Image.asset(
                     "images/left.png",
-                    width: 40,
-                    height: 30,
+                    width: leftWidth,
+                    height: leftHeight,
                   ),
                   onTap: () {
                     setState(() {
@@ -2053,14 +2541,14 @@ class _HomePageState extends State<HomePage>
                     if (surveys[0]["surveyId"] == "ReplacementSurvey") {
                       if (!GetValidResponses(currentSurvey)) {
                         AlertDialog alert = AlertDialog(
-                          title: const Text("Alert"),
+                          title: Text("Alert"),
                           content: Text(goingForwardMessage),
                           actions: [
                             TextButton(
                                 onPressed: () {
                                   Navigator.pop(context);
                                 },
-                                child: const Text("Cancel")),
+                                child: Text("Cancel")),
                           ],
                         );
 
@@ -2077,7 +2565,7 @@ class _HomePageState extends State<HomePage>
                         "ReplacementSurvey")) {
                       if (!GetValidResponses(currentSurvey)) {
                         AlertDialog alert = AlertDialog(
-                          title: const Text("Alert"),
+                          title: Text("Alert"),
                           content: Text(goingForwardMessage),
                           actions: [
                             currentSurvey[0]["answerType"].contains("Rating") ||
@@ -2099,13 +2587,13 @@ class _HomePageState extends State<HomePage>
                                       });
                                       Navigator.pop(context);
                                     },
-                                    child: const Text("Continue"))
+                                    child: Text("Continue"))
                                 : Text(""),
                             TextButton(
                                 onPressed: () {
                                   Navigator.pop(context);
                                 },
-                                child: const Text("Cancel"))
+                                child: Text("Cancel"))
                           ],
                         );
 
@@ -2148,7 +2636,7 @@ class _HomePageState extends State<HomePage>
                         "Submit",
                         textAlign: TextAlign.center,
                         style: GoogleFonts.roboto(
-                          fontSize: 15,
+                          fontSize: MediaQuery.textScalerOf(context).scale(15),
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
                         ),
@@ -2166,7 +2654,7 @@ class _HomePageState extends State<HomePage>
         child: Text(
           processQuestion(
               "Thank you very much for completing your first experience check-in!Your feedback will help to improve the quality and functionality of future \"products\".  We will contact you for an update of your experience in …. months."),
-          style: const TextStyle(color: Colors.red, fontSize: 14),
+          style: TextStyle(color: Colors.red, fontSize: MediaQuery.textScalerOf(context).scale(15)),
         ),
       );
     }
@@ -2182,7 +2670,7 @@ class _HomePageState extends State<HomePage>
   }
 
   String processQuestion(String question) {
-    if (question.length > 0) {
+    if (question.isNotEmpty) {
       var values = <String>[];
       values = productSelected.toString().split("-");
       question = question.replaceAll("product", values[0].toLowerCase());
@@ -2224,108 +2712,171 @@ class _HomePageState extends State<HomePage>
         titleLine.isNotEmpty &&
         (lastTitle == "LoadLastLine" || lastTitle != titleLine)) {
       lastTitle = titleLine;
-      return Padding(
-        padding: const EdgeInsets.only(left: 20.0, top: 20.0, right: 20.0),
-        child: Column(
-          children: [
-            Text(
+      return Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 50),
+            child: Text(
               processQuestion(titleLine),
-              style: const TextStyle(
-                  fontSize: 18,
-                  color: Colors.deepPurpleAccent,
-                  fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(
-              height: 30.0,
-            ),
-            MaterialButton(
-              color: Colors.white60,
-              onPressed: () {
-                setState(() {
-                  showTitleLineNow = false;
-                  lastTitle = titleLine;
-                });
-              },
-              child: const Text(
-                "Continue",
-                style: TextStyle(color: Colors.pink, fontSize: 14.0),
+              style: GoogleFonts.poppins(
+                  fontSize: MediaQuery.textScalerOf(context).scale(18),
+                  color: Colors.blue,
+                  fontWeight: FontWeight.bold,
               ),
-            )
-          ],
-        ),
+            ),
+          ),
+          const SizedBox(
+            height: 30.0,
+          ),
+          MaterialButton(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20.0), // ✅ Rounded Borders
+              side: BorderSide(color: Colors.black, width: 1.5), // ✅ Optional border
+            ),
+            color: Color(0xff003060),
+            height: 50,
+            onPressed: () {
+              setState(() {
+                showTitleLineNow = false;
+                lastTitle = titleLine;
+              });
+            },
+            child: Text(
+              "Continue",
+              style: GoogleFonts.poppins(color: Colors.white,
+                  fontSize: MediaQuery.textScalerOf(context).scale(14),
+                fontWeight: FontWeight.bold
+              ),
+            ),
+          )
+        ],
       );
     }
 
     return SingleChildScrollView(
+      physics: BouncingScrollPhysics(),
       child: Column(
         children: [
           const SizedBox(height: 10.0),
-          Padding(
-            padding: EdgeInsets.only(left: size.width * .7),
-            child: Material(
-              child: ElevatedButton(
-                  style: const ButtonStyle(
-                    backgroundColor: MaterialStatePropertyAll(Colors.white),
-                  ),
-                  child: const Icon(Icons.home,
-                      size: 35, color: Colors.deepPurpleAccent),
-                  onPressed: () async {
-                    setState(() {
-                      AlertDialog alert = AlertDialog(
-                        title: const Text("Warning"),
-                        content: const Text(
-                            "You are leaving the survey while its not complete.If you proceed, it may reset and not"
-                            " get recorded.\n\nDo you wish to abort feedback ?"),
-                        actions: [
-                          TextButton(
-                              onPressed: () {
-                                setState(() {
-                                  showThankyouMessage = false;
-                                  showFeedback = false;
-                                  showRegistrationPage = false;
-                                  showSpinnerMyProducts = true;
-                                  goToHome = true;
-                                });
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Material(
+                child: ElevatedButton(
+                    style: const ButtonStyle(
+                      backgroundColor: MaterialStatePropertyAll(Colors.white),
+                    ),
+                    child: Image.asset("images/homeButton.png",height: 35,width: 35,),
+                    onPressed: () async {
+                      setState(() {
+                        AlertDialog alert = AlertDialog(
+                          backgroundColor: Colors.blue, // ✅ Background color
+                          title: Text(
+                            "Warning",
+                            style: GoogleFonts.poppins(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white, // ✅ Title text color
+                            ),
+                          ),
+                          content: Text(
+                            "You are leaving the survey while it's not complete. If you proceed, it may reset and not "
+                                "get recorded.\n\nDo you wish to abort feedback?",
+                            style: GoogleFonts.poppins(
+                              fontSize: 16,
+                              color: Colors.white, // ✅ Content text color
+                            ),
+                          ),
+                          actions: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly, // ✅ Evenly spaced buttons
+                              children: [
+                                GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      showThankyouMessage = false;
+                                      showFeedback = false;
+                                      showRegistrationPage = false;
+                                      showSpinnerMyProducts = true;
+                                      goToHome = true;
+                                    });
 
-                                //saving data from survey in myProduct selected
-                                if (isDefectSurvey) {
-                                  setState(() {
-                                    myProductSelected["currentDefectSurvey"] =
-                                        surveys[0];
-                                  });
-                                } else {
-                                  setState(() {
-                                    myProductSelected["currentMainSurvey"] =
-                                        surveys[0];
-                                    print(
-                                        myProductSelected["currentMainSurvey"]);
-                                  });
-                                }
+                                    // ✅ Save survey data to myProductSelected
+                                    if (isDefectSurvey) {
+                                      setState(() {
+                                        myProductSelected["currentDefectSurvey"] = surveys[0];
+                                      });
+                                    } else {
+                                      setState(() {
+                                        myProductSelected["currentMainSurvey"] = surveys[0];
+                                        print(myProductSelected["currentMainSurvey"]);
+                                      });
+                                    }
 
-                                Navigator.pop(context);
-                                questionIndex = 0;
+                                    Navigator.pop(context);
+                                    questionIndex = 0;
 
-                                setState(() {
-                                  showSpinnerMyProducts = false;
-                                });
-                              },
-                              child: const Text("Continue")),
-                          TextButton(
-                              onPressed: () {
-                                Navigator.pop(context);
-                              },
-                              child: const Text("Cancel"))
-                        ],
-                      );
+                                    setState(() {
+                                      showSpinnerMyProducts = false;
+                                    });
+                                  },
+                                  child: Container(
+                                    padding: EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                                    decoration: BoxDecoration(
+                                      color: Color(0xff003060), // ✅ Button color
+                                      borderRadius: BorderRadius.circular(20), // ✅ Rounded corners
+                                    ),
+                                    child: Text(
+                                      "Continue",
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white, // ✅ Button text color
+                                      ),
+                                    ),
+                                  ),
+                                ),
 
-                      showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return alert;
-                          });
-                    });
-                  }),
-            ),
+                                GestureDetector(
+                                  onTap: () {
+                                    Navigator.pop(context);
+                                  },
+                                  child: Container(
+                                    padding: EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                                    decoration: BoxDecoration(
+                                      color: Color(0xff003060), // ✅ Button color
+                                      borderRadius: BorderRadius.circular(20), // ✅ Rounded corners
+                                    ),
+                                    child: Text(
+                                      "Cancel",
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white, // ✅ Button text color
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        );
+
+
+                        showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return alert;
+                            });
+                      });
+                    }),
+              ),
+              SizedBox(
+                width: 10,
+              )
+            ],
           ),
           Container(
             color: Colors.white,
@@ -2348,232 +2899,363 @@ class _HomePageState extends State<HomePage>
 
   MyProducts(BuildContext context) {
     return Scaffold(
-        backgroundColor: Colors.white,
-        body: ModalProgressHUD(
-          inAsyncCall: showSpinnerMyProducts,
-          child: SingleChildScrollView(
-            child: Column(
+      backgroundColor: Colors.white,
+      body: ModalProgressHUD(
+        inAsyncCall: showSpinnerMyProducts,
+        child: SingleChildScrollView(
+          physics: BouncingScrollPhysics(),
+          child: Column(
+            children: [
+              Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        Container(
-                          height: 50.0,
-                          margin: EdgeInsets.all(10),
-                          child: ElevatedButton(
-                            onPressed: () {
-                              setState(() {
-                                for (int i = 0;
-                                    i < featureList.keys.length;
-                                    i++) {
-                                  featureList[featureList.keys.elementAt(i)] =
-                                      "";
-                                }
-                                year = null;
-                                month = null;
-                                type = null;
-                                showRegistrationPage = true;
-                                isFirstRegistration = true;
-                              });
-                            },
-                            style: ButtonStyle(
-                                shape:
-                                    MaterialStateProperty.all<OutlinedBorder>(
-                                        RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(80.0))),
-                                padding: MaterialStateProperty.all<
-                                    EdgeInsetsGeometry>(
-                                  EdgeInsets.all(0.0),
-                                )),
-                            child: Ink(
-                              decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      Color(0xff374ABE),
-                                      Color(0xff64B6FF)
+                  Text(
+                    "My Products",
+                    style: GoogleFonts.poppins(
+                        fontSize: MediaQuery.textScalerOf(context).scale(25),
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xff003060)),
+                  ),
+                ],
+              ),
+              const SizedBox(
+                height: 10.0,
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Text("In this section, you can view your saved products or add new ones."
+                    "Tap the info icon for more details or the bin icon to remove a product."
+                    ,style: GoogleFonts.poppins(
+                      color: Color(0xff003060),
+                      fontSize: MediaQuery.textScalerOf(context).scale(14),
+                  ),
+                ),
+              ),
+              SizedBox(
+                height: 15,
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  SizedBox(
+                    width: 16,
+                  ),
+                  Text(
+                    "Registered Products",
+                    style: GoogleFonts.poppins(
+                        fontSize: MediaQuery.textScalerOf(context).scale(20),
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xff003060)),
+                  ),
+                ],
+              ),
+              Padding(
+                padding: const EdgeInsets.all(25.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    for (var product in myProducts)
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          // ✅ ACTUAL TABLE
+                          Expanded(
+                            flex: 6, // Adjust table width
+                            child: Table(
+                              border: TableBorder.all(
+                                color: Colors.grey, // Table border color
+                                width: 1, // Border thickness
+                              ), // ⬅️ Table Borders
+                              columnWidths: const {
+                                0: FlexColumnWidth(3), // Product Name + Info column
+                                1: FlexColumnWidth(3), // Purchase Date column
+                              }, // ⬅️ Define table column widths
+                              children: [
+                                // 📌 HEADER ROW (Only Shown for First Product)
+                                if (product == myProducts.first)
+                                  TableRow(
+                                    decoration: BoxDecoration(color: Color(0xff003060)), // Header Background
+                                    children: [
+                                      Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: Text(
+                                          "Product", // ⬅️ Header 1: Product
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ), // ⬅️ Column 1: Header "Product"
+
+                                      Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: Text(
+                                          "Purchase Date", // ⬅️ Header 2: Purchase Date
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ), // ⬅️ Column 2: Header "Purchase Date"
                                     ],
-                                    begin: Alignment.centerLeft,
-                                    end: Alignment.centerRight,
-                                  ),
-                                  borderRadius: BorderRadius.circular(30.0)),
-                              child: Container(
-                                constraints: BoxConstraints(
-                                    maxWidth: 150.0, minHeight: 50.0),
-                                alignment: Alignment.center,
-                                child: Text(
-                                  "Register Product",
-                                  textAlign: TextAlign.center,
-                                  style: GoogleFonts.roboto(
-                                    fontSize: 15,
+                                  ), // ⬅️ Table Header Row Ends
+
+                                // 📌 PRODUCT ROW
+                                TableRow(
+                                  children: [
+                                    // 📌 PRODUCT NAME + INFO COLUMN
+                                    Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Row(
+                                        children: [
+                                          Expanded(
+                                            child: Text(
+                                              product["productName"].toString(),
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 12,
+                                                color: Color(0xff184B2A),
+                                              ),
+                                              softWrap: true,
+                                            ),
+                                          ), // ⬅️ Column 1: Product Name
+
+                                          InkWell(
+                                            child: const Icon(
+                                              Icons.info,
+                                              color: Colors.blue,
+                                            ), // ⬅️ Column 1: Info Icon
+                                            onTap: () {
+                                              AlertDialog alert = AlertDialog(
+                                                backgroundColor: Colors.blue, // ✅ Background color
+                                                title: Text(
+                                                  "Product Details",
+                                                  style: GoogleFonts.poppins(
+                                                    fontSize: 18,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Colors.white, // ✅ Title text color
+                                                  ),
+                                                ),
+                                                content: SingleChildScrollView(
+                                                  physics: BouncingScrollPhysics(), // ✅ Smooth scrolling
+                                                  child: Column(
+                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                    children: getFeaturesAsRowWidget(product), // ✅ Keeps existing functionality
+                                                  ),
+                                                ),
+                                                actions: [
+                                                  Center( // ✅ Centering the button
+                                                    child: GestureDetector(
+                                                      onTap: () {
+                                                        Navigator.pop(context);
+                                                      },
+                                                      child: Container(
+                                                        padding: EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                                                        decoration: BoxDecoration(
+                                                          color: Color(0xff003060), // ✅ Button color
+                                                          borderRadius: BorderRadius.circular(20), // ✅ Rounded corners
+                                                        ),
+                                                        child: Text(
+                                                          "Back",
+                                                          style: GoogleFonts.poppins(
+                                                            fontSize: 14,
+                                                            fontWeight: FontWeight.bold,
+                                                            color: Colors.white, // ✅ Button text color
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              );
+
+
+                                              showDialog(
+                                                context: context,
+                                                builder: (BuildContext context) {
+                                                  return alert;
+                                                },
+                                              );
+                                            },
+                                          ), // ⬅️ Column 1: Info Dialog Trigger
+                                        ],
+                                      ),
+                                    ), // ⬅️ Column 1: Product Name + Info Icon
+
+                                    // 📌 PURCHASE DATE COLUMN
+                                    Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Text(
+                                        product["features"]["Purchase Date"].toString(),
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 12,
+                                          color: Color(0xff184B2A),
+                                        ),
+                                      ),
+                                    ), // ⬅️ Column 2: Purchase Date
+                                  ],
+                                ), // ⬅️ End of Product Row
+                              ],
+                            ), // ⬅️ End of Table
+                          ), // ⬅️ End of Table inside Row
+
+                          // ✅ DELETE BUTTON (OUTSIDE TABLE, ALIGNED AS THIRD COLUMN)
+                          SizedBox(width: 10), // Space between table and delete button
+                          InkWell(
+                            child: const Icon(
+                              Icons.delete,
+                              color: Colors.blue,
+                            ), // ⬅️ Delete Icon
+                            onTap: () {
+                              AlertDialog alert = AlertDialog(
+                                backgroundColor: Colors.blue, // ✅ Background color
+                                title: Text(
+                                  "Alert",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 18,
                                     fontWeight: FontWeight.bold,
-                                    color: Colors.white,
+                                    color: Colors.white, // ✅ Title text color
                                   ),
                                 ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 20.0,
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      Text(
-                        "Registered Products",
-                        style: GoogleFonts.ebGaramond(
-                            fontSize: 25,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.deepPurple),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(
-                    height: 10.0,
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(0.5),
-                    child: DataTable(
-                      columnSpacing: 3.0,
-                      columns: [
-                        DataColumn(
-                            label: Text(
-                          "Products",
-                          style: GoogleFonts.courierPrime(
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xffB7673A)),
-                        )),
-                        DataColumn(
-                            label: Text(
-                          "Purchased On",
-                          style: GoogleFonts.courierPrime(
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xffB7673A)),
-                        )),
-                        const DataColumn(
-                            label: Text(
-                          "",
-                          style: TextStyle(
-                              color: Colors.pink,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14.0),
-                        )),
-                        const DataColumn(
-                            label: Text(
-                          "",
-                          style: TextStyle(
-                              color: Colors.pink,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14.0),
-                        ))
-                      ],
-                      rows: [
-                        for (var product in myProducts)
-                          DataRow(cells: [
-                            DataCell(Container(
-                              width: 100,
-                              child: Text(
-                                product["productName"].toString(),
-                                style: GoogleFonts.courierPrime(
-                                    fontSize: 15, color: Color(0xff184B2A)),
-                              ),
-                            )),
-                            DataCell(Text(
-                              product["features"]["Purchase Date"].toString(),
-                              style: GoogleFonts.courierPrime(
-                                  fontSize: 15, color: Color(0xff184B2A)),
-                            )),
-                            DataCell(InkWell(
-                              child: const Icon(
-                                Icons.delete,
-                                color: Colors.red,
-                              ),
-                              onTap: () {
-                                AlertDialog alert = AlertDialog(
-                                  title: const Text("Alert"),
-                                  content: Text(
-                                      "Do you wish to remove ${product["productName"].toString()}"
-                                      " from your list of products ? "),
-                                  actions: [
-                                    TextButton(
-                                        onPressed: () {
+                                content: Text(
+                                  "Do you wish to remove ${product["productName"].toString()} "
+                                      "from your list of products?",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 16,
+                                    color: Colors.white, // ✅ Content text color
+                                  ),
+                                ),
+                                actions: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceEvenly, // ✅ Evenly spaced buttons
+                                    children: [
+                                      GestureDetector(
+                                        onTap: () {
                                           setState(() {
                                             myProducts.remove(product);
                                           });
                                           RemoveProductFromUser(product);
                                           Navigator.pop(context);
                                         },
-                                        child: const Text("Continue")),
-                                    TextButton(
-                                        onPressed: () {
+                                        child: Container(
+                                          padding: EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                                          decoration: BoxDecoration(
+                                            color: Color(0xff003060), // ✅ Button color
+                                            borderRadius: BorderRadius.circular(20), // ✅ Rounded corners
+                                          ),
+                                          child: Text(
+                                            "Continue",
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.white, // ✅ Button text color
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      GestureDetector(
+                                        onTap: () {
                                           Navigator.pop(context);
                                         },
-                                        child: const Text("Cancel"))
-                                  ],
-                                );
-
-                                showDialog(
-                                    context: context,
-                                    builder: (BuildContext context) {
-                                      return alert;
-                                    });
-                              },
-                            )),
-                            DataCell(InkWell(
-                              child: const Icon(
-                                Icons.info,
-                                color: Colors.deepPurple,
-                              ),
-                              onTap: () {
-                                AlertDialog alert = AlertDialog(
-                                  title: const Text("Product Details"),
-                                  content: Column(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceEvenly,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: getFeaturesAsRowWidget(product),
+                                        child: Container(
+                                          padding: EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                                          decoration: BoxDecoration(
+                                            color: Color(0xff003060), // ✅ Button color
+                                            borderRadius: BorderRadius.circular(20), // ✅ Rounded corners
+                                          ),
+                                          child: Text(
+                                            "Cancel",
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.white, // ✅ Button text color
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                  actions: [
-                                    TextButton(
-                                        onPressed: () {
-                                          Navigator.pop(context);
-                                        },
-                                        child: const Text("Back"))
-                                  ],
-                                );
+                                ],
+                              );
 
-                                showDialog(
-                                    context: context,
-                                    builder: (BuildContext context) {
-                                      return SingleChildScrollView(
-                                          child: alert);
-                                    });
-                              },
-                            )),
-                          ]),
+
+                              showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return alert;
+                                },
+                              );
+                            },
+                          ), // ⬅️ Delete Button for Each Product
+                        ],
+                      ), // ⬅️ End of Row
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                child: GestureDetector(
+                  onTap: () async{
+                    setState(() async {
+                      for (int i = 0; i < featureList.keys.length; i++) {
+                        featureList[featureList.keys.elementAt(i)] = "";
+                      }
+                      await loadProducts();
+                      year = null;
+                      month = null;
+                      type = null;
+                      showRegistrationPage = true;
+                      isFirstRegistration = true;
+                    });
+                  },
+                  child: Container(
+                    height: 60.0,
+                    width: 250.0, // Adjust width as needed
+                    padding: EdgeInsets.symmetric(horizontal: 16.0),
+                    decoration: BoxDecoration(
+                     color: Color(0xff003060)
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // 📌 Icon
+                        Image.asset(
+                          'images/plusIcon.png', // ✅ Path to your image
+                          height: 40, // Adjust icon size
+                          width: 40,
+                        ),
+                        SizedBox(width: 10), // Space between icon and text
+
+                        // 📌 Text
+                        Text(
+                          "Add a new product",
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.poppins(
+                            fontSize: MediaQuery.textScalerOf(context).scale(12),
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
                       ],
                     ),
-                  )
-                ]),
+                  ),
+                ),
+              ),
+
+            ],
           ),
-        ));
+        ),
+      ),
+    );
   }
+
 
   MyProductsPage(BuildContext context) {
     if (showRegistrationPage) {
       return RegisterProduct(context);
     } else {
+
       return MyProducts(context);
     }
   }
@@ -2586,15 +3268,19 @@ class _HomePageState extends State<HomePage>
     print('Deleted user product successfully - ${response.body}');
   }
 
-  DataCell checkForActiveFeedbackAndGetDataCell(product) {
+  Widget checkForActiveFeedbackAndGetWidget(product) {
     if (product["currentMainSurvey"]["next"]) {
-      return DataCell(MaterialButton(
-        color: Color(0xff3AB7A6),
+      return MaterialButton(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20.0), // ✅ Rounded Borders
+          side: BorderSide(color: Colors.black, width: 1.5), // ✅ Optional border
+        ),
+        color: Colors.white,
         onPressed: () {
           if (product["currentMainSurvey"]["surveyId"] == "QS2") {
             setState(() {
               ApplicationData.audioMessage =
-                  "Voice record your reason for not complaining. Limit 02 minutes";
+              "Voice record your reason for not complaining. Limit 02 minutes";
             });
           }
           if (product["currentMainSurvey"]["surveyId"] == "QS1") {
@@ -2617,26 +3303,30 @@ class _HomePageState extends State<HomePage>
             }
           }
         },
-        child: const Text(
-          "Pending Feedback",
-          style: TextStyle(color: Colors.deepPurple, fontSize: 12.0),
-        ),
-      ));
+        child: Text(
+         "Regular Feedback",
+         style: GoogleFonts.poppins(color: Colors.black, fontSize: MediaQuery.textScalerOf(context).scale(10)),
+         maxLines: 2,
+                  ),
+      );
     }
-    return const DataCell(
-      Text(
-        "No Pending Feedback",
-        style: TextStyle(color: Colors.deepPurple, fontSize: 12.0),
-      ),
+    return  Text(
+      "No Pending Feedback",
+      style: GoogleFonts.poppins(color: Colors.black, fontSize: MediaQuery.textScalerOf(context).scale(10)),
     );
   }
 
-  DataCell SetDefectReportAndGetDataCell(product) {
+
+  Widget SetDefectReportAndGetWidget(product) {
     myProductSelected = product;
     setBrand(myProductSelected);
 
-    return DataCell(MaterialButton(
-      color: Color(0xff3AB7A6),
+    return MaterialButton(
+      color: Colors.white, // Button background color
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20.0), // ✅ Rounded Borders
+        side: BorderSide(color: Colors.black, width: 1.5), // ✅ Optional border
+      ),
       onPressed: () {
         setState(() {
           myProductSelected = product;
@@ -2644,16 +3334,21 @@ class _HomePageState extends State<HomePage>
           startSurveyProcess(myProductSelected["currentDefectSurvey"]);
           isDefectSurvey = true;
           ApplicationData.audioMessage =
-              "Voice record your issue in detail. Limit 02 minutes";
+          "Voice record your issue in detail. Limit 02 minutes";
         });
-        print('product is ' + product["productName"]);
+        print('Product is ' + product["productName"]);
       },
-      child: const Text(
+      child: Text(
         "Report a problem",
-        style: TextStyle(color: Colors.deepPurple, fontSize: 12.0),
+        style: GoogleFonts.poppins(
+          color: Colors.black,
+          fontSize: MediaQuery.textScalerOf(context).scale(10),
+        ),
       ),
-    ));
+    );
+
   }
+
 
   void setIsSelected(int index) {
     print('Question index is $questionIndex');
@@ -2751,15 +3446,15 @@ class _HomePageState extends State<HomePage>
     return Row(
       mainAxisAlignment: MainAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           "Audio",
-          style: TextStyle(fontSize: 15, color: Colors.brown),
+          style: TextStyle(fontSize: MediaQuery.textScalerOf(context).scale(15), color: Colors.brown),
         ),
         InkResponse(
           onTap: (() {
             AudioPlayer(
-              source: surveys[0]["feedbackQuestion"][superIndex]["answer"]
-                  ["audio"]!,
+              source: ApplicationData.multimediaUrls[surveys[0]["feedbackQuestion"][superIndex]["answer"]
+              ["audio"]]!,
               onDelete: () {},
             );
           }),
@@ -2875,7 +3570,7 @@ class _HomePageState extends State<HomePage>
   void ProcessReplacementSurveyResponse(String response) {
     if (response == "Yes") {
       AlertDialog alert = AlertDialog(
-        title: const Text("Alert"),
+        title: Text("Alert"),
         content: Text(
             "You have chosen that your ${getProductName(myProductSelected).toString().toLowerCase()}"
             " has been replaced. You will be redirected to register the new product. "),
@@ -2899,12 +3594,12 @@ class _HomePageState extends State<HomePage>
                 setNextSurvey(false);
                 MyFeedback(context);
               },
-              child: const Text("Continue")),
+              child: Text("Continue")),
           TextButton(
               onPressed: () {
                 Navigator.pop(context);
               },
-              child: const Text("Cancel"))
+              child: Text("Cancel"))
         ],
       );
 
@@ -3033,8 +3728,8 @@ class _HomePageState extends State<HomePage>
             children: [
               Text(
                 ApplicationData.audioMessage,
-                style: const TextStyle(
-                    fontSize: 16,
+                style: TextStyle(
+                    fontSize: MediaQuery.textScalerOf(context).scale(13),
                     color: Colors.red,
                     overflow: TextOverflow.ellipsis),
                 overflow: TextOverflow.ellipsis,
@@ -3056,11 +3751,11 @@ class _HomePageState extends State<HomePage>
                 setState(() {
                   surveys[0]["feedbackQuestion"][superIndex]["answer"]
                       ["audio"] = "https://drive.google.com/uc?id=$link";
-
+                    ApplicationData.multimediaUrls[surveys[0]["feedbackQuestion"][superIndex]["answer"]
+                    ["audio"]] = path;
                   showSpinner = false;
                 });
-                print('Recorded file path: ' +
-                    (surveys[0]["feedbackQuestion"][superIndex]["answer"]));
+                print('Recorded file path: $path ');
               },
             ),
           ),
@@ -3099,7 +3794,7 @@ class _HomePageState extends State<HomePage>
                     "Back",
                     textAlign: TextAlign.center,
                     style: GoogleFonts.roboto(
-                      fontSize: 15,
+                      fontSize: MediaQuery.textScalerOf(context).scale(15),
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                     ),
@@ -3127,8 +3822,8 @@ class _HomePageState extends State<HomePage>
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 25),
               child: AudioPlayer(
-                source: surveys[0]["feedbackQuestion"][superIndex]["answer"]
-                    ["audio"]!,
+                source: ApplicationData.multimediaUrls[surveys[0]["feedbackQuestion"][superIndex]["answer"]
+                ["audio"]]!,
                 onDelete: () {
                   setState(() {
                     surveys[0]["feedbackQuestion"][superIndex]["answer"]
@@ -3156,9 +3851,9 @@ class _HomePageState extends State<HomePage>
               },
               minWidth: 50.0,
               height: 32.0,
-              child: const Text(
+              child: Text(
                 'Back',
-                style: TextStyle(fontSize: 14),
+                style: TextStyle(fontSize: MediaQuery.textScalerOf(context).scale(14)),
               ),
             ),
           ),
@@ -3179,9 +3874,9 @@ class _HomePageState extends State<HomePage>
         const SizedBox(
           height: 50,
         ),
-        const Text(
+        Text(
           "Audio File uploaded.",
-          style: TextStyle(color: Colors.deepOrange, fontSize: 16),
+          style: TextStyle(color: Colors.deepOrange, fontSize:MediaQuery.textScalerOf(context).scale(16)),
         ),
         const SizedBox(
           width: 20,
@@ -3230,9 +3925,9 @@ class _HomePageState extends State<HomePage>
         const SizedBox(
           height: 50,
         ),
-        const Text(
+        Text(
           "Image File uploaded.",
-          style: TextStyle(color: Colors.deepPurple, fontSize: 16),
+          style: TextStyle(color: Colors.deepPurple, fontSize: MediaQuery.textScalerOf(context).scale(16)),
         ),
         const SizedBox(
           width: 20,
@@ -3244,8 +3939,8 @@ class _HomePageState extends State<HomePage>
                   context: context,
                   builder: (context) {
                     return AlertDialog(
-                        content: Image.file(File(surveys[0]["feedbackQuestion"]
-                                [index]["answer"]["image"]
+                        content: Image.file(File(ApplicationData.multimediaUrls[surveys[0]["feedbackQuestion"]
+                        [index]["answer"]["image"]]
                             .toString())),
                         actions: [
                           Material(
@@ -3264,9 +3959,9 @@ class _HomePageState extends State<HomePage>
                               },
                               minWidth: 50.0,
                               height: 32.0,
-                              child: const Text(
+                              child: Text(
                                 'Back',
-                                style: TextStyle(fontSize: 14),
+                                style: TextStyle(fontSize: MediaQuery.textScalerOf(context).scale(14)),
                               ),
                             ),
                           ),
@@ -3312,9 +4007,9 @@ class _HomePageState extends State<HomePage>
         const SizedBox(
           height: 50,
         ),
-        const Text(
+        Text(
           "Video File uploaded.",
-          style: TextStyle(color: Colors.deepPurple, fontSize: 16),
+          style: TextStyle(color: Colors.deepPurple, fontSize: MediaQuery.textScalerOf(context).scale(16)),
         ),
         const SizedBox(
           width: 20,
@@ -3325,8 +4020,8 @@ class _HomePageState extends State<HomePage>
               showDialog(
                   context: context,
                   builder: (context) {
-                    return VideoApp(surveys[0]["feedbackQuestion"][index]
-                        ["answer"]["video"]);
+                    return VideoApp(ApplicationData.multimediaUrls[surveys[0]["feedbackQuestion"][index]
+                    ["answer"]["video"]]!);
                   });
             });
           },
@@ -3372,7 +4067,7 @@ class _HomePageState extends State<HomePage>
             setState(() {
               surveys[0]["feedbackQuestion"][superIndex]["answer"]["image"] =
                   "https://drive.google.com/uc?id=$link";
-
+              ApplicationData.multimediaUrls["https://drive.google.com/uc?id=$link"] = path;
               showFeedback = true;
               showSpinner = false;
             });
@@ -3396,7 +4091,7 @@ class _HomePageState extends State<HomePage>
           setState(() {
             surveys[0]["feedbackQuestion"][superIndex]["answer"]["video"] =
                 "https://drive.google.com/uc?id=$link";
-
+            ApplicationData.multimediaUrls["https://drive.google.com/uc?id=$link"] = path;
             showFeedback = true;
             showSpinner = false;
           });
@@ -3454,11 +4149,19 @@ class _HomePageState extends State<HomePage>
     setState(() {
       if (_paths != null) {
         if (fileType == "image") {
-          surveys[0]["feedbackQuestion"][superIndex]["answer"]["image"] =
-              "https://drive.google.com/uc?id=$link";
+          setState(() {
+            surveys[0]["feedbackQuestion"][superIndex]["answer"]["image"] =
+            "https://drive.google.com/uc?id=$link";
+            ApplicationData.multimediaUrls["https://drive.google.com/uc?id=$link"] = _paths![0].path.toString() ;
+          });
+
         } else {
-          surveys[0]["feedbackQuestion"][superIndex]["answer"]["video"] =
-              "https://drive.google.com/uc?id=$link";
+          setState(() {
+            surveys[0]["feedbackQuestion"][superIndex]["answer"]["video"] =
+            "https://drive.google.com/uc?id=$link";
+            ApplicationData.multimediaUrls["https://drive.google.com/uc?id=$link"] = _paths![0].path.toString();
+          });
+
         }
         showSpinner = false;
       }
@@ -3534,10 +4237,15 @@ class _HomePageState extends State<HomePage>
   }
 
   bool GetValidResponses(currentSurvey) {
-    print(currentSurvey);
+    for (var item in currentSurvey) {
+      print("item is $item");
+      print("Question is " + item["question"]);
+      print("Answer is " + item["answer"].toString());
+      print("Answer type is " + item["answerType"] + "\n\n");
+    }
+
     for (var i = 0; i < currentSurvey.length; i++) {
       if (currentSurvey[i]["answerType"].contains("Rating")) {
-        print("before " + currentSurvey[i]["answer"]);
         if (currentSurvey[i]["answer"] == "1") {
           setState(() {
             goingForwardMessage = "For one or more rating, your response is "
@@ -3557,7 +4265,6 @@ class _HomePageState extends State<HomePage>
           return false;
         }
       }
-
       if (currentSurvey[i]["answerType"].contains("Multimedia/Descriptive")) {
         if (currentSurvey[i]["answer"]["text"] == "" &&
             currentSurvey[i]["answer"]["image"] == "" &&
@@ -3570,7 +4277,8 @@ class _HomePageState extends State<HomePage>
           });
 
           return false;
-        } else if (currentSurvey[i]["answer"]["text"] == "" ||
+        }
+        if (currentSurvey[i]["answer"]["text"] == "" ||
             currentSurvey[i]["answer"]["image"] == "" ||
             currentSurvey[i]["answer"]["audio"] == "" ||
             currentSurvey[i]["answer"]["video"] == "") {
@@ -3592,7 +4300,8 @@ class _HomePageState extends State<HomePage>
           });
 
           return false;
-        } else if (currentSurvey[i]["answer"]["text"] == "" ||
+        }
+        if (currentSurvey[i]["answer"]["text"] == "" ||
             currentSurvey[i]["answer"]["audio"] == "") {
           setState(() {
             goingForwardMessage =
@@ -3601,9 +4310,16 @@ class _HomePageState extends State<HomePage>
 
           return false;
         }
-      }
-    }
+      } // } else if (currentSurvey[i]["answerType"].contains("NumberBox")) {
+      //   if (currentSurvey[i]["answer"] == "") {
+      //     setState(() {
+      //       goingForwardMessage = "Enter the number as response";
+      //     });
+      //     return false;
+      //   }
+      // }
 
+    }
     return true;
   }
 
@@ -3708,4 +4424,158 @@ class _HomePageState extends State<HomePage>
         ",video - " +
         survey["video"];
   }
+
+  Widget getRowOfEndPoints() {
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final double padding = 40.0; // Total horizontal padding (20 left + 20 right)
+
+    // Calculate the widths of the two texts
+    final TextPainter leftTextPainter = TextPainter(
+      text: TextSpan(
+        text: responseArray[0],
+        style: GoogleFonts.roboto(
+          fontWeight: FontWeight.bold,
+          fontSize: MediaQuery.textScalerOf(context).scale(15),
+          color: Colors.red,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    final double leftTextWidth = leftTextPainter.size.width;
+
+    final TextPainter rightTextPainter = TextPainter(
+      text: TextSpan(
+        text: responseArray[responseArray.length - 1],
+        style: GoogleFonts.roboto(
+          fontWeight: FontWeight.bold,
+          fontSize: MediaQuery.textScalerOf(context).scale(15),
+          color: Colors.deepPurple,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    final double rightTextWidth = rightTextPainter.size.width;
+
+    print("Screenwidth 80% : ${screenWidth*.8}");
+
+    print("Left Text: ${responseArray[0]}");
+    print("Left Text Width: $leftTextWidth");
+    print("Right Text: ${responseArray[responseArray.length - 1]}");
+    print("Right Text Width: $rightTextWidth");
+    print("Padding : $padding");
+
+    // Check if the combined width exceeds the available width
+    final bool isOverflowing = (leftTextWidth + rightTextWidth + padding) >= screenWidth*.8;
+
+    print("Combined Width: ${leftTextWidth + rightTextWidth + padding}");
+    print("Is Overflowing: $isOverflowing");
+
+    if (isOverflowing) {
+      // Return two rows if text overflows
+      return Padding(
+        padding: const EdgeInsets.only(left: 20.0, top: 10, right: 20, bottom: 0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                responseArray[0],
+                style: GoogleFonts.roboto(
+                  fontWeight: FontWeight.bold,
+                  fontSize: MediaQuery.textScalerOf(context).scale(15),
+                  color: Colors.red,
+                ),
+              ),
+            ),
+            Align(
+              alignment: Alignment.centerRight,
+              child: Text(
+                responseArray[responseArray.length - 1],
+                style: GoogleFonts.roboto(
+                  fontWeight: FontWeight.bold,
+                  fontSize: MediaQuery.textScalerOf(context).scale(15),
+                  color: Colors.deepPurple,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    } else {
+      // Return a single row if no overflow
+      return Padding(
+        padding: const EdgeInsets.only(left: 20.0, top: 10, right: 20, bottom: 0),
+        child: Row(
+          children: [
+            Text(
+              responseArray[0],
+              style: GoogleFonts.roboto(
+                fontWeight: FontWeight.bold,
+                fontSize: MediaQuery.textScalerOf(context).scale(15),
+                color: Colors.red,
+              ),
+              overflow: TextOverflow.ellipsis,
+              softWrap: true,
+            ),
+            const Spacer(),
+            Text(
+              responseArray[responseArray.length - 1],
+              style: GoogleFonts.roboto(
+                fontWeight: FontWeight.bold,
+                fontSize: MediaQuery.textScalerOf(context).scale(15),
+                color: Colors.deepPurple,
+              ),
+              overflow: TextOverflow.ellipsis,
+              softWrap: true,
+            ),
+          ],
+        ),
+      );
+    }
+  }
+
+  bool checkIfItsFirstQuestion(currentSurvey) {
+
+    if(surveys[0]["feedbackQuestion"][0]["mainScreentitle"] == currentSurvey[0]["mainScreentitle"]
+    && surveys[0]["feedbackQuestion"][0]["titleLine"] == currentSurvey[0]["titleLine"]
+    && surveys[0]["feedbackQuestion"][0]["questionTitle"] == currentSurvey[0]["questionTitle"])
+      {
+        return true;
+      }
+
+    return false;
+
+  }
+
+  Future<void> _launchUrl() async{
+    final url ;
+
+    switch(urlId)
+    {
+      case 1:
+        url = Uri.parse("https://qualtrack-privacypolicy.web.app/faq.html");
+        break;
+
+      case 2:
+        url = Uri.parse("https://qualtrack-privacypolicy.web.app/");
+        break;
+
+      case 3:
+        url = Uri.parse("https://qualtrack-privacypolicy.web.app/help-us-improve.html");
+        break;
+
+      default:
+        url = Uri.parse("https://qualtrack-privacypolicy.web.app/");
+
+    }
+    if (!await launchUrl(url)) {
+      throw Exception('Could not launch $url');
+    } else {
+      print("Could not launch URL");
+    }
+  }
+
 }
+
+

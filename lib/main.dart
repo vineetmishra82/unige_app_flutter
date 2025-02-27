@@ -1,56 +1,70 @@
 import 'package:flutter/material.dart';
+import 'package:googleapis/dfareporting/v4.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:unige_app/screens/ApplicationData.dart';
 import 'package:unige_app/screens/HomePage.dart';
+import 'package:unige_app/screens/LandingPage.dart';
 import 'package:unige_app/screens/LoginScreen.dart';
 import 'package:unige_app/screens/RegisterUser.dart';
 
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // await Firebase.initializeApp(
-  //   options: DefaultFirebaseOptions.currentPlatform,
-  // );
-
-  runApp(Unige_App());
+  runApp(UnigeApp());
 }
 
 Future<bool> checkIfUserLoggedIn() async {
   SharedPreferences loginCheck = await SharedPreferences.getInstance();
-  // bool? result = loginCheck.getBool('isLoggedIn');
+  bool? isLoggedIn = loginCheck.getBool('isLoggedIn') ?? false;
 
-  ApplicationData.mobile =
-      loginCheck.get("LoginMobileInThisSuperliciousApp").toString();
-  bool phoneLength = (ApplicationData.mobile.length > 0) ? true : false;
-  ApplicationData.countryCodeISO = loginCheck.get("CountryCodeISO").toString();
+  ApplicationData.mobile = loginCheck.getString("LoginMobileInThisSuperliciousApp") ?? "";
+  ApplicationData.countryCodeISO = loginCheck.getString("CountryCodeISO") ?? "";
 
-  return phoneLength;
+  // Ensure ApplicationData.mobile is valid (not null and not empty)
+  bool isMobileValid = ApplicationData.mobile.isNotEmpty ;
+
+  return isLoggedIn && isMobileValid;
 }
 
-class Unige_App extends StatelessWidget {
+class ApplicationData {
+  static String mobile = "";
+  static String countryCodeISO = "";
+}
+
+class UnigeApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData.dark().copyWith(
         textTheme: const TextTheme(
-          bodyText2: TextStyle(color: Colors.white),
+          bodyMedium: TextStyle(color: Colors.white),
         ),
       ),
       home: FutureBuilder<bool>(
-          future: checkIfUserLoggedIn(),
-          builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
-            if (snapshot.data == false) {
-              return LoginScreen();
-            } else {
-              print("Going to home page - " + ApplicationData.mobile);
-              return HomePage(ApplicationData.mobile);
-            }
-          }),
+        future: checkIfUserLoggedIn(),
+        builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            // Show a loading indicator while waiting for the Future
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError || snapshot.data == false) {
+            // Go to LoginScreen if not logged in or an error occurs
+            return LoginScreen();
+          } else {
+            // Go to HomePage if logged in
+            return HomePage(ApplicationData.mobile);
+          }
+        },
+      ),
       routes: {
         LoginScreen.id: (context) => LoginScreen(),
         HomePage.id: (context) => HomePage(ApplicationData.mobile),
         RegisterUser.id: (context) => RegisterUser(),
+        LandingPageDetail.id: (context) => LandingPageDetail(),
       },
     );
   }
 }
+
