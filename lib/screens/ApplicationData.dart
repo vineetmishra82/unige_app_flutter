@@ -15,6 +15,8 @@ class ApplicationData extends StatelessWidget {
   static String? videoPath;
   static String audioMessage = "";
   static Map<String,String> multimediaUrls = {};
+
+  static Map<String,String> thankYouMessages ={};
   @override
   Widget build(BuildContext context) {
     return Container();

@@ -7,6 +7,8 @@ import 'package:url_launcher/url_launcher.dart';
 
 class LandingPageDetail extends StatefulWidget {
   static String id = "LandingPage";
+  String mobileNum;
+  LandingPageDetail(this.mobileNum, {super.key});
 
 
   @override
@@ -144,7 +146,7 @@ class _LandingPageDetailState extends State<LandingPageDetail> {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => HomePage(ApplicationData.mobile)),
+                MaterialPageRoute(builder: (context) => HomePage(widget.mobileNum)),
               );
             },
             child: Image.asset(

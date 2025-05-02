@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:modal_progress_hud_nsn/modal_progress_hud_nsn.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -36,7 +37,7 @@ class _OTPVerifyState extends State<OTPVerify> {
 
   @override
   void initState() {
-    //generateOTPandVerify();
+    print("this.mobile ${widget.mobile}");
   }
 
   @override
@@ -146,11 +147,15 @@ class _OTPVerifyState extends State<OTPVerify> {
                                 widget.mobile);
                             loginCheck.setString(
                                 "CountryCodeISO", widget.countryCodeISO);
-                            ApplicationData.mobile = widget.mobile;
+                            setState(() {
+                              ApplicationData.mobile = widget.mobile;
+                              ApplicationData.countryCodeISO =
+                                  widget.countryCodeISO;
+                            });
+
                             print('ApplicationData.mobile' +
                                 ApplicationData.mobile);
-                            ApplicationData.countryCodeISO =
-                                widget.countryCodeISO;
+
 
                             if (widget.id == 2) {
                               setState(() {
@@ -162,24 +167,55 @@ class _OTPVerifyState extends State<OTPVerify> {
                               print(url);
                               if (response.body == "true") {
                                 AlertDialog alert = AlertDialog(
-                                  title: Text("Success"),
+                                  backgroundColor: Colors.blue, // ✅ Dialog background color
+                                  title: Text(
+                                    "Success",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white, // ✅ Title text color
+                                    ),
+                                  ),
                                   content: Text(
-                                      "Welcome, User created successfully !"),
+                                    "Welcome, User created successfully!",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 16,
+                                      color: Colors.white, // ✅ Content text color
+                                    ),
+                                  ),
                                   actions: [
-                                    TextButton(
-                                        onPressed: () {
+                                    Center(
+                                      child: GestureDetector(
+                                        onTap: () {
                                           Navigator.pop(context);
                                           Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                  builder: (context) => LandingPageDetail()));
+                                            context,
+                                            MaterialPageRoute(builder: (context) => LandingPageDetail(widget.mobile)),
+                                          );
                                           setState(() {
                                             showSpinner = false;
                                           });
                                         },
-                                        child: Text("Continue"))
+                                        child: Container(
+                                          padding: EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                                          decoration: BoxDecoration(
+                                            color: Color(0xff003060), // ✅ Button color
+                                            borderRadius: BorderRadius.circular(20), // ✅ Rounded corners
+                                          ),
+                                          child: Text(
+                                            "Continue",
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.white, // ✅ Button text color
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
                                   ],
                                 );
+
 
                                 showDialog(
                                     context: context,
@@ -189,21 +225,51 @@ class _OTPVerifyState extends State<OTPVerify> {
                                 print(ApplicationData.mobile + " - true");
                               } else {
                                 AlertDialog alert = AlertDialog(
-                                  title: Text("Error"),
-                                  content:
-                                      Text("Could not Create User...Try again !"),
+                                  backgroundColor: Colors.blue, // ✅ Dialog background color
+                                  title: Text(
+                                    "Error",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white, // ✅ Title text color
+                                    ),
+                                  ),
+                                  content: Text(
+                                    "Could not create user... Try again!",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 16,
+                                      color: Colors.white, // ✅ Content text color
+                                    ),
+                                  ),
                                   actions: [
-                                    TextButton(
-                                        onPressed: () {
+                                    Center(
+                                      child: GestureDetector(
+                                        onTap: () {
                                           Navigator.pop(context);
-
                                           setState(() {
                                             showSpinner = false;
                                           });
                                         },
-                                        child: Text("Continue"))
+                                        child: Container(
+                                          padding: EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                                          decoration: BoxDecoration(
+                                            color: Color(0xff003060), // ✅ Button color
+                                            borderRadius: BorderRadius.circular(20), // ✅ Rounded corners
+                                          ),
+                                          child: Text(
+                                            "Continue",
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.white, // ✅ Button text color
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
                                   ],
                                 );
+
 
                                 showDialog(
                                     context: context,
@@ -217,7 +283,7 @@ class _OTPVerifyState extends State<OTPVerify> {
                                   context,
                                   MaterialPageRoute(
                                       builder: (context) =>
-                                        LandingPageDetail()));
+                                        LandingPageDetail(widget.mobile)));
                               setState(() {
                                 showSpinner = false;
                               });
@@ -316,9 +382,8 @@ class _OTPVerifyState extends State<OTPVerify> {
         Navigator.push(
             context,
             MaterialPageRoute(
-                builder: (context) => HomePage(ApplicationData.mobile)));
-        print(ApplicationData.mobile + " - true");
-        print("verify returned truew");
+                builder: (context) => HomePage(widget.mobile)));
+
       } else {
         authCredStatus = false;
         setState(() {

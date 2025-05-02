@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class Apis extends StatelessWidget {
   static String baseUrl = "https://unige-geneva.herokuapp.com/";
-  // static String baseUrl = "http://10.0.2.2:8080/";
+  //static String baseUrl = "http://10.0.2.2:8080/";
 
   @override
   Widget build(BuildContext context) {
@@ -66,5 +66,13 @@ class Apis extends StatelessWidget {
     return "${baseUrl}setNextSurveyForFeedback?userMobile=$mobile"
         "&productName=$productSelected&surveyId=$currentSurvey"
         "&activateReplacementSurvey=$isReplacementSurvey";
+  }
+
+  static String getThankyouMessage(shortName) {
+  return "${baseUrl}getThankYouMessage?productId=$shortName";
+  }
+
+  static String submitUserFeedback(){
+    return "${baseUrl}submitUserFeedback";
   }
 }

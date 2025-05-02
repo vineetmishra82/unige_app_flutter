@@ -17,9 +17,9 @@ import 'package:record/record.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:toggle_switch/toggle_switch.dart';
 import 'package:unige_app/screens/ApplicationData.dart';
+import 'package:unige_app/screens/HelpUsImprovePage.dart';
 import 'package:unige_app/screens/LoginScreen.dart';
 import 'package:url_launcher/url_launcher.dart';
-
 
 import '../Other_data/Apis.dart';
 import '../Other_data/AudioPlayer.dart';
@@ -32,7 +32,7 @@ import 'LandingPage.dart';
 class HomePage extends StatefulWidget {
   static String id = "HomePage";
   String mobileNum;
-  HomePage(this.mobileNum);
+  HomePage(this.mobileNum, {super.key});
 
   @override
   _HomePageState createState() => _HomePageState();
@@ -42,11 +42,11 @@ class _HomePageState extends State<HomePage>
     with SingleTickerProviderStateMixin {
   bool showSpinnerRegisterProduct = false,
       showSpinner = false,
+      showSpinnerMyFeedback = false,
       showSpinnerMyProfile = false,
       showSpinnerMyProducts = false;
   Color color = Colors.orange;
   final recorder = Record;
- 
 
   String name = "",
       email = "",
@@ -65,6 +65,7 @@ class _HomePageState extends State<HomePage>
   List<dynamic> surveys = [];
   List<dynamic> allSurveys = [];
   Map<String, dynamic> ratings = {};
+  Map<String, dynamic> checkBoxes = {};
   List<String> years = <String>[];
   List<String> months = <String>[];
   List<String> responseArray = <String>[
@@ -82,12 +83,16 @@ class _HomePageState extends State<HomePage>
       pressed2 = false,
       userDataLoaded = false,
       ratingsArrayLoaded = false,
+      checkBoxArrayLoaded = false,
       showRegistrationPage = false,
       showFeedback = false,
       isRecorderReady = false,
       isPlaying = false,
       isDefectSurvey = false,
-      isFirstRegistration = false;
+      isFirstRegistration = false,
+      isSurveyComplete = false;
+
+  Map<int, Set<String>> selectedCheckboxes = {};
 
   var featureList = {};
   int val = 3, tabIndex = 0, qs2DefectSurveyLength = -1;
@@ -113,7 +118,16 @@ class _HomePageState extends State<HomePage>
   bool isRecording = false;
 
   //Navigation icon sizes
-  double leftWidth = 40,leftHeight=40,rightWidth = 40, rightHeight=40;
+  double leftWidth = 40, leftHeight = 40, rightWidth = 40, rightHeight = 40;
+
+  Map<int, bool> isDropdownFocusedMap =
+      {}; // ✅ Stores focus state for each dropdown
+
+  void _updateFocusState(int index, bool isFocused) {
+    setState(() {
+      isDropdownFocusedMap[index] = isFocused;
+    });
+  }
 
   @override
   void initState() {
@@ -151,7 +165,7 @@ class _HomePageState extends State<HomePage>
           length: 3,
           initialIndex: 0,
           child: Scaffold(
-           backgroundColor: Colors.white,
+            backgroundColor: Colors.white,
             appBar: PreferredSize(
               preferredSize: Size.fromHeight(size.height * .08),
               child: SafeArea(
@@ -165,7 +179,7 @@ class _HomePageState extends State<HomePage>
                         child: Image.asset(
                           'images/logo.png',
                           height: 50,
-                          width: size.width * 0.4,// Ensures proper scaling
+                          width: size.width * 0.4, // Ensures proper scaling
                         ),
                       ),
                       InkWell(
@@ -205,7 +219,8 @@ class _HomePageState extends State<HomePage>
               color: const Color(0xff003060),
               child: TabBar(
                 controller: tabController,
-                labelStyle: GoogleFonts.roboto(fontSize: MediaQuery.textScalerOf(context).scale(14)),
+                labelStyle: GoogleFonts.roboto(
+                    fontSize: MediaQuery.textScalerOf(context).scale(14)),
                 indicatorSize: TabBarIndicatorSize.tab,
                 tabs: [
                   Tab(
@@ -241,9 +256,6 @@ class _HomePageState extends State<HomePage>
     loginCheck.setBool("isLoggedIn", false);
     loginCheck.setString("LoginMobileInThisSuperliciousApp", "");
     loginCheck.setString("CountryCodeISO", "");
-
-    ApplicationData.mobile = "";
-    ApplicationData.countryCodeISO = "";
   }
 
   MyProfile(context) {
@@ -285,9 +297,9 @@ class _HomePageState extends State<HomePage>
                   Text(
                     "Profile details",
                     style: GoogleFonts.poppins(
-                      fontSize: MediaQuery.textScalerOf(context).scale(15),
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xff003060)),
+                        fontSize: MediaQuery.textScalerOf(context).scale(15),
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xff003060)),
                   ),
                 ],
               ),
@@ -308,8 +320,8 @@ class _HomePageState extends State<HomePage>
                     Text(
                       name,
                       style: GoogleFonts.poppins(
-                          fontSize: MediaQuery.textScalerOf(context).scale(18),
-                          color: Color(0xff003060),
+                        fontSize: MediaQuery.textScalerOf(context).scale(18),
+                        color: Color(0xff003060),
                       ),
                     ),
                   ],
@@ -332,7 +344,7 @@ class _HomePageState extends State<HomePage>
                       width: 20,
                     ),
                     Text(
-                      "+$mobile",
+                      "+${widget.mobileNum}",
                       style: GoogleFonts.poppins(
                         fontSize: MediaQuery.textScalerOf(context).scale(18),
                         color: Color(0xff003060),
@@ -380,16 +392,18 @@ class _HomePageState extends State<HomePage>
                         fontWeight: FontWeight.bold,
                         color: Color(0xff003060)),
                   ),
-
                 ],
               ),
               const SizedBox(
                 height: 20.0,
               ),
               GestureDetector(
-                onTap: (){
-                  Navigator.push(  context,
-                      MaterialPageRoute(builder: (context) => LandingPageDetail()));
+                onTap: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              LandingPageDetail(widget.mobileNum)));
                 },
                 child: Padding(
                   padding: EdgeInsets.only(left: 20),
@@ -417,7 +431,7 @@ class _HomePageState extends State<HomePage>
                 height: 20.0,
               ),
               GestureDetector(
-                onTap: (){
+                onTap: () {
                   setState(() {
                     urlId = 1;
                   });
@@ -449,7 +463,7 @@ class _HomePageState extends State<HomePage>
                 height: 20.0,
               ),
               GestureDetector(
-                onTap: (){
+                onTap: () {
                   setState(() {
                     urlId = 2;
                   });
@@ -481,11 +495,17 @@ class _HomePageState extends State<HomePage>
                 height: 20.0,
               ),
               GestureDetector(
-                onTap: (){
-                  setState(() {
-                    urlId = 3;
-                  });
-                  _launchUrl();
+                onTap: () {
+                  final result =
+                     Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) =>
+                        HelpUsImprovePage(
+                          name: name,
+                          email: email,
+                          mobile: widget.mobileNum
+                  )));
                 },
                 child: Padding(
                   padding: EdgeInsets.only(left: 20),
@@ -514,57 +534,163 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-  getUserDetails() async {
-
-    String mobile = ApplicationData.mobile;
-    print("Getting user details as condition is ${mobile.isNotEmpty && (name.isEmpty || email.isEmpty)}");
-    if (name.isEmpty || email.isEmpty) {
-
+  Future<void> getUserDetails() async {
+    if (!mounted) {
+      print("getUserDetails: Aborted, widget not mounted at ${DateTime.now()}");
+      return;
+    }
+    print("in profile ApplicationData.mobile is ${widget.mobileNum}");
+    print(
+        "Getting user details as condition is ${widget.mobileNum.isNotEmpty && (name.isEmpty || email.isEmpty)}");
+    if (widget.mobileNum.isNotEmpty && (name.isEmpty || email.isEmpty)) {
+      final startTime = DateTime.now();
       setState(() {
         showSpinnerMyProfile = true;
+        print("getUserDetails: showSpinnerMyProfile set to true at ${DateTime.now()}");
       });
 
-      var url = Uri.parse(Apis.getUser(mobile));
-      var response = await http.get(url);
+      try {
+        var url = Uri.parse(Apis.getUser(widget.mobileNum));
+        print("getUserDetails: Fetching user details from $url at ${DateTime.now()}");
+        var response = await http.get(url);
+        Map<String, dynamic> values = json.decode(response.body);
 
-      Map<String, dynamic> values = json.decode(response.body);
+        if (mounted) {
+          setState(() {
+            name = values["name"];
+            email = values["email"];
+            print("getUserDetails: name and email updated at ${DateTime.now()}");
+            print("getUserDetails: Data received: $values");
+          });
+        } else {
+          print("getUserDetails: Skipped name and email update, widget not mounted at ${DateTime.now()}");
+        }
 
-      setState(() {
-        name = values["name"];
-        email = values["email"];
-        showSpinnerMyProfile = false;
-      });
+        final elapsed = DateTime.now().difference(startTime).inMilliseconds;
+        const minDuration = 500; // Minimum spinner duration in ms
+        if (elapsed < minDuration) {
+          await Future.delayed(Duration(milliseconds: minDuration - elapsed));
+        }
 
+        if (mounted) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              setState(() {
+                showSpinnerMyProfile = false;
+                print("getUserDetails: showSpinnerMyProfile set to false at ${DateTime.now()}");
+              });
+            } else {
+              print("getUserDetails: Skipped spinner hide, widget not mounted at ${DateTime.now()}");
+            }
+          });
+        } else {
+          print("getUserDetails: Skipped post-frame callback, widget not mounted at ${DateTime.now()}");
+        }
+      } catch (e) {
+        print("Error in getUserDetails: $e at ${DateTime.now()}");
+        if (mounted) {
+          setState(() {
+            showSpinnerMyProfile = false;
+            print("getUserDetails: showSpinnerMyProfile set to false (error) at ${DateTime.now()}");
+          });
+        } else {
+          print("getUserDetails: Skipped error handling, widget not mounted at ${DateTime.now()}");
+        }
+      }
     }
-
-
   }
 
   Future<void> loadProducts() async {
-    print("before loading products is $products");
+    if (!mounted) {
+      print("loadProducts: Aborted, widget not mounted at ${DateTime.now()}");
+      return;
+    }
+    final startTime = DateTime.now();
     setState(() {
       showSpinnerMyProducts = true;
+      showSpinnerMyFeedback = true;
+      print("loadProducts: showSpinnerMyProducts set to true at ${DateTime.now()}");
     });
-    var response = await http.get(Uri.parse(Apis.getAllProducts()));
-
-    productsObjects = json.decode(response.body);
-
-    for (int i = 0; i < productsObjects.length; i++) {
-      if (!products.contains((productsObjects[i]["productName"].toString()))) {
-        products.add(productsObjects[i]["productName"].toString());
+    try {
+      var response = await http.get(Uri.parse(Apis.getAllProducts()));
+      productsObjects = json.decode(response.body);
+      print("loadProducts: Processing ${productsObjects.length} products");
+      List<String> tempProducts = [];
+      for (var item in productsObjects) {
+        String productName = item["productName"].toString();
+        if (!tempProducts.contains(productName)) {
+          tempProducts.add(productName);
+        }
+      }
+      if (mounted) {
+        setState(() {
+          products = tempProducts;
+          print("loadProducts: products updated at ${DateTime.now()}");
+        });
+      } else {
+        print("loadProducts: Skipped products update, widget not mounted at ${DateTime.now()}");
+      }
+      final elapsed = DateTime.now().difference(startTime).inMilliseconds;
+      const minDuration = 1000; // Increased to 1000ms for visibility
+      if (elapsed < minDuration) {
+        await Future.delayed(Duration(milliseconds: minDuration - elapsed));
+      }
+      if (mounted) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted && !_isLoadingMyProducts) { // Check if loadMyProducts is still running
+            setState(() {
+              showSpinnerMyProducts = false;
+              showSpinnerMyFeedback = false;
+              print("loadProducts: showSpinnerMyProducts set to false at ${DateTime.now()}");
+            });
+          } else {
+            print("loadProducts: Skipped spinner hide, widget not mounted or loadMyProducts running at ${DateTime.now()}");
+          }
+        });
+      } else {
+        print("loadProducts: Skipped post-frame callback, widget not mounted at ${DateTime.now()}");
+      }
+    } catch (e) {
+      print("Error in loadProducts: $e at ${DateTime.now()}");
+      if (mounted) {
+        setState(() {
+          showSpinnerMyProducts = false;
+          showSpinnerMyFeedback = false;
+          print("loadProducts: showSpinnerMyProducts set to false (error) at ${DateTime.now()}");
+        });
+      } else {
+        print("loadProducts: Skipped error handling, widget not mounted at ${DateTime.now()}");
       }
     }
-    print("after loading products is $products");
-    // productSelected = products[0];
-    setState(() {
-      products = products.toSet().toList(); // ✅ Ensure uniqueness
-
-      showSpinnerMyProducts = false;
-    });
   }
 
   MyFeedback(BuildContext context) {
-   if (showThankyouMessage) {
+    // 🧠 Check once per build frame to update global isSurveyComplete
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      try {
+        for (var product in myProducts) {
+          if (product["active"] == true &&
+              product["currentMainSurvey"]?["surveyId"] == "Done") {
+            setState(() {
+              isSurveyComplete = true;
+            });
+
+            break; // no need to keep checking once we find one
+          } else {
+            setState(() {
+              isSurveyComplete = false;
+            });
+          }
+        }
+
+      } on Exception catch (e) {
+        // TODO
+      }
+
+
+    });
+
+    if (showThankyouMessage) {
       return Padding(
         padding: const EdgeInsets.all(10.0),
         child: (Column(
@@ -573,7 +699,9 @@ class _HomePageState extends State<HomePage>
           children: [
             Text(
               processThankYouText(surveys[0]["thankYouText"]),
-              style: TextStyle(fontSize: MediaQuery.textScalerOf(context).scale(18), color: Colors.pink),
+              style: TextStyle(
+                  fontSize: MediaQuery.textScalerOf(context).scale(18),
+                  color: Colors.pink),
             ),
             Material(
               color: Colors.blue,
@@ -581,22 +709,23 @@ class _HomePageState extends State<HomePage>
               elevation: 2.0,
               child: MaterialButton(
                 onPressed: () async {
-                  setState(() {
                     setState(() {
                       showThankyouMessage = false;
                       showFeedback = false;
                       showRegistrationPage = false;
-                      showSpinnerMyProducts = false;
+                      showSpinnerMyProducts = true;
+                      showSpinner = true;
+                      showSpinnerMyFeedback = true;
                       goToHome = true;
                     });
                     //   loadMyProducts();
-                  });
                 },
                 minWidth: 50.0,
                 height: 32.0,
                 child: Text(
                   'Continue',
-                  style: TextStyle(fontSize: MediaQuery.textScalerOf(context).scale(14)),
+                  style: TextStyle(
+                      fontSize: MediaQuery.textScalerOf(context).scale(14)),
                 ),
               ),
             ),
@@ -608,7 +737,7 @@ class _HomePageState extends State<HomePage>
     } else if (showAudioPlayer) {
       return getAudioPlayerApparatus();
     } else if (showFeedback) {
-      return startFeedback();
+        return startFeedback();
     } else if (goToHome) {
       tabController.animateTo(0);
 
@@ -618,7 +747,8 @@ class _HomePageState extends State<HomePage>
       return getVideoPlayerApparatus();
     } else {
       return ModalProgressHUD(
-        inAsyncCall: showSpinner,
+        inAsyncCall: showSpinnerMyFeedback,
+        color: Colors.green,
         child: SingleChildScrollView(
           physics: BouncingScrollPhysics(),
           child: Padding(
@@ -632,13 +762,12 @@ class _HomePageState extends State<HomePage>
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     Text(
-                      "My Feedback",
+                      isSurveyComplete ? "" : "My Feedback",
                       style: GoogleFonts.poppins(
                           fontSize: MediaQuery.textScalerOf(context).scale(25),
                           fontWeight: FontWeight.bold,
                           color: Color(0xff003060)),
                     ),
-
                   ],
                 ),
                 const SizedBox(
@@ -646,74 +775,118 @@ class _HomePageState extends State<HomePage>
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Text("In this section, you can check the status of your feedback or report a recent issue."
-                    "\nTo submit an unusual report, simply click on the report icon."
-                    ,style: GoogleFonts.poppins(
+                  child: Text(
+                    isSurveyComplete
+                        ? ""
+                        : "In this section, you can check the status of your feedback or report a recent issue."
+                            "\nTo report an incident, simply click on Report a problem.",
+                    style: GoogleFonts.poppins(
                       color: Color(0xff003060),
                       fontSize: MediaQuery.textScalerOf(context).scale(14),
                     ),
                   ),
                 ),
                 // Header Row
-               SizedBox(
-                 height: 10,
-               ),
+                SizedBox(
+                  height: 10,
+                ),
                 // Product Rows
                 Column(
                   children: [
                     for (var product in myProducts)
                       if (product["active"] == true)
-                        Column(
-                          children: [
-                            Container(
-                              color: Color(0xff003060),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.center,
+                        product["currentMainSurvey"]["surveyId"] == "Done"
+                            ? Column(
                                 children: [
-                                  // Product Name
-                                  Expanded(
-                                    flex: 2,
-                                    child: SizedBox(
-                                      width: 100, // Ensure proper width for wrapping
-                                      child: Text(
-                                        product["productName"],
-                                        style: GoogleFonts.poppins(
-                                          fontSize: MediaQuery.textScalerOf(context).scale(11),
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white,
-                                        ),
-                                        softWrap: true, // Enable text wrapping
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 20, vertical: 20),
+                                    child: Text(
+                                      processResponse(
+                                              ApplicationData.thankYouMessages[
+                                                  product["shortName"]]) ??
+                                          "",
+                                      style: GoogleFonts.poppins(
+                                        color: Colors.blue,
+                                        fontSize:
+                                            MediaQuery.textScalerOf(context)
+                                                .scale(20),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              )
+                            : Column(
+                                children: [
+                                  Padding(
+                                    padding: EdgeInsets.symmetric(
+                                        horizontal:
+                                            16.0), // ✅ Adds equal spacing on both sides
+                                    child: Container(
+                                      color: Color(0xff003060),
+                                      child: Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.center,
+                                        mainAxisAlignment: MainAxisAlignment
+                                            .center, // ✅ Centers the row contents
+                                        children: [
+                                          // Product Name
+                                          Expanded(
+                                            flex: 2,
+                                            child: SizedBox(
+                                              width:
+                                                  180, // ✅ Ensure proper width for wrapping
+                                              child: Padding(
+                                                padding:
+                                                    const EdgeInsets.all(8.0),
+                                                child: Text(
+                                                  product["shortName"],
+                                                  style: GoogleFonts.poppins(
+                                                    fontSize:
+                                                        MediaQuery.textScalerOf(
+                                                                context)
+                                                            .scale(11),
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Colors.white,
+                                                  ),
+                                                  softWrap:
+                                                      true, // ✅ Enable text wrapping
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                          SizedBox(
+                                              width:
+                                                  8), // ✅ Spacer between elements
+
+                                          // Check for Active Feedback
+                                          if (product["active"] == true)
+                                            Expanded(
+                                              flex: 1,
+                                              child:
+                                                  SetDefectReportAndGetWidget(
+                                                      product),
+                                            ),
+                                          SizedBox(
+                                              width:
+                                                  3), // ✅ Add space between elements
+
+                                          // Defect Report
+                                          if (product["active"] == true)
+                                            Expanded(
+                                              flex: 1,
+                                              child:
+                                                  checkForActiveFeedbackAndGetWidget(
+                                                      product),
+                                            ),
+                                        ],
                                       ),
                                     ),
                                   ),
                                   SizedBox(
-                                    width: 10,
-                                  ),
-
-                                  // Check for Active Feedback
-                                  if (product["active"] == true)
-                                    Expanded(
-                                      flex: 1,
-                                      child: SetDefectReportAndGetWidget(product),
-                                    ),
-                                  SizedBox(
-                                    width: 5,
-                                  ),
-
-                                  // Defect Report
-                                  if (product["active"] == true)
-                                    Expanded(
-                                      flex: 1,
-                                      child: checkForActiveFeedbackAndGetWidget(product),
-                                    ),
+                                      height: 10), // ✅ Divider between rows
                                 ],
                               ),
-                            ),
-                            SizedBox(
-                              height: 10,
-                            ) // Divider between rows
-                          ],
-                        ),
                   ],
                 ),
               ],
@@ -721,7 +894,6 @@ class _HomePageState extends State<HomePage>
           ),
         ),
       );
-
     }
   }
 
@@ -766,72 +938,96 @@ class _HomePageState extends State<HomePage>
                         Row(
                           children: [
                             SizedBox(
-                            width: 55,
+                              width: 55,
                             ),
-                            Text("Product",style: GoogleFonts.poppins(
-                              color: Color(0xff003060),
-                                fontSize: MediaQuery.textScalerOf(context).scale(16),
-                                fontWeight: FontWeight.bold
-                            ),)
+                            Text(
+                              "Product",
+                              style: GoogleFonts.poppins(
+                                  color: Color(0xff003060),
+                                  fontSize: MediaQuery.textScalerOf(context)
+                                      .scale(16),
+                                  fontWeight: FontWeight.bold),
+                            )
                           ],
                         ),
-                        Container(
-                          width: 300,
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.black, width: 1), // Black thin border
-                            borderRadius: BorderRadius.circular(6), // Slightly rounded corners
-                          ),
-                          padding: EdgeInsets.symmetric(horizontal: 10, vertical: 1), // Padding inside the box
-                          child: DropdownButtonHideUnderline( // Removes the default underline
-                            child: DropdownButton<String>(
-                              isExpanded: true, // ✅ Prevents UI overflow
-                              style: GoogleFonts.poppins(
-                                fontSize: MediaQuery.textScalerOf(context).scale(15),
-                                color: const Color(0xff003060),
-                              ),
-                              icon: const Icon(Icons.keyboard_arrow_down),
-                              iconSize: 24,
-                              iconEnabledColor: Color(0xff3AB7A6),
-
-                              hint: Text(
-                                "Please Select",
-                                style: GoogleFonts.poppins(
-                                  fontSize: MediaQuery.textScalerOf(context).scale(15),
-                                  color: Color(0xff003060),
-                                ),
-                              ),
-
-                              // ✅ Ensure non-null and unique list
-                              items: (products.isEmpty
-                                  ? ["Loading..."]
-                                  : products.toSet().toList()) // ✅ Ensure uniqueness
-                                  .map((String prod) {
-                                return DropdownMenuItem(
-                                  value: prod,
-                                  child: Text(
-                                    prod,
-                                    style: GoogleFonts.poppins(
-                                      fontSize: MediaQuery.textScalerOf(context).scale(15),
-                                      color: Color(0xff003060),
-                                    ),
-                                  ),
-                                );
-                              }).toList(),
-
-                              onChanged: (String? newValue) {
-                                setState(() {
-                                  productSelected = newValue;
-                                  loadFeaturesListForSelectedProduct();
-                                });
-                              },
-
-                              // ✅ Only set `productSelected` if it's in the list
-                              value: products.contains(productSelected) ? productSelected : null,
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 10, horizontal: 54.0),
+                          child: Container(
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: productSelected != null
+                                    ? Colors.blue
+                                    : Colors
+                                        .black, // ✅ Changes to blue when selected
+                                width: 2.0,
+                              ), // Black thin border
+                              borderRadius: BorderRadius.circular(
+                                  6), // Slightly rounded corners
                             ),
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 1), // Padding inside the box
+                            child: DropdownButtonHideUnderline(
+                              // Removes the default underline
+                              child: DropdownButton<String>(
+                                isExpanded: true, // ✅ Prevents UI overflow
+                                style: GoogleFonts.poppins(
+                                  fontSize: MediaQuery.textScalerOf(context)
+                                      .scale(15),
+                                  color: const Color(0xff003060),
+                                ),
 
+                                icon: const Icon(Icons.keyboard_arrow_down),
+                                iconSize: 24,
+                                iconEnabledColor: Color(0xff3AB7A6),
+
+                                hint: Text(
+                                  "Please Select",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: MediaQuery.textScalerOf(context)
+                                        .scale(15),
+                                    color: Color(0xff003060),
+                                  ),
+                                ),
+
+                                // ✅ Ensure non-null and unique list
+                                items: (products.isEmpty
+                                        ? ["Loading..."]
+                                        : products
+                                            .toSet()
+                                            .toList()) // ✅ Ensure uniqueness
+                                    .map((String prod) {
+                                  return DropdownMenuItem(
+                                    value: prod,
+                                    child: Text(
+                                      prod,
+                                      style: GoogleFonts.poppins(
+                                        fontSize:
+                                            MediaQuery.textScalerOf(context)
+                                                .scale(15),
+                                        color: Color(0xff003060),
+                                      ),
+                                    ),
+                                  );
+                                }).toList(),
+
+                                onChanged: (String? newValue) {
+                                  setState(() {
+                                    productSelected = newValue;
+                                    loadFeaturesListForSelectedProduct();
+                                  });
+                                },
+
+                                // ✅ Only set `productSelected` if it's in the list
+                                value: products.contains(productSelected)
+                                    ? productSelected
+                                    : null,
+                              ),
+                            ),
                           ),
                         )
-
                       ],
                     ),
                   ),
@@ -864,49 +1060,60 @@ class _HomePageState extends State<HomePage>
                 elevation: 5.0,
                 child: MaterialButton(
                   onPressed: () async {
+                    FocusScope.of(context).unfocus();
                     if (allRegisterFieldsOk()) {
                       AlertDialog alert = AlertDialog(
                         backgroundColor: Colors.blue,
                         title: Text("Confirm"),
                         content: Text(
                           "Please check all fields before registering your product. You will not"
-                              " be able to change it later.\n\n Do you wish to register the product ?",
+                          " be able to change it later.\n\n Do you wish to register the product ?",
                           style: GoogleFonts.poppins(),
                         ),
                         actions: [
                           Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly, // Space buttons evenly
+                            mainAxisAlignment: MainAxisAlignment
+                                .spaceEvenly, // Space buttons evenly
                             children: [
                               GestureDetector(
                                 onTap: () async {
+
                                   Navigator.pop(context);
+                                  FocusScope.of(context).unfocus();
                                   setState(() {
                                     showSpinnerRegisterProduct = true;
                                   });
                                   var url = Uri.parse(Apis.registerProduct(
-                                      productSelected.toString(), mobile));
+                                      productSelected.toString(),
+                                      widget.mobileNum));
                                   print(url);
                                   print(jsonEncode(featureList));
                                   var response = await http.post(url,
                                       headers: <String, String>{
-                                        'Content-Type': 'application/json; charset=UTF-8',
+                                        'Content-Type':
+                                            'application/json; charset=UTF-8',
                                       },
                                       body: jsonEncode(featureList));
 
                                   if (response.body == "true") {
                                     await loadMyProducts();
-                                    var prodName = "$productSelected-" + featureList["Brand"];
-                                    bool isElectricTwoWheeler = productSelected.toString().toLowerCase().contains("electric two".toLowerCase());
+                                    var prodName = "$productSelected-" +
+                                        featureList["Brand"];
+                                    bool isElectricTwoWheeler = productSelected
+                                        .toString()
+                                        .toLowerCase()
+                                        .contains("electric vehicle".toLowerCase());
                                     if (isFirstRegistration) {
                                       setState(() {
-                                        myProductSelected = getProduct(prodName);
-                                        print("myProductSelected is $myProductSelected");
+                                        myProductSelected =
+                                            getProduct(prodName);
+
                                         if (!isElectricTwoWheeler) {
-                                          startSurveyProcess(myProductSelected["currentMainSurvey"]);
+                                          startSurveyProcess(myProductSelected[
+                                              "currentMainSurvey"]);
                                           isDefectSurvey = false;
                                           isFirstRegistration = false;
                                         }
-
                                       });
                                     } else {
                                       setState(() {
@@ -917,20 +1124,23 @@ class _HomePageState extends State<HomePage>
                                     }
 
                                     AlertDialog successAlert = AlertDialog(
-                                      backgroundColor: Colors.blue, // ✅ Set background color
+                                      backgroundColor:
+                                          Colors.blue, // ✅ Set background color
                                       title: Text(
                                         "Success",
                                         style: GoogleFonts.poppins(
                                           fontSize: 18,
                                           fontWeight: FontWeight.bold,
-                                          color: Colors.white, // ✅ Title text color
+                                          color: Colors
+                                              .white, // ✅ Title text color
                                         ),
                                       ),
                                       content: Text(
                                         "Thank you for registering your ${productSelected.toString().toLowerCase()}",
                                         style: GoogleFonts.poppins(
                                           fontSize: 16,
-                                          color: Colors.white, // ✅ Content text color
+                                          color: Colors
+                                              .white, // ✅ Content text color
                                         ),
                                       ),
                                       actions: [
@@ -945,14 +1155,20 @@ class _HomePageState extends State<HomePage>
                                             Navigator.pop(context);
 
                                             if (isElectricTwoWheeler) {
-                                              final result = await Navigator.push(
+                                              final result =
+                                                  await Navigator.push(
                                                 context,
-                                                MaterialPageRoute(builder: (context) => const EVLandingPage()),
+                                                MaterialPageRoute(
+                                                    builder: (context) =>
+                                                        const EVLandingPage()),
                                               );
 
-                                              if (result == true && isFirstRegistration) {
+                                              if (result == true &&
+                                                  isFirstRegistration) {
                                                 setState(() {
-                                                  startSurveyProcess(myProductSelected["currentMainSurvey"]);
+                                                  startSurveyProcess(
+                                                      myProductSelected[
+                                                          "currentMainSurvey"]);
                                                   isDefectSurvey = false;
                                                   isFirstRegistration = false;
                                                 });
@@ -960,24 +1176,28 @@ class _HomePageState extends State<HomePage>
                                             }
                                           },
                                           child: Container(
-                                            padding: EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                                            padding: EdgeInsets.symmetric(
+                                                vertical: 12, horizontal: 20),
                                             decoration: BoxDecoration(
-                                              color: Color(0xff003060), // ✅ Button color
-                                              borderRadius: BorderRadius.circular(20), // ✅ Rounded corners
+                                              color: Color(
+                                                  0xff003060), // ✅ Button color
+                                              borderRadius:
+                                                  BorderRadius.circular(
+                                                      20), // ✅ Rounded corners
                                             ),
                                             child: Text(
                                               "Continue",
                                               style: GoogleFonts.poppins(
                                                 fontSize: 16,
                                                 fontWeight: FontWeight.bold,
-                                                color: Colors.white, // ✅ Button text color
+                                                color: Colors
+                                                    .white, // ✅ Button text color
                                               ),
                                             ),
                                           ),
                                         ),
                                       ],
                                     );
-
 
                                     showDialog(
                                         context: context,
@@ -991,14 +1211,17 @@ class _HomePageState extends State<HomePage>
                                   } else {
                                     setState(() {
                                       showSpinner = false;
+                                      showSpinnerMyFeedback = false;
                                     });
                                   }
                                 },
                                 child: Container(
-                                  padding: EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                                  padding: EdgeInsets.symmetric(
+                                      vertical: 12, horizontal: 20),
                                   decoration: BoxDecoration(
                                     color: Color(0xff003060), // Button color
-                                    borderRadius: BorderRadius.circular(20), // Rounded corners
+                                    borderRadius: BorderRadius.circular(
+                                        20), // Rounded corners
                                   ),
                                   child: Text(
                                     "Register",
@@ -1015,10 +1238,12 @@ class _HomePageState extends State<HomePage>
                                   Navigator.pop(context);
                                 },
                                 child: Container(
-                                  padding: EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                                  padding: EdgeInsets.symmetric(
+                                      vertical: 12, horizontal: 20),
                                   decoration: BoxDecoration(
                                     color: Color(0xff003060), // Button color
-                                    borderRadius: BorderRadius.circular(20), // Rounded corners
+                                    borderRadius: BorderRadius.circular(
+                                        20), // Rounded corners
                                   ),
                                   child: Text(
                                     "Cancel",
@@ -1035,23 +1260,150 @@ class _HomePageState extends State<HomePage>
                         ],
                       );
 
-
                       showDialog(
                           context: context,
                           builder: (BuildContext context) {
                             return alert;
                           });
                     } else {
+                      print("coming to this else 1172");
                       AlertDialog alert = AlertDialog(
-                        title: Text("Error"),
-                        content:
-                            Text("All fields are mandatory to register!"),
+                        backgroundColor: Colors.blue, // ✅ Background color
+                        title: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              "Oops! Missing Info",
+                              style: GoogleFonts.poppins(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white, // ✅ Title text color
+                              ),
+                            ),
+                            SizedBox(width: 8), // ✅ Spacing
+                            Icon(Icons.warning, color: Colors.yellow, size: 30),
+                          ],
+                        ),
+                        content: Column(
+                          mainAxisSize: MainAxisSize
+                              .min, // ✅ Prevents unnecessary spacing
+                          crossAxisAlignment: CrossAxisAlignment
+                              .start, // ✅ Aligns content to the left
+                          children: [
+                            Text(
+                              "We need all fields filled out to continue.",
+                              style: GoogleFonts.poppins(
+                                fontSize: 16,
+                                color: Colors.white, // ✅ Content text color
+                              ),
+                            ),
+                            SizedBox(
+                                height:
+                                    20), // ✅ Space between text and checklist
+                            Column(
+                              children: [
+                                Row(
+                                  children: [
+                                    Stack(
+                                      alignment: Alignment.center,
+                                      children: [
+                                        Icon(Icons.check_box,
+                                            color: Colors.green,
+                                            size: 18), // Green box
+                                        Icon(Icons.check,
+                                            color: Colors.white,
+                                            size: 14), // White tick on top
+                                      ],
+                                    ), // ✅ Check Icon
+                                    SizedBox(width: 8), // ✅ Spacing
+                                    Text(
+                                      "Check your info",
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 14,
+                                        color: Colors.white, // ✅ Text color
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(
+                                    height:
+                                        5), // ✅ Spacing between checklist items
+                                Row(
+                                  children: [
+                                    Stack(
+                                      alignment: Alignment.center,
+                                      children: [
+                                        Icon(Icons.check_box,
+                                            color: Colors.green,
+                                            size: 18), // Green box
+                                        Icon(Icons.check,
+                                            color: Colors.white,
+                                            size: 14), // White tick on top
+                                      ],
+                                    ),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      "Fill in the missing parts",
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 14,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(height: 5),
+                                Row(
+                                  children: [
+                                    Stack(
+                                      alignment: Alignment.center,
+                                      children: [
+                                        Icon(Icons.check_box,
+                                            color: Colors.green,
+                                            size: 18), // Green box
+                                        Icon(Icons.check,
+                                            color: Colors.white,
+                                            size: 14), // White tick on top
+                                      ],
+                                    ),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      "Try again!",
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 14,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                         actions: [
-                          TextButton(
-                              onPressed: () {
+                          Center(
+                            child: GestureDetector(
+                              onTap: () {
                                 Navigator.pop(context);
                               },
-                              child: Text("Back"))
+                              child: Container(
+                                padding: EdgeInsets.symmetric(
+                                    vertical: 12, horizontal: 20),
+                                decoration: BoxDecoration(
+                                  color: Color(0xff003060), // ✅ Button color
+                                  borderRadius: BorderRadius.circular(
+                                      20), // ✅ Rounded corners
+                                ),
+                                child: Text(
+                                  "Go Back",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white, // ✅ Button text color
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
                         ],
                       );
 
@@ -1066,7 +1418,9 @@ class _HomePageState extends State<HomePage>
                   height: 52.0,
                   child: Text(
                     'Register',
-                    style: TextStyle(fontSize: MediaQuery.textScalerOf(context).scale(18), color: Colors.white),
+                    style: TextStyle(
+                        fontSize: MediaQuery.textScalerOf(context).scale(18),
+                        color: Colors.white),
                   ),
                 ),
               ))
@@ -1074,10 +1428,12 @@ class _HomePageState extends State<HomePage>
       );
     }
     if (products.length <= 0) {
-      return Column(mainAxisAlignment: MainAxisAlignment.end, children:  [
+      return Column(mainAxisAlignment: MainAxisAlignment.end, children: [
         Text(
           "No values to input",
-          style: TextStyle(color: Colors.red, fontSize: MediaQuery.textScalerOf(context).scale(18)),
+          style: TextStyle(
+              color: Colors.red,
+              fontSize: MediaQuery.textScalerOf(context).scale(18)),
         ),
       ]);
     }
@@ -1107,35 +1463,91 @@ class _HomePageState extends State<HomePage>
     // featureList.forEach((key, value) {});
   }
 
+  bool _isLoadingMyProducts = false; // Add to _HomePageState
+
   Future<void> loadMyProducts() async {
+    if (!mounted) {
+      print("loadMyProducts: Aborted, widget not mounted at ${DateTime.now()}");
+      return;
+    }
+    _isLoadingMyProducts = true;
+    final startTime = DateTime.now();
     setState(() {
       showSpinnerMyProducts = true;
+      showSpinnerMyFeedback = true;
+      print("loadMyProducts: showSpinnerMyProducts set to true at ${DateTime.now()}");
     });
-    myProducts = [];
-    var url = Uri.parse(Apis.getUserProducts(mobile));
-    print(url);
-    var response = await http.get(url);
+    try {
+      List<dynamic> tempProducts = [];
+      var url = Uri.parse(Apis.getUserProducts(widget.mobileNum));
+      print(url);
+      var response = await http.get(url);
+      var data = json.decode(response.body);
+      print("loadMyProducts: Processing ${data.length} products");
 
-    var data = json.decode(response.body);
+      for (var element in data) {
+        tempProducts.add(element);
+        url = Uri.parse(Apis.getThankyouMessage(element["shortName"]));
+        print(url);
+        response = await http.get(url);
+        ApplicationData.thankYouMessages[element["shortName"]] = response.body;
+      }
 
-    for (var element in data) {
-      setState(() {
-        myProducts.add(element);
-      });
+      if (mounted) {
+        setState(() {
+          myProducts = tempProducts;
+          if (myProducts.isNotEmpty) {
+            myProductSelected = myProducts[0];
+            final brandStart = DateTime.now();
+            setBrand(myProductSelected);
+            print("loadMyProducts: setBrand took ${DateTime.now().difference(brandStart).inMilliseconds}ms");
+          }
+          print("loadMyProducts: myProducts updated at ${DateTime.now()}");
+        });
+      } else {
+        print("loadMyProducts: Skipped myProducts update, widget not mounted at ${DateTime.now()}");
+      }
+
+      final elapsed = DateTime.now().difference(startTime).inMilliseconds;
+      const minDuration = 1000; // Increased to 1000ms
+      if (elapsed < minDuration) {
+        await Future.delayed(Duration(milliseconds: minDuration - elapsed));
+      }
+
+      if (mounted) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            setState(() {
+              showSpinnerMyProducts = false;
+              showSpinnerMyFeedback = false;
+              print("loadMyProducts: showSpinnerMyProducts set to false at ${DateTime.now()}");
+            });
+          } else {
+            print("loadMyProducts: Skipped spinner hide, widget not mounted at ${DateTime.now()}");
+          }
+        });
+      } else {
+        print("loadMyProducts: Skipped post-frame callback, widget not mounted at ${DateTime.now()}");
+      }
+    } catch (e) {
+      print("Error in loadMyProducts: $e at ${DateTime.now()}");
+      if (mounted) {
+        setState(() {
+          showSpinnerMyProducts = false;
+          showSpinnerMyFeedback = false;
+
+          print("loadMyProducts: showSpinnerMyProducts set to false (error) at ${DateTime.now()}");
+        });
+      } else {
+        print("loadMyProducts: Skipped error handling, widget not mounted at ${DateTime.now()}");
+      }
+    } finally {
+      _isLoadingMyProducts = false;
     }
-
-    if (myProducts.isNotEmpty) {
-      myProductSelected = myProducts[0];
-      setBrand(myProductSelected);
-    }
-
-    setState(() {
-      showSpinnerMyProducts = false;
-    });
   }
 
   checkForFeedback() {
-    if (apiResult && ApplicationData.mobile != "") {
+    if (apiResult && widget.mobileNum != "") {
       loadMyProducts();
       apiResult = false;
     }
@@ -1163,8 +1575,10 @@ class _HomePageState extends State<HomePage>
         return Container(
           color: Color(0xff003060),
           child: Text(
-            "No pending feedback~~",
-            style: GoogleFonts.poppins(color: Colors.white, fontSize: MediaQuery.textScalerOf(context).scale(14)),
+            "No pending feedback",
+            style: GoogleFonts.poppins(
+                color: Colors.white,
+                fontSize: MediaQuery.textScalerOf(context).scale(14)),
           ),
         );
       }
@@ -1175,7 +1589,7 @@ class _HomePageState extends State<HomePage>
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-               Text(
+                Text(
                   "You have a pending feedback.",
                   style: TextStyle(
                     fontSize: MediaQuery.textScalerOf(context).scale(14),
@@ -1192,7 +1606,8 @@ class _HomePageState extends State<HomePage>
                     height: 32.0,
                     child: Text(
                       'Start Feedback',
-                      style: TextStyle(fontSize: MediaQuery.textScalerOf(context).scale(14)),
+                      style: TextStyle(
+                          fontSize: MediaQuery.textScalerOf(context).scale(14)),
                     ),
                   ),
                 ),
@@ -1225,7 +1640,9 @@ class _HomePageState extends State<HomePage>
         return Container(
           child: Text(
             "No pending feedback",
-            style: TextStyle(color: Colors.red, fontSize: MediaQuery.textScalerOf(context).scale(18)),
+            style: TextStyle(
+                color: Colors.red,
+                fontSize: MediaQuery.textScalerOf(context).scale(18)),
           ),
         );
       }
@@ -1246,7 +1663,8 @@ class _HomePageState extends State<HomePage>
                     height: 32.0,
                     child: Text(
                       'Start Defect Reporting',
-                      style: TextStyle(fontSize: MediaQuery.textScalerOf(context).scale(14)),
+                      style: TextStyle(
+                          fontSize: MediaQuery.textScalerOf(context).scale(14)),
                     ),
                   ),
                 ),
@@ -1263,7 +1681,7 @@ class _HomePageState extends State<HomePage>
 
   getChildOfFeaturesList(int i) {
     if (featureList.keys.elementAt(i).toString().contains("Purchase Date")) {
-     String selectedMonthYear = "MM-YY";
+      String selectedMonthYear = "MM-YY";
       return Column(
         children: [
           Row(
@@ -1283,7 +1701,8 @@ class _HomePageState extends State<HomePage>
             padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 54.0),
             child: GestureDetector(
               onTap: () {
-                _pickMonthYear(context,i,selectedMonthYear); // Open Month-Year Picker when tapped
+                _pickMonthYear(context, i,
+                    selectedMonthYear); // Open Month-Year Picker when tapped
               },
               child: Container(
                 width: double.infinity,
@@ -1296,13 +1715,17 @@ class _HomePageState extends State<HomePage>
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      featureList[featureList.keys.elementAt(i)]=="" ?  "Select Date" : featureList[featureList.keys.elementAt(i)], // Display selected month-year
+                      featureList[featureList.keys.elementAt(i)] == ""
+                          ? "Select Date"
+                          : featureList[featureList.keys
+                              .elementAt(i)], // Display selected month-year
                       style: GoogleFonts.poppins(
                         fontSize: MediaQuery.textScalerOf(context).scale(15),
                         color: Color(0xff003060),
                       ),
                     ),
-                    Icon(Icons.calendar_today, color: Color(0xff003060), size: 20), // Calendar Icon
+                    Icon(Icons.calendar_today,
+                        color: Color(0xff003060), size: 20), // Calendar Icon
                   ],
                 ),
               ),
@@ -1318,11 +1741,13 @@ class _HomePageState extends State<HomePage>
               SizedBox(
                 width: 55,
               ),
-              Text(featureList.keys.elementAt(i),style: GoogleFonts.poppins(
-                  color: Color(0xff003060),
-                  fontSize: MediaQuery.textScalerOf(context).scale(16),
-                  fontWeight: FontWeight.bold
-              ),),
+              Text(
+                featureList.keys.elementAt(i),
+                style: GoogleFonts.poppins(
+                    color: Color(0xff003060),
+                    fontSize: MediaQuery.textScalerOf(context).scale(16),
+                    fontWeight: FontWeight.bold),
+              ),
             ],
           ),
           Padding(
@@ -1337,17 +1762,19 @@ class _HomePageState extends State<HomePage>
                 onChanged: (value) {
                   featureList[featureList.keys.elementAt(i)] = value;
                 },
-                style:
-                GoogleFonts.poppins(fontSize: MediaQuery.textScalerOf(context).scale(15), color: Color(0xff003060)),
+                style: GoogleFonts.poppins(
+                    fontSize: MediaQuery.textScalerOf(context).scale(15),
+                    color: Color(0xff003060)),
                 decoration: InputDecoration(
                   enabled: true,
-                  contentPadding:
-                  const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+                  contentPadding: const EdgeInsets.symmetric(
+                      vertical: 10.0, horizontal: 20.0),
                   border: const OutlineInputBorder(
                     borderRadius: BorderRadius.all(Radius.circular(5.0)),
                   ),
                   enabledBorder: const OutlineInputBorder(
-                    borderSide: BorderSide(color: Color(0xff003060), width: 1.0),
+                    borderSide:
+                        BorderSide(color: Color(0xff003060), width: 1.0),
                     borderRadius: BorderRadius.all(Radius.circular(5.0)),
                   ),
                 ),
@@ -1367,58 +1794,71 @@ class _HomePageState extends State<HomePage>
               SizedBox(
                 width: 55,
               ),
-              Text("Purchase Type",style: GoogleFonts.poppins(
-                  color: Color(0xff003060),
-                  fontSize: MediaQuery.textScalerOf(context).scale(16),
-                  fontWeight: FontWeight.bold
-              ),)
+              Text(
+                "Purchase Type",
+                style: GoogleFonts.poppins(
+                    color: Color(0xff003060),
+                    fontSize: MediaQuery.textScalerOf(context).scale(16),
+                    fontWeight: FontWeight.bold),
+              )
             ],
           ),
-          Container(
-            width: 300,
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.black, width: 1), // Black thin border
-              borderRadius: BorderRadius.circular(6), // Slightly rounded corners
-            ),
-            padding: EdgeInsets.symmetric(horizontal: 10, vertical: 1), // Padding inside the box
-            child: DropdownButtonHideUnderline( // Removes the default underline
-              child: DropdownButton(
-                style: GoogleFonts.poppins(
-                  fontSize: MediaQuery.textScalerOf(context).scale(16),
-                  color: const Color(0xff003060),
-                ),
-                icon: const Icon(Icons.keyboard_arrow_down),
-                iconSize: 24,
-                iconEnabledColor: Color(0xff003060),
-                hint: Text(
-                  "Please Select",
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 54.0),
+            child: Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: productSelected != null
+                      ? Colors.blue
+                      : Colors.black, // ✅ Changes to blue when selected
+                  width: 2.0,
+                ), // Black thin border
+                borderRadius:
+                    BorderRadius.circular(6), // Slightly rounded corners
+              ),
+              padding: EdgeInsets.symmetric(
+                  horizontal: 10, vertical: 1), // Padding inside the box
+              child: DropdownButtonHideUnderline(
+                // Removes the default underline
+                child: DropdownButton(
                   style: GoogleFonts.poppins(
-                    fontSize: MediaQuery.textScalerOf(context).scale(15),
-                    color: Color(0xff003060),
+                    fontSize: MediaQuery.textScalerOf(context).scale(16),
+                    color: const Color(0xff003060),
                   ),
-                ),
-                items: ['New Product', 'Used Product'].map((String prod) {
-                  return DropdownMenuItem(
-                    value: prod,
-                    child: Text(
-                      prod,
-                      style: GoogleFonts.poppins(
-                          fontSize: MediaQuery.textScalerOf(context).scale(15), color: Color(0xff003060)),
+                  icon: const Icon(Icons.keyboard_arrow_down),
+                  iconSize: 24,
+                  iconEnabledColor: Color(0xff003060),
+                  hint: Text(
+                    "Please Select",
+                    style: GoogleFonts.poppins(
+                      fontSize: MediaQuery.textScalerOf(context).scale(15),
+                      color: Color(0xff003060),
                     ),
-                  );
-                }).toList(),
-                onChanged: (String? newValue) {
-                  setState(() {
-                    type = newValue!;
-                  });
-                  featureList[featureList.keys.elementAt(i)] = type;
-                },
-                value: type,
+                  ),
+                  items: ['New Product', 'Used Product'].map((String prod) {
+                    return DropdownMenuItem(
+                      value: prod,
+                      child: Text(
+                        prod,
+                        style: GoogleFonts.poppins(
+                            fontSize:
+                                MediaQuery.textScalerOf(context).scale(15),
+                            color: Color(0xff003060)),
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      type = newValue!;
+                    });
+                    featureList[featureList.keys.elementAt(i)] = type;
+                  },
+                  value: type,
+                ),
               ),
             ),
           ),
-
-
         ],
       );
     }
@@ -1431,16 +1871,18 @@ class _HomePageState extends State<HomePage>
                 SizedBox(
                   width: 55,
                 ),
-                Text(featureList.keys.elementAt(i),style: GoogleFonts.poppins(
-                    color: Color(0xff003060),
-                    fontSize: MediaQuery.textScalerOf(context).scale(16),
-                    fontWeight: FontWeight.bold
-                ),),
+                Text(
+                  featureList.keys.elementAt(i),
+                  style: GoogleFonts.poppins(
+                      color: Color(0xff003060),
+                      fontSize: MediaQuery.textScalerOf(context).scale(16),
+                      fontWeight: FontWeight.bold),
+                ),
               ],
             ),
-
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 54.0),
+              padding:
+                  const EdgeInsets.symmetric(vertical: 0, horizontal: 54.0),
               child: GestureDetector(
                 onTap: () {
                   print('Clicked outside');
@@ -1451,17 +1893,19 @@ class _HomePageState extends State<HomePage>
                   onChanged: (value) {
                     featureList[featureList.keys.elementAt(i)] = value;
                   },
-                  style:
-                      GoogleFonts.poppins(fontSize: MediaQuery.textScalerOf(context).scale(14), color: Color(0xff003060)),
+                  style: GoogleFonts.poppins(
+                      fontSize: MediaQuery.textScalerOf(context).scale(14),
+                      color: Color(0xff003060)),
                   decoration: InputDecoration(
                     enabled: true,
-                  contentPadding:
-                        const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+                    contentPadding: const EdgeInsets.symmetric(
+                        vertical: 10.0, horizontal: 20.0),
                     border: const OutlineInputBorder(
                       borderRadius: BorderRadius.all(Radius.circular(5.0)),
                     ),
                     enabledBorder: const OutlineInputBorder(
-                      borderSide: BorderSide(color: Color(0xff003060), width: 1.0),
+                      borderSide:
+                          BorderSide(color: Color(0xff003060), width: 1.0),
                       borderRadius: BorderRadius.all(Radius.circular(5.0)),
                     ),
                   ),
@@ -1474,7 +1918,7 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-  void _pickMonthYear(BuildContext context, int i,String selectedMonthYear) {
+  void _pickMonthYear(BuildContext context, int i, String selectedMonthYear) {
     showMonthPicker(
       context: context,
       firstDate: DateTime(2000), // Earliest year selectable
@@ -1484,7 +1928,8 @@ class _HomePageState extends State<HomePage>
       if (date != null) {
         setState(() {
           selectedMonthYear = formatMonthYear(date.month, date.year);
-          featureList[featureList.keys.elementAt(i)] = selectedMonthYear; // Store selected value
+          featureList[featureList.keys.elementAt(i)] =
+              selectedMonthYear; // Store selected value
         });
       }
     });
@@ -1537,7 +1982,6 @@ class _HomePageState extends State<HomePage>
     return "$monthName $year";
   }
 
-
   List<String> getYears() {
     final currentYear = DateTime.parse(DateTime.now().toString());
 
@@ -1550,33 +1994,7 @@ class _HomePageState extends State<HomePage>
     return years;
   }
 
-  getMyProductsList() {
-    setState(() {
-      showSpinner = true;
-    });
-
-    List<String> myProductsList = <String>[];
-
-    for (var prod in myProducts) {
-      if (prod["productName"] != null &&
-          !myProductsList.contains(prod["productName"].toString())) {
-        myProductsList.add(prod["productName"].toString());
-      }
-    }
-
-    setState(() {
-      showSpinner = false;
-    });
-
-    if (myProductsList.length <= 0) {
-      myProductsList.add(myProductSelected);
-      myProductSelected = "My Products";
-    } else {
-      myProductSelected = myProductsList[0];
-    }
-
-    return myProductsList;
-  }
+ 
 
   //This method groups questions based on title, main screen title, question title etc
   getQuestionAndResponse() {
@@ -1621,14 +2039,22 @@ class _HomePageState extends State<HomePage>
       children: [
         Padding(
           padding: const EdgeInsets.all(10.0),
-          child: Container(
-            child: Text(
-              surveys[0]["feedbackQuestion"][questionIndex]["mainScreentitle"],
-              style: GoogleFonts.poppins(
-                  fontSize: MediaQuery.textScalerOf(context).scale(26),
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xff003060)),
-            ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: Text(
+                  processQuestion(surveys[0]["feedbackQuestion"][questionIndex]
+                      ["mainScreentitle"]),
+                  style: GoogleFonts.poppins(
+                      fontSize: MediaQuery.textScalerOf(context).scale(26),
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xff003060)),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ],
           ),
         ),
         const SizedBox(
@@ -1656,7 +2082,7 @@ class _HomePageState extends State<HomePage>
                 overflow: TextOverflow.clip,
                 style: GoogleFonts.poppins(
                   fontSize: MediaQuery.textScalerOf(context).scale(16),
-                  color: Color(0xff003060),
+                  color: Colors.blue,
                 ),
               ),
             ),
@@ -1670,15 +2096,26 @@ class _HomePageState extends State<HomePage>
             minimum: const EdgeInsets.symmetric(horizontal: 10),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment:
+                  CrossAxisAlignment.start, // ✅ Ensures left alignment
               children: [
-                Container(
-                  child: Text(
-                    processQuestion(currentSurvey[i]["question"]),
-                    overflow: TextOverflow.clip,
-                    style: GoogleFonts.poppins(
+                Align(
+                  alignment: Alignment.centerLeft, // ✅ Forces left alignment
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxWidth: MediaQuery.of(context).size.width -
+                          20, // ✅ Prevents overflow
+                    ),
+                    child: Text(
+                      processQuestion(currentSurvey[i]["question"]),
+                      overflow: TextOverflow
+                          .clip, // ✅ Ensures wrapping instead of overflow
+                      softWrap: true, // ✅ Enables text wrapping
+                      style: GoogleFonts.poppins(
                         fontSize: MediaQuery.textScalerOf(context).scale(16),
-                        color: Color(0xff003060)),
+                        color: Color(0xff003060),
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -1689,7 +2126,8 @@ class _HomePageState extends State<HomePage>
             height: 20,
           ),
         ],
-        getBottomButtonSet(currentSurvey)
+        getBottomButtonSet(currentSurvey),
+        getBottomButtonSetDev(),
       ],
     );
   }
@@ -1698,30 +2136,7 @@ class _HomePageState extends State<HomePage>
     var responses = ['Yes', 'No'];
     var index = startIndex - pos;
 
-    if (answerType == "Checkbox") {
-      print("In checkbos");
-      return Checkbox(
-        value: surveys[0]["feedbackQuestion"][index]["answer"] == ""
-            ? false
-            : surveys[0]["feedbackQuestion"][index]["answer"],
-        onChanged: (value) {
-          setState(() {
-            surveys[0]["feedbackQuestion"][index]["answer"] = value;
-          });
-          //Disabling all other tickboxes with same questionTitle
-          disableAllOthers(
-              surveys[0]["feedbackQuestion"][index]["questionTitle"], index);
-        },
-        checkColor: Colors.white,
-        hoverColor: Colors.red,
-      );
-    }
-
     if (answerType.contains("Yes")) {
-      // surveys[0]["feedbackQuestion"][index]["answer"] =
-      //     (surveys[0]["feedbackQuestion"][index]["answer"] == ""
-      //         ? "Yes"
-      //         : surveys[0]["feedbackQuestion"][index]["answer"]);
       return Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -1744,16 +2159,14 @@ class _HomePageState extends State<HomePage>
             onToggle: (index1) {
               setState(() {
                 var intResponse = responses[index1!];
-                surveys[0]["feedbackQuestion"][index]["answer"] = intResponse;
-                print("yesNo - " +
-                    surveys[0]["feedbackQuestion"][index]["answer"]);
-                print(surveys[0]["feedbackQuestion"][index]);
-                print(" for index - " + index.toString());
+                surveys[0]["feedbackQuestion"][index]["answer"] = intResponse.toString();
+                print("Yes no response is ${surveys[0]["feedbackQuestion"][index]["answer"]}");
+
               });
 
               if (surveys[0]["feedbackQuestion"][questionIndex]["question"] ==
                   "I complained to the manufacturer/retailer") {
-                print("questionIndex is $questionIndex");
+
                 updateCurrentSurveyWithComplaintStatus(
                     surveys[0]["feedbackQuestion"][index]["answer"]);
               }
@@ -1763,22 +2176,6 @@ class _HomePageState extends State<HomePage>
             height: 120,
           )
         ],
-      );
-    } else if (answerType == ("CheckBox")) {
-      print("In checkbos");
-      return Container(
-        child: Checkbox(
-          value: surveys[0]["feedbackQuestion"][index]["answer"] == ""
-              ? false
-              : surveys[0]["feedbackQuestion"][index]["answer"],
-          onChanged: (value) {
-            setState(() {
-              surveys[0]["feedbackQuestion"][index]["answer"] = value;
-            });
-          },
-          checkColor: Colors.blue,
-          hoverColor: Colors.yellow,
-        ),
       );
     } else if (answerType == "Descriptive Upto 10 Words") {
       return Column(
@@ -1862,8 +2259,8 @@ class _HomePageState extends State<HomePage>
               decoration: InputDecoration(
                 enabled: true,
                 floatingLabelBehavior: FloatingLabelBehavior.always,
-                contentPadding:
-                    const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+                contentPadding: const EdgeInsets.symmetric(
+                    vertical: 10.0, horizontal: 20.0),
                 border: const OutlineInputBorder(
                   borderRadius: BorderRadius.all(Radius.circular(0.0)),
                 ),
@@ -1871,10 +2268,12 @@ class _HomePageState extends State<HomePage>
                   borderSide:
                       BorderSide(color: Colors.lightBlueAccent, width: 2.0),
                 ),
-                hintText: "Enter details of the issue...", // ✅ Converted label to hint text
+                hintText:
+                    "Enter details of the issue...", // ✅ Converted label to hint text
                 hintStyle: GoogleFonts.poppins(
                   fontSize: MediaQuery.textScalerOf(context).scale(14),
-                  color: const Color(0xff003060), // ✅ Same color as styled input
+                  color:
+                      const Color(0xff003060), // ✅ Same color as styled input
                 ),
               ),
             ),
@@ -1904,7 +2303,6 @@ class _HomePageState extends State<HomePage>
                 child: Image.asset(
                   'images/mic.png',
                   height: 40.0,
-
                 ),
               ),
               InkResponse(
@@ -1921,59 +2319,119 @@ class _HomePageState extends State<HomePage>
                 child: Image.asset(
                   'images/camera.png',
                   height: 40.0,
-                 
                 ),
               ),
               InkResponse(
                 onTap: (() {
                   AlertDialog alert = AlertDialog(
-                    title: Text("Select Upload type"),
+                    backgroundColor: Colors.blue, // ✅ Background color
+                    title: Text(
+                      "Select Upload Type",
+                      style: GoogleFonts.poppins(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white, // ✅ Title text color
+                      ),
+                    ),
                     content: StatefulBuilder(
                       builder: (BuildContext context, _setState) {
                         return Column(
+                          mainAxisSize:
+                              MainAxisSize.min, // ✅ Prevent unnecessary space
                           children: [
-                            Builder(builder: (context) {
-                              return RadioListTile(
-                                title: Text("Image file"),
-                                value: "image",
-                                groupValue: fileType,
-                                onChanged: (value) {
+                            RadioListTile(
+                              title: Text(
+                                "Image File",
+                                style: GoogleFonts.poppins(
+                                  fontSize: 16,
+                                  color: Colors.white, // ✅ Text color
+                                ),
+                              ),
+                              value: "image",
+                              groupValue: fileType,
+                              activeColor: Colors
+                                  .white, // ✅ White radio button when selected
+                              onChanged: (value) {
+                                _setState(() {
                                   fileType = value.toString();
-                                  _setState(() {
-                                    fileType = value.toString();
-                                  });
-                                  print("Radio tile is $fileType");
-                                },
-                              );
-                            }),
-                            Builder(builder: (context) {
-                              return RadioListTile(
-                                title: Text("Video File"),
-                                value: "video",
-                                groupValue: fileType,
-                                onChanged: (value) {
-                                  _setState(() {
-                                    fileType = value.toString();
-                                  });
-                                },
-                              );
-                            }),
+                                });
+                                print("Radio tile is $fileType");
+                              },
+                            ),
+                            RadioListTile(
+                              title: Text(
+                                "Video File",
+                                style: GoogleFonts.poppins(
+                                  fontSize: 16,
+                                  color: Colors.white, // ✅ Text color
+                                ),
+                              ),
+                              value: "video",
+                              groupValue: fileType,
+                              activeColor: Colors
+                                  .white, // ✅ White radio button when selected
+                              onChanged: (value) {
+                                _setState(() {
+                                  fileType = value.toString();
+                                });
+                              },
+                            ),
                           ],
                         );
                       },
                     ),
                     actions: [
-                      TextButton(
-                          onPressed: () {
-                            Navigator.pop(context);
-                            _pickFiles(fileType);
-                          },
-                          child: Text("Continue")),
-                      TextButton(
-                          onPressed: () {
-                            Navigator.pop(context);
-                          },
-                          child: Text("Cancel"))
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment
+                            .spaceEvenly, // ✅ Evenly spaced buttons
+                        children: [
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.pop(context);
+                              _pickFiles(fileType);
+                            },
+                            child: Container(
+                              padding: EdgeInsets.symmetric(
+                                  vertical: 12, horizontal: 20),
+                              decoration: BoxDecoration(
+                                color: Color(0xff003060), // ✅ Button color
+                                borderRadius: BorderRadius.circular(
+                                    20), // ✅ Rounded corners
+                              ),
+                              child: Text(
+                                "Continue",
+                                style: GoogleFonts.poppins(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white, // ✅ Button text color
+                                ),
+                              ),
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.pop(context);
+                            },
+                            child: Container(
+                              padding: EdgeInsets.symmetric(
+                                  vertical: 12, horizontal: 20),
+                              decoration: BoxDecoration(
+                                color: Color(0xff003060), // ✅ Button color
+                                borderRadius: BorderRadius.circular(
+                                    20), // ✅ Rounded corners
+                              ),
+                              child: Text(
+                                "Cancel",
+                                style: GoogleFonts.poppins(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white, // ✅ Button text color
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
                   );
 
@@ -1983,7 +2441,10 @@ class _HomePageState extends State<HomePage>
                         return alert;
                       });
                 }),
-                child: Image.asset("images/upload.png",height: 30 ,),
+                child: Image.asset(
+                  "images/upload.png",
+                  height: 30,
+                ),
               )
             ],
           ),
@@ -1993,7 +2454,6 @@ class _HomePageState extends State<HomePage>
         ],
       );
     } else if (answerType == "Audio/Descriptive") {
-      print(surveys[0]["feedbackQuestion"][index]["answer"]);
       if (surveys[0]["feedbackQuestion"][index]["answer"].toString().isEmpty) {
         surveys[0]["feedbackQuestion"][index]
             ["answer"] = {"text": "", "image": "", "audio": "", "video": ""};
@@ -2031,10 +2491,12 @@ class _HomePageState extends State<HomePage>
                   borderSide:
                       BorderSide(color: Colors.lightBlueAccent, width: 2.0),
                 ),
-                hintText: "Enter details of the issue...", // ✅ Converted label to hint text
+                hintText:
+                    "Enter details of the issue...", // ✅ Converted label to hint text
                 hintStyle: GoogleFonts.poppins(
                   fontSize: MediaQuery.textScalerOf(context).scale(14),
-                  color: const Color(0xff003060), // ✅ Same color as styled input
+                  color:
+                      const Color(0xff003060), // ✅ Same color as styled input
                 ),
               ),
             ),
@@ -2065,7 +2527,6 @@ class _HomePageState extends State<HomePage>
                 child: Image.asset(
                   'images/mic.png',
                   height: 40.0,
-                 
                 ),
               ),
             ],
@@ -2084,7 +2545,7 @@ class _HomePageState extends State<HomePage>
 
       return Column(
         children: [
-         getRowOfEndPoints(),
+          getRowOfEndPoints(),
           Slider(
             thumbColor: Colors.blue,
             activeColor: Colors.green,
@@ -2107,6 +2568,50 @@ class _HomePageState extends State<HomePage>
                 : (responses.length).toDouble()),
           ),
         ],
+      );
+    } else if (answerType.contains("Checkbox")) {
+      getRatingsArray(answerType, index);
+      var responses = responseArray;
+      print("checkbox responses $responses");
+
+      if (!selectedCheckboxes.containsKey(index)) {
+        selectedCheckboxes[index] = <String>{};
+      }
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: responses.map((option) {
+          return Padding(
+            padding: const EdgeInsets.only(left: 10),
+            child: CheckboxListTile(
+              title: Text(option,
+                  style: GoogleFonts.poppins(
+                      fontSize: MediaQuery.textScalerOf(context).scale(14),
+                      color: const Color(0xff003060))),
+              value: selectedCheckboxes[index]!.contains(option),
+              onChanged: (bool? value) {
+                if (value == true) {
+                  selectedCheckboxes[index]!.add(option);
+                } else {
+                  selectedCheckboxes[index]!.remove(option);
+                }
+
+                // Store answer: sorted, hyphen-separated
+                final sortedAnswers = selectedCheckboxes[index]!.toList()
+                  ..sort();
+                final answerString = sortedAnswers.join('-');
+
+                surveys[0]["feedbackQuestion"][index]["answer"] = answerString;
+
+                print("Selected checkboxes for index $index: $answerString");
+                setState(() {});
+              },
+              controlAffinity: ListTileControlAffinity.leading,
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+            ),
+          );
+        }).toList(),
       );
     } else if (answerType.contains("NumberBox")) {
       TextEditingController textController = TextEditingController();
@@ -2138,15 +2643,26 @@ class _HomePageState extends State<HomePage>
               ),
 
               // ✅ Styled Rectangle Box (No Rounded Corners)
-              contentPadding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+              contentPadding:
+                  const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+              focusedBorder: const OutlineInputBorder(
+                borderSide: BorderSide(
+                    color: Colors.blue,
+                    width: 2.0), // ✅ Ensures blue border on focus
+                borderRadius: BorderRadius.all(
+                    Radius.circular(5.0)), // ✅ Keeps rectangular shape
+              ),
 
               border: const OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(5.0)), // ✅ Rectangular box
+                borderRadius:
+                    BorderRadius.all(Radius.circular(5.0)), // ✅ Rectangular box
               ),
 
               enabledBorder: const OutlineInputBorder(
-                borderSide: BorderSide(color: Color(0xff003060), width: 1.0), // ✅ Styled border
-                borderRadius: BorderRadius.all(Radius.circular(5.0)), // ✅ No rounded corners
+                borderSide: BorderSide(
+                    color: Color(0xff003060), width: 1.0), // ✅ Styled border
+                borderRadius: BorderRadius.all(
+                    Radius.circular(5.0)), // ✅ No rounded corners
               ),
             ),
           ),
@@ -2170,60 +2686,72 @@ class _HomePageState extends State<HomePage>
 
       return Padding(
         padding: const EdgeInsets.all(8.0),
-        child: Container(
-          width: 300, // Set a consistent width
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.black, width: 1), // ✅ Black thin border
-            borderRadius: BorderRadius.circular(6), // ✅ Slightly rounded corners
-          ),
-          padding: EdgeInsets.symmetric(horizontal: 10, vertical: 1), // ✅ Inner padding
-          child: DropdownButtonHideUnderline( // ✅ Removes default underline
-            child: DropdownButton<String>(
-              isExpanded: true, // ✅ Ensures dropdown fills container width
-              style: GoogleFonts.poppins(
-                fontSize: MediaQuery.textScalerOf(context).scale(15),
-                color: const Color(0xff003060),
-              ),
-              icon: const Icon(Icons.keyboard_arrow_down), // ✅ Dropdown icon
-              iconSize: 24,
-              iconEnabledColor: const Color(0xff3AB7A6),
-
-              // ✅ Hint Text (Same as before)
-              hint: Text(
-                "Select Response",
+        child: Focus(
+          onFocusChange: (isFocused) =>
+              _updateFocusState(index, isFocused), // ✅ Track focus
+          child: Container(
+            width: 300, // Set a consistent width
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: isDropdownFocusedMap[index] == true
+                    ? Colors.blue
+                    : Colors.black, // ✅ Changes to blue when selected
+                width: 2.0,
+              ), // ✅ Black thin border
+              borderRadius:
+                  BorderRadius.circular(6), // ✅ Slightly rounded corners
+            ),
+            padding: EdgeInsets.symmetric(
+                horizontal: 10, vertical: 1), // ✅ Inner padding
+            child: DropdownButtonHideUnderline(
+              // ✅ Removes default underline
+              child: DropdownButton<String>(
+                isExpanded: true, // ✅ Ensures dropdown fills container width
                 style: GoogleFonts.poppins(
                   fontSize: MediaQuery.textScalerOf(context).scale(15),
                   color: const Color(0xff003060),
                 ),
-              ),
+                icon: const Icon(Icons.keyboard_arrow_down), // ✅ Dropdown icon
+                iconSize: 24,
+                iconEnabledColor: const Color(0xff3AB7A6),
 
-              // ✅ Dropdown Items (Unchanged)
-              items: dropDowns.map((String item) {
-                return DropdownMenuItem(
-                  value: item,
-                  child: Text(
-                    item,
-                    style: GoogleFonts.poppins(
-                      fontSize: MediaQuery.textScalerOf(context).scale(15),
-                      color: const Color(0xff003060),
-                    ),
+                // ✅ Hint Text (Same as before)
+                hint: Text(
+                  "Select Response",
+                  style: GoogleFonts.poppins(
+                    fontSize: MediaQuery.textScalerOf(context).scale(15),
+                    color: const Color(0xff003060),
                   ),
-                );
-              }).toList(),
+                ),
 
-              // ✅ Functionality: Store Selected Value
-              onChanged: (String? newValue) {
-                setState(() {
-                  dropdownResponse = newValue!;
-                  surveys[0]["feedbackQuestion"][index]["answer"] = dropdownResponse;
-                });
-              },
-              value: dropdownResponse,
+                // ✅ Dropdown Items (Unchanged)
+                items: dropDowns.map((String item) {
+                  return DropdownMenuItem(
+                    value: item,
+                    child: Text(
+                      item,
+                      style: GoogleFonts.poppins(
+                        fontSize: MediaQuery.textScalerOf(context).scale(15),
+                        color: const Color(0xff003060),
+                      ),
+                    ),
+                  );
+                }).toList(),
+
+                // ✅ Functionality: Store Selected Value
+                onChanged: (String? newValue) {
+                  setState(() {
+                    dropdownResponse = newValue!;
+                    surveys[0]["feedbackQuestion"][index]["answer"] =
+                        dropdownResponse;
+                  });
+                },
+                value: dropdownResponse,
+              ),
             ),
           ),
         ),
       );
-
     }
 
     return Container();
@@ -2246,10 +2774,12 @@ class _HomePageState extends State<HomePage>
                   height: rightHeight,
                 ),
                 onTap: () {
-                  setState(() {
-                    questionIndex++;
-                    ratingsArrayLoaded = false;
-                  });
+                  FocusScope.of(context).unfocus();
+                    setState(() {
+                      questionIndex++;
+                      ratingsArrayLoaded = false;
+                    });
+
                 }),
           ),
         ],
@@ -2266,7 +2796,8 @@ class _HomePageState extends State<HomePage>
                 });
               },
               child: ConstrainedBox(
-                constraints: BoxConstraints(maxWidth: leftWidth, maxHeight: leftHeight),
+                constraints:
+                    BoxConstraints(maxWidth: leftWidth, maxHeight: leftHeight),
                 child: Image.asset(
                   "images/left.png",
                   fit: BoxFit.contain,
@@ -2278,13 +2809,36 @@ class _HomePageState extends State<HomePage>
           BottomNavigationBarItem(
             icon: GestureDetector(
               onTap: () {
-                setState(() {
-                  questionIndex++;
-                  ratingsArrayLoaded = false;
-                });
+                   FocusScope.of(context).unfocus();
+                try {
+                  if(surveys[0]["feedbackQuestion"][questionIndex]["answer"] == "No" &&
+                      surveys[0]["feedbackQuestion"][questionIndex]["titleLine"].contains("Please let us know about any unreported problems/issues with your"))
+                    {
+                      setState(() {
+                        showThankyouMessage = true;
+                        questionIndex = 0;
+                        superIndex = 0;
+                        setNextSurvey(true);
+                       
+                      });
+                    }
+                  else{
+                    setState(() {
+                      questionIndex++;
+                      ratingsArrayLoaded = false;
+                    });
+                  }
+                } finally {
+                  setState(() {
+                    showSpinner = false;
+                    showSpinnerMyFeedback = false;
+                  });
+                }
+
               },
               child: ConstrainedBox(
-                constraints: BoxConstraints(maxWidth: rightWidth, maxHeight: rightHeight),
+                constraints: BoxConstraints(
+                    maxWidth: rightWidth, maxHeight: rightHeight),
                 child: Image.asset(
                   "images/right.png",
                   fit: BoxFit.contain,
@@ -2372,23 +2926,25 @@ class _HomePageState extends State<HomePage>
       child: Text(
         processQuestion(
             "Thank you very much for completing your first experience check-in!Your feedback will help to improve the quality and functionality of future \"products\".  We will contact you for an update of your experience in …. months."),
-        style: TextStyle(color: Colors.red, fontSize: MediaQuery.textScalerOf(context).scale(14)),
+        style: TextStyle(
+            color: Colors.red,
+            fontSize: MediaQuery.textScalerOf(context).scale(14)),
       ),
     );
   }
 
   getBottomButtonSet(currentSurvey) {
     int ind = 0;
-    for(var item in currentSurvey)
-      {
-        print("Index - $ind -> item - $item");
-        ind++;
-      }
+    for (var item in currentSurvey) {
+
+      ind++;
+    }
 
     var arraySize = surveys[0]["feedbackQuestion"].length;
-    print("Question index is $questionIndex & arraySize is ${currentSurvey.length}");
 
-    if (checkIfItsFirstQuestion(currentSurvey) && questionIndex < arraySize - 1) {
+
+    if (checkIfItsFirstQuestion(currentSurvey) &&
+        questionIndex < arraySize - 1) {
       return Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
@@ -2399,41 +2955,617 @@ class _HomePageState extends State<HomePage>
                 height: rightHeight,
               ),
               onTap: () {
+                FocusScope.of(context).unfocus();
                 if (!GetValidResponses(currentSurvey)) {
-                  AlertDialog alert = AlertDialog(
-                    title: Text("Alert"),
-                    content: Text(goingForwardMessage),
-                    actions: [
-                      currentSurvey[0]["answerType"].contains("Rating") ||
-                              (currentSurvey[0]["answerType"]
-                                      .contains("Multimedia/Descriptive") &&
-                                  goingForwardMessage.contains("options")) ||
-                              (currentSurvey[0]["answerType"]
-                                      .contains("Audio/Descriptive") &&
-                                  goingForwardMessage.contains("options"))
-                          ? TextButton(
-                              onPressed: () {
+                  print("Abhi goingForwardmessage is $goingForwardMessage and its 1st question");
+                  print(goingForwardMessage.contains("You have not used all given options to response, you can record audio and state detailed problem. Are you sure you want to continue?"));
+                  if (goingForwardMessage.contains(
+                      "A response is needed to continue, you can record audio/video, upload pic")) {
+                    print("line 2833 coming to goingForwardMessage.contains(A response is needed to continue, you can record audio/video, upload pic");
+                    AlertDialog alert = AlertDialog(
+                      backgroundColor: Colors.blue, // ✅ Background color
+                      title: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            "Oops! Missing Info",
+                            style: GoogleFonts.poppins(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white, // ✅ Title text color
+                            ),
+                          ),
+                          SizedBox(width: 8), // ✅ Spacing
+                          Icon(Icons.warning, color: Colors.yellow, size: 30),
+                        ],
+                      ),
+                      content: Column(
+                        mainAxisSize:
+                            MainAxisSize.min, // ✅ Prevents unnecessary spacing
+                        crossAxisAlignment: CrossAxisAlignment
+                            .start, // ✅ Aligns content to the left
+                        children: [
+                          Text(
+                            "We need all fields filled out to continue.",
+                            style: GoogleFonts.poppins(
+                              fontSize: 16,
+                              color: Colors.white, // ✅ Content text color
+                            ),
+                          ),
+                          SizedBox(
+                              height: 20), // ✅ Space between text and checklist
+                          Column(
+                            children: [
+                              Row(
+                                children: [
+                                  Stack(
+                                    alignment: Alignment.center,
+                                    children: [
+                                      Icon(Icons.check_box,
+                                          color: Colors.green,
+                                          size: 18), // Green box
+                                      Icon(Icons.check,
+                                          color: Colors.white,
+                                          size: 14), // White tick on top
+                                    ],
+                                  ), // ✅ Check Icon
+                                  SizedBox(width: 8), // ✅ Spacing
+                                  Text(
+                                    "Check your info",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 14,
+                                      color: Colors.white, // ✅ Text color
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(
+                                  height:
+                                      5), // ✅ Spacing between checklist items
+                              Row(
+                                children: [
+                                  Stack(
+                                    alignment: Alignment.center,
+                                    children: [
+                                      Icon(Icons.check_box,
+                                          color: Colors.green,
+                                          size: 18), // Green box
+                                      Icon(Icons.check,
+                                          color: Colors.white,
+                                          size: 14), // White tick on top
+                                    ],
+                                  ),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    "Fill in the missing parts",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 14,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 5),
+                              Row(
+                                children: [
+                                  Stack(
+                                    alignment: Alignment.center,
+                                    children: [
+                                      Icon(Icons.check_box,
+                                          color: Colors.green,
+                                          size: 18), // Green box
+                                      Icon(Icons.check,
+                                          color: Colors.white,
+                                          size: 14), // White tick on top
+                                    ],
+                                  ),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    "Try again!",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 14,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      actions: [
+                        Center(
+                          child: GestureDetector(
+                            onTap: () {
+                              Navigator.pop(context);
+                            },
+                            child: Container(
+                              padding: EdgeInsets.symmetric(
+                                  vertical: 12, horizontal: 20),
+                              decoration: BoxDecoration(
+                                color: Color(0xff003060), // ✅ Button color
+                                borderRadius: BorderRadius.circular(
+                                    20), // ✅ Rounded corners
+                              ),
+                              child: Text(
+                                "Go Back",
+                                style: GoogleFonts.poppins(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white, // ✅ Button text color
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+
+                    showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return alert;
+                        });
+                  }else if (goingForwardMessage.contains(
+                      "You have not used all given options to response, you can record audio and state detailed problem. Are you sure you want to continue?")) {
+                    AlertDialog alert = AlertDialog(
+                      backgroundColor: Colors.blue, // ✅ Background color
+                      title: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.star, color: Colors.yellow, size: 24),
+                          Text(
+                            "Enhance Your Feedback!",
+                            style: GoogleFonts.poppins(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white, // ✅ Title text color
+                            ),
+                          ),
+                          Icon(Icons.star, color: Colors.yellow, size: 24),
+                        ],
+                      ),
+                      content: Expanded(
+                        child: Column(
+                          mainAxisSize: MainAxisSize
+                              .min, // ✅ Prevents unnecessary spacing
+                          crossAxisAlignment: CrossAxisAlignment
+                              .start, // ✅ Aligns content to the left
+                          children: [
+                            Text(
+                              goingForwardMessage,
+                              style: GoogleFonts.poppins(
+                                fontSize: 14,
+                                color: Colors.white, // Custom color
+                              ),
+                            ),
+                           SizedBox(
+                                height:
+                                20), // ✅ Space between text and checklist
+
+                            SizedBox(
+                              height: 10,
+                            ),
+                            Text(
+                              "Your input helps us improve—thank you! 🚀",
+                              style: GoogleFonts.poppins(
+                                fontSize: 14,
+                                color: Colors.white, // Custom color
+                              ),
+                            )
+                          ],
+                        ),
+                      ),
+                      actions: [
+                        Row(
+                          children: [
+                            GestureDetector(
+                              onTap: () {
+                                Navigator.pop(context);
+                              },
+                              child: Container(
+                                padding: EdgeInsets.symmetric(
+                                    vertical: 12, horizontal: 20),
+                                decoration: BoxDecoration(
+                                  color: Color(0xff003060), // ✅ Button color
+                                  borderRadius: BorderRadius.circular(
+                                      20), // ✅ Rounded corners
+                                ),
+                                child: Text(
+                                  "Improve Feedback",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white, // ✅ Button text color
+                                  ),
+                                ),
+                              ),
+                            ),
+                            SizedBox(
+                              width: 5,
+                            ),
+                            GestureDetector(
+                              onTap: () {
                                 setState(() {
                                   questionIndex++;
                                   ratingsArrayLoaded = false;
                                 });
                                 Navigator.pop(context);
                               },
-                              child: Text("Continue"))
-                          : Text(""),
-                      TextButton(
-                          onPressed: () {
-                            Navigator.pop(context);
-                          },
-                          child: Text("Cancel"))
-                    ],
-                  );
+                              child: Container(
+                                padding: EdgeInsets.symmetric(
+                                    vertical: 12, horizontal: 20),
+                                decoration: BoxDecoration(
+                                  color: Color(0xff003060), // ✅ Button color
+                                  borderRadius: BorderRadius.circular(
+                                      20), // ✅ Rounded corners
+                                ),
+                                child: Text(
+                                  "Continue as is",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white, // ✅ Button text color
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    );
 
-                  showDialog(
-                      context: context,
-                      builder: (BuildContext context) {
-                        return alert;
-                      });
+                    showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return alert;
+                        });
+                  }else if (goingForwardMessage.contains(
+                      "You have not used all given options to response, you can record audio/video, upload pic")) {
+                    AlertDialog alert = AlertDialog(
+                      backgroundColor: Colors.blue, // ✅ Background color
+                      title: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.star, color: Colors.yellow, size: 24),
+                          Text(
+                            "Enhance Your Feedback!",
+                            style: GoogleFonts.poppins(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white, // ✅ Title text color
+                            ),
+                          ),
+                          Icon(Icons.star, color: Colors.yellow, size: 24),
+                        ],
+                      ),
+                      content: Expanded(
+                        child: Column(
+                          mainAxisSize: MainAxisSize
+                              .min, // ✅ Prevents unnecessary spacing
+                          crossAxisAlignment: CrossAxisAlignment
+                              .start, // ✅ Aligns content to the left
+                          children: [
+                            Text(
+                              "Add more impact with: ",
+                              style: GoogleFonts.poppins(
+                                fontSize: 14,
+                                color: Colors.white, // Custom color
+                              ),
+                            ),
+                            SizedBox(height: 20),
+                            Text(
+                              "📷 Photo | 🎥 Video | 🎙️ Audio",
+                              style: GoogleFonts.poppins(
+                                fontSize: 14,
+                                color: Colors
+                                    .white, // Different color for emphasis
+                              ),
+                            ),
+                            SizedBox(
+                                height:
+                                    20), // ✅ Space between text and checklist
+                            Column(
+                              children: [
+                                Row(
+                                  children: [
+                                    Stack(
+                                      alignment: Alignment.center,
+                                      children: [
+                                        Icon(Icons.check_box,
+                                            color: Colors.green,
+                                            size: 18), // Green box
+                                        Icon(Icons.check,
+                                            color: Colors.white,
+                                            size: 14), // White tick on top
+                                      ],
+                                    ), // ✅ Check Icon
+                                    SizedBox(width: 8), // ✅ Spacing
+                                    Text(
+                                      "Choose an option",
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 14,
+                                        color: Colors.white, // ✅ Text color
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(
+                                    height:
+                                        5), // ✅ Spacing between checklist items
+                                Row(
+                                  children: [
+                                    Stack(
+                                      alignment: Alignment.center,
+                                      children: [
+                                        Icon(Icons.check_box,
+                                            color: Colors.green,
+                                            size: 18), // Green box
+                                        Icon(Icons.check,
+                                            color: Colors.white,
+                                            size: 14), // White tick on top
+                                      ],
+                                    ),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      "Upload or add details",
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 14,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(height: 5),
+                                Row(
+                                  children: [
+                                    Stack(
+                                      alignment: Alignment.center,
+                                      children: [
+                                        Icon(Icons.check_box,
+                                            color: Colors.green,
+                                            size: 18), // Green box
+                                        Icon(Icons.check,
+                                            color: Colors.white,
+                                            size: 14), // White tick on top
+                                      ],
+                                    ),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      "Submit again!",
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 14,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                            SizedBox(
+                              height: 10,
+                            ),
+                            Text(
+                              "Your input helps us improve—thank you! 🚀",
+                              style: GoogleFonts.poppins(
+                                fontSize: 14,
+                                color: Colors.white, // Custom color
+                              ),
+                            )
+                          ],
+                        ),
+                      ),
+                      actions: [
+                        Row(
+                          children: [
+                            GestureDetector(
+                              onTap: () {
+                                Navigator.pop(context);
+                              },
+                              child: Container(
+                                padding: EdgeInsets.symmetric(
+                                    vertical: 12, horizontal: 20),
+                                decoration: BoxDecoration(
+                                  color: Color(0xff003060), // ✅ Button color
+                                  borderRadius: BorderRadius.circular(
+                                      20), // ✅ Rounded corners
+                                ),
+                                child: Text(
+                                  "Improve Feedback",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white, // ✅ Button text color
+                                  ),
+                                ),
+                              ),
+                            ),
+                            SizedBox(
+                              width: 5,
+                            ),
+                            GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  questionIndex++;
+                                  ratingsArrayLoaded = false;
+                                });
+                                Navigator.pop(context);
+                              },
+                              child: Container(
+                                padding: EdgeInsets.symmetric(
+                                    vertical: 12, horizontal: 20),
+                                decoration: BoxDecoration(
+                                  color: Color(0xff003060), // ✅ Button color
+                                  borderRadius: BorderRadius.circular(
+                                      20), // ✅ Rounded corners
+                                ),
+                                child: Text(
+                                  "Continue as is",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white, // ✅ Button text color
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    );
+
+                    showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return alert;
+                        });
+                  } else {
+                    print("oops in line 3292");
+                    AlertDialog alert = AlertDialog(
+                      backgroundColor: Colors.blue, // ✅ Background color
+                      title: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            "Oops! Missing Info",
+                            style: GoogleFonts.poppins(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white, // ✅ Title text color
+                            ),
+                          ),
+                          SizedBox(width: 8), // ✅ Spacing
+                          Icon(Icons.warning, color: Colors.yellow, size: 30),
+                        ],
+                      ),
+                      content: Column(
+                        mainAxisSize:
+                            MainAxisSize.min, // ✅ Prevents unnecessary spacing
+                        crossAxisAlignment: CrossAxisAlignment
+                            .start, // ✅ Aligns content to the left
+                        children: [
+                          Text(
+                            "We need all fields filled out to continue.",
+                            style: GoogleFonts.poppins(
+                              fontSize: 16,
+                              color: Colors.white, // ✅ Content text color
+                            ),
+                          ),
+                          SizedBox(
+                              height: 20), // ✅ Space between text and checklist
+                          Column(
+                            children: [
+                              Row(
+                                children: [
+                                  Stack(
+                                    alignment: Alignment.center,
+                                    children: [
+                                      Icon(Icons.check_box,
+                                          color: Colors.green,
+                                          size: 18), // Green box
+                                      Icon(Icons.check,
+                                          color: Colors.white,
+                                          size: 14), // White tick on top
+                                    ],
+                                  ), // ✅ Check Icon
+                                  SizedBox(width: 8), // ✅ Spacing
+                                  Text(
+                                    "Check your info",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 14,
+                                      color: Colors.white, // ✅ Text color
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(
+                                  height:
+                                      5), // ✅ Spacing between checklist items
+                              Row(
+                                children: [
+                                  Stack(
+                                    alignment: Alignment.center,
+                                    children: [
+                                      Icon(Icons.check_box,
+                                          color: Colors.green,
+                                          size: 18), // Green box
+                                      Icon(Icons.check,
+                                          color: Colors.white,
+                                          size: 14), // White tick on top
+                                    ],
+                                  ),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    "Fill in the missing parts",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 14,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 5),
+                              Row(
+                                children: [
+                                  Stack(
+                                    alignment: Alignment.center,
+                                    children: [
+                                      Icon(Icons.check_box,
+                                          color: Colors.green,
+                                          size: 18), // Green box
+                                      Icon(Icons.check,
+                                          color: Colors.white,
+                                          size: 14), // White tick on top
+                                    ],
+                                  ),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    "Try again!",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 14,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      actions: [
+                        Center(
+                          child: GestureDetector(
+                            onTap: () {
+                              Navigator.pop(context);
+                            },
+                            child: Container(
+                              padding: EdgeInsets.symmetric(
+                                  vertical: 12, horizontal: 20),
+                              decoration: BoxDecoration(
+                                color: Color(0xff003060), // ✅ Button color
+                                borderRadius: BorderRadius.circular(
+                                    20), // ✅ Rounded corners
+                              ),
+                              child: Text(
+                                "Go Back",
+                                style: GoogleFonts.poppins(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white, // ✅ Button text color
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+
+                    showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return alert;
+                        });
+                  }
                 } else {
                   setState(() {
                     questionIndex++;
@@ -2468,45 +3600,926 @@ class _HomePageState extends State<HomePage>
               ),
               onTap: () {
                 if (!GetValidResponses(currentSurvey)) {
-                  AlertDialog alert = AlertDialog(
-                    title: Text("Alert"),
-                    content: Text(goingForwardMessage),
-                    actions: [
-                      currentSurvey[0]["answerType"].contains("Rating") ||
-                              (currentSurvey[0]["answerType"]
-                                      .contains("Multimedia/Descriptive") &&
-                                  goingForwardMessage.contains("options")) ||
-                              (currentSurvey[0]["answerType"]
-                                      .contains("Audio/Descriptive") &&
-                                  goingForwardMessage.contains("options"))
-                          ? TextButton(
-                              onPressed: () {
+                  FocusScope.of(context).unfocus();
+
+                  if (goingForwardMessage.contains(
+                          "A response is needed to continue, select any one for Yes or No") ||
+                      goingForwardMessage.isEmpty) {
+                    print("oops in line 3478");
+                    AlertDialog alert = AlertDialog(
+                      backgroundColor: Colors.blue, // ✅ Background color
+                      title: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            "Oops! Missing Info",
+                            style: GoogleFonts.poppins(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white, // ✅ Title text color
+                            ),
+                          ),
+                          SizedBox(width: 8), // ✅ Spacing
+                          Icon(Icons.warning, color: Colors.yellow, size: 30),
+                        ],
+                      ),
+                      content: Column(
+                        mainAxisSize:
+                            MainAxisSize.min, // ✅ Prevents unnecessary spacing
+                        crossAxisAlignment: CrossAxisAlignment
+                            .start, // ✅ Aligns content to the left
+                        children: [
+                          Text(
+                            "We need all fields filled out to continue.",
+                            style: GoogleFonts.poppins(
+                              fontSize: 16,
+                              color: Colors.white, // ✅ Content text color
+                            ),
+                          ),
+                          SizedBox(
+                              height: 20), // ✅ Space between text and checklist
+                          Column(
+                            children: [
+                              Row(
+                                children: [
+                                  Stack(
+                                    alignment: Alignment.center,
+                                    children: [
+                                      Icon(Icons.check_box,
+                                          color: Colors.green,
+                                          size: 18), // Green box
+                                      Icon(Icons.check,
+                                          color: Colors.white,
+                                          size: 14), // White tick on top
+                                    ],
+                                  ), // ✅ Check Icon
+                                  SizedBox(width: 8), // ✅ Spacing
+                                  Text(
+                                    "Check your info",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 14,
+                                      color: Colors.white, // ✅ Text color
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(
+                                  height:
+                                      5), // ✅ Spacing between checklist items
+                              Row(
+                                children: [
+                                  Stack(
+                                    alignment: Alignment.center,
+                                    children: [
+                                      Icon(Icons.check_box,
+                                          color: Colors.green,
+                                          size: 18), // Green box
+                                      Icon(Icons.check,
+                                          color: Colors.white,
+                                          size: 14), // White tick on top
+                                    ],
+                                  ),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    "Fill in the missing parts",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 14,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 5),
+                              Row(
+                                children: [
+                                  Stack(
+                                    alignment: Alignment.center,
+                                    children: [
+                                      Icon(Icons.check_box,
+                                          color: Colors.green,
+                                          size: 18), // Green box
+                                      Icon(Icons.check,
+                                          color: Colors.white,
+                                          size: 14), // White tick on top
+                                    ],
+                                  ),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    "Try again!",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 14,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      actions: [
+                        Center(
+                          child: GestureDetector(
+                            onTap: () {
+                              Navigator.pop(context);
+                            },
+                            child: Container(
+                              padding: EdgeInsets.symmetric(
+                                  vertical: 12, horizontal: 20),
+                              decoration: BoxDecoration(
+                                color: Color(0xff003060), // ✅ Button color
+                                borderRadius: BorderRadius.circular(
+                                    20), // ✅ Rounded corners
+                              ),
+                              child: Text(
+                                "Go Back",
+                                style: GoogleFonts.poppins(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white, // ✅ Button text color
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+
+                    showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return alert;
+                        });
+                  } else if (goingForwardMessage.contains("You have not used all given options to response, you can record audio and state detailed problem. Are you sure you want to continue?")) {
+                    AlertDialog alert = AlertDialog(
+                      backgroundColor: Colors.blue, // ✅ Background color
+                      title: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.star, color: Colors.yellow, size: 24),
+                          Text(
+                            "Enhance Your Feedback!",
+                            style: GoogleFonts.poppins(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white, // ✅ Title text color
+                            ),
+                          ),
+                          Icon(Icons.star, color: Colors.yellow, size: 24),
+                        ],
+                      ),
+                      content: Expanded(
+                        child: Column(
+                          mainAxisSize: MainAxisSize
+                              .min, // ✅ Prevents unnecessary spacing
+                          crossAxisAlignment: CrossAxisAlignment
+                              .start, // ✅ Aligns content to the left
+                          children: [
+                            Text(
+                              goingForwardMessage,
+                              style: GoogleFonts.poppins(
+                                fontSize: 14,
+                                color: Colors.white, // Custom color
+                              ),
+                            ),
+                            SizedBox(
+                                height:
+                                20), // ✅ Space between text and checklist
+
+                            SizedBox(
+                              height: 10,
+                            ),
+                            Text(
+                              "Your input helps us improve—thank you! 🚀",
+                              style: GoogleFonts.poppins(
+                                fontSize: 14,
+                                color: Colors.white, // Custom color
+                              ),
+                            )
+                          ],
+                        ),
+                      ),
+                      actions: [
+                        Row(
+                          children: [
+                            GestureDetector(
+                              onTap: () {
+                                Navigator.pop(context);
+                              },
+                              child: Container(
+                                padding: EdgeInsets.symmetric(
+                                    vertical: 12, horizontal: 20),
+                                decoration: BoxDecoration(
+                                  color: Color(0xff003060), // ✅ Button color
+                                  borderRadius: BorderRadius.circular(
+                                      20), // ✅ Rounded corners
+                                ),
+                                child: Text(
+                                  "Improve Feedback",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white, // ✅ Button text color
+                                  ),
+                                ),
+                              ),
+                            ),
+                            SizedBox(
+                              width: 5,
+                            ),
+                            GestureDetector(
+                              onTap: () {
                                 setState(() {
                                   questionIndex++;
                                   ratingsArrayLoaded = false;
                                 });
                                 Navigator.pop(context);
                               },
-                              child: Text("Continue"))
-                          : Text(""),
-                      TextButton(
-                          onPressed: () {
-                            Navigator.pop(context);
-                          },
-                          child: Text("Cancel"))
-                    ],
-                  );
+                              child: Container(
+                                padding: EdgeInsets.symmetric(
+                                    vertical: 12, horizontal: 20),
+                                decoration: BoxDecoration(
+                                  color: Color(0xff003060), // ✅ Button color
+                                  borderRadius: BorderRadius.circular(
+                                      20), // ✅ Rounded corners
+                                ),
+                                child: Text(
+                                  "Continue as is",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white, // ✅ Button text color
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    );
 
-                  showDialog(
-                      context: context,
-                      builder: (BuildContext context) {
-                        return alert;
-                      });
+                    showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return alert;
+                        });
+                  }else if (goingForwardMessage.contains(
+                      "You have not used all given options to response, you can record audio/video, upload pic")) {
+                    AlertDialog alert = AlertDialog(
+                      backgroundColor: Colors.blue, // ✅ Background color
+                      title: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.star, color: Colors.yellow, size: 24),
+                          Text(
+                            "Enhance Your Feedback!",
+                            style: GoogleFonts.poppins(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white, // ✅ Title text color
+                            ),
+                          ),
+                          Icon(Icons.star, color: Colors.yellow, size: 24),
+                        ],
+                      ),
+                      content: Expanded(
+                        child: Column(
+                          mainAxisSize: MainAxisSize
+                              .min, // ✅ Prevents unnecessary spacing
+                          crossAxisAlignment: CrossAxisAlignment
+                              .start, // ✅ Aligns content to the left
+                          children: [
+                            Text(
+                              "Add more impact with: ",
+                              style: GoogleFonts.poppins(
+                                fontSize: 14,
+                                color: Colors.white, // Custom color
+                              ),
+                            ),
+                            SizedBox(height: 20),
+                            Text(
+                              "📷 Photo | 🎥 Video | 🎙️ Audio",
+                              style: GoogleFonts.poppins(
+                                fontSize: 14,
+                                color: Colors
+                                    .white, // Different color for emphasis
+                              ),
+                            ),
+                            SizedBox(
+                                height:
+                                    20), // ✅ Space between text and checklist
+                            Column(
+                              children: [
+                                Row(
+                                  children: [
+                                    Stack(
+                                      alignment: Alignment.center,
+                                      children: [
+                                        Icon(Icons.check_box,
+                                            color: Colors.green,
+                                            size: 18), // Green box
+                                        Icon(Icons.check,
+                                            color: Colors.white,
+                                            size: 14), // White tick on top
+                                      ],
+                                    ), // ✅ Check Icon
+                                    SizedBox(width: 8), // ✅ Spacing
+                                    Text(
+                                      "Choose an option",
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 14,
+                                        color: Colors.white, // ✅ Text color
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(
+                                    height:
+                                        5), // ✅ Spacing between checklist items
+                                Row(
+                                  children: [
+                                    Stack(
+                                      alignment: Alignment.center,
+                                      children: [
+                                        Icon(Icons.check_box,
+                                            color: Colors.green,
+                                            size: 18), // Green box
+                                        Icon(Icons.check,
+                                            color: Colors.white,
+                                            size: 14), // White tick on top
+                                      ],
+                                    ),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      "Upload or add details",
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 14,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(height: 5),
+                                Row(
+                                  children: [
+                                    Stack(
+                                      alignment: Alignment.center,
+                                      children: [
+                                        Icon(Icons.check_box,
+                                            color: Colors.green,
+                                            size: 18), // Green box
+                                        Icon(Icons.check,
+                                            color: Colors.white,
+                                            size: 14), // White tick on top
+                                      ],
+                                    ),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      "Submit again!",
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 14,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                            SizedBox(
+                              height: 10,
+                            ),
+                            Text(
+                              "Your input helps us improve—thank you! 🚀",
+                              style: GoogleFonts.poppins(
+                                fontSize: 14,
+                                color: Colors.white, // Custom color
+                              ),
+                            )
+                          ],
+                        ),
+                      ),
+                      actions: [
+                        Row(
+                          children: [
+                            GestureDetector(
+                              onTap: () {
+                                Navigator.pop(context);
+                              },
+                              child: Container(
+                                padding: EdgeInsets.symmetric(
+                                    vertical: 12, horizontal: 20),
+                                decoration: BoxDecoration(
+                                  color: Color(0xff003060), // ✅ Button color
+                                  borderRadius: BorderRadius.circular(
+                                      20), // ✅ Rounded corners
+                                ),
+                                child: Text(
+                                  "Improve Feedback",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white, // ✅ Button text color
+                                  ),
+                                ),
+                              ),
+                            ),
+                            SizedBox(
+                              width: 5,
+                            ),
+                            GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  questionIndex++;
+                                  ratingsArrayLoaded = false;
+                                });
+                                Navigator.pop(context);
+                              },
+                              child: Container(
+                                padding: EdgeInsets.symmetric(
+                                    vertical: 12, horizontal: 20),
+                                decoration: BoxDecoration(
+                                  color: Color(0xff003060), // ✅ Button color
+                                  borderRadius: BorderRadius.circular(
+                                      20), // ✅ Rounded corners
+                                ),
+                                child: Text(
+                                  "Continue as is",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white, // ✅ Button text color
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    );
+
+                    showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return alert;
+                        });
+                  } else if (goingForwardMessage.contains(
+                      "you can record audio and state detailed problem")) {
+                    AlertDialog alert = AlertDialog(
+                      backgroundColor: Colors.blue, // ✅ Background color
+                      title: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.star, color: Colors.yellow, size: 24),
+                          Text(
+                            "Enhance Your Feedback!",
+                            style: GoogleFonts.poppins(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white, // ✅ Title text color
+                            ),
+                          ),
+                          Icon(Icons.star, color: Colors.yellow, size: 24),
+                        ],
+                      ),
+                      content: Expanded(
+                        child: Column(
+                          mainAxisSize: MainAxisSize
+                              .min, // ✅ Prevents unnecessary spacing
+                          crossAxisAlignment: CrossAxisAlignment
+                              .start, // ✅ Aligns content to the left
+                          children: [
+                            Text(
+                              "Add more impact with: ",
+                              style: GoogleFonts.poppins(
+                                fontSize: 14,
+                                color: Colors.white, // Custom color
+                              ),
+                            ),
+                            SizedBox(height: 20),
+                            Text(
+                              "Give Description and 🎙️ Audio",
+                              style: GoogleFonts.poppins(
+                                fontSize: 14,
+                                color: Colors
+                                    .white, // Different color for emphasis
+                              ),
+                            ),
+                            SizedBox(
+                                height:
+                                20), // ✅ Space between text and checklist
+                            Column(
+                              children: [
+                                Row(
+                                  children: [
+                                    Stack(
+                                      alignment: Alignment.center,
+                                      children: [
+                                        Icon(Icons.check_box,
+                                            color: Colors.green,
+                                            size: 18), // Green box
+                                        Icon(Icons.check,
+                                            color: Colors.white,
+                                            size: 14), // White tick on top
+                                      ],
+                                    ), // ✅ Check Icon
+                                    SizedBox(width: 8), // ✅ Spacing
+                                    Text(
+                                      "Choose an option",
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 14,
+                                        color: Colors.white, // ✅ Text color
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(
+                                    height:
+                                    5), // ✅ Spacing between checklist items
+                                Row(
+                                  children: [
+                                    Stack(
+                                      alignment: Alignment.center,
+                                      children: [
+                                        Icon(Icons.check_box,
+                                            color: Colors.green,
+                                            size: 18), // Green box
+                                        Icon(Icons.check,
+                                            color: Colors.white,
+                                            size: 14), // White tick on top
+                                      ],
+                                    ),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      "Upload or add details",
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 14,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(height: 5),
+                                Row(
+                                  children: [
+                                    Stack(
+                                      alignment: Alignment.center,
+                                      children: [
+                                        Icon(Icons.check_box,
+                                            color: Colors.green,
+                                            size: 18), // Green box
+                                        Icon(Icons.check,
+                                            color: Colors.white,
+                                            size: 14), // White tick on top
+                                      ],
+                                    ),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      "Submit again!",
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 14,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                            SizedBox(
+                              height: 10,
+                            ),
+                            Text(
+                              "Your input helps us improve—thank you! 🚀",
+                              style: GoogleFonts.poppins(
+                                fontSize: 14,
+                                color: Colors.white, // Custom color
+                              ),
+                            )
+                          ],
+                        ),
+                      ),
+                      actions: [
+                        Row(
+                          children: [
+                            GestureDetector(
+                              onTap: () {
+                                Navigator.pop(context);
+                              },
+                              child: Container(
+                                padding: EdgeInsets.symmetric(
+                                    vertical: 12, horizontal: 20),
+                                decoration: BoxDecoration(
+                                  color: Color(0xff003060), // ✅ Button color
+                                  borderRadius: BorderRadius.circular(
+                                      20), // ✅ Rounded corners
+                                ),
+                                child: Text(
+                                  "Improve Feedback",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white, // ✅ Button text color
+                                  ),
+                                ),
+                              ),
+                            ),
+                            SizedBox(
+                              width: 5,
+                            ),
+                            GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  questionIndex++;
+                                  ratingsArrayLoaded = false;
+                                });
+                                Navigator.pop(context);
+                              },
+                              child: Container(
+                                padding: EdgeInsets.symmetric(
+                                    vertical: 12, horizontal: 20),
+                                decoration: BoxDecoration(
+                                  color: Color(0xff003060), // ✅ Button color
+                                  borderRadius: BorderRadius.circular(
+                                      20), // ✅ Rounded corners
+                                ),
+                                child: Text(
+                                  "Continue as is",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white, // ✅ Button text color
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    );
+
+                    showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return alert;
+                        });
+                  } else if (goingForwardMessage.contains(
+                      "A response is needed to continue, you can record audio or state detailed problem.")) {
+                    print("oops in line 4136");
+                    AlertDialog alert = AlertDialog(
+                      backgroundColor: Colors.blue, // ✅ Background color
+                      title: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            "Oops! Missing Info",
+                            style: GoogleFonts.poppins(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white, // ✅ Title text color
+                            ),
+                          ),
+                          SizedBox(width: 8), // ✅ Spacing
+                          Icon(Icons.warning, color: Colors.yellow, size: 30),
+                        ],
+                      ),
+                      content: Column(
+                        mainAxisSize:
+                        MainAxisSize.min, // ✅ Prevents unnecessary spacing
+                        crossAxisAlignment: CrossAxisAlignment
+                            .start, // ✅ Aligns content to the left
+                        children: [
+                          Text(
+                            "We need all fields filled out to continue.",
+                            style: GoogleFonts.poppins(
+                              fontSize: 16,
+                              color: Colors.white, // ✅ Content text color
+                            ),
+                          ),
+                          SizedBox(
+                              height: 20), // ✅ Space between text and checklist
+                          Column(
+                            children: [
+                              Row(
+                                children: [
+                                  Stack(
+                                    alignment: Alignment.center,
+                                    children: [
+                                      Icon(Icons.check_box,
+                                          color: Colors.green,
+                                          size: 18), // Green box
+                                      Icon(Icons.check,
+                                          color: Colors.white,
+                                          size: 14), // White tick on top
+                                    ],
+                                  ), // ✅ Check Icon
+                                  SizedBox(width: 8), // ✅ Spacing
+                                  Text(
+                                    "Check your info",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 14,
+                                      color: Colors.white, // ✅ Text color
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(
+                                  height:
+                                  5), // ✅ Spacing between checklist items
+                              Row(
+                                children: [
+                                  Stack(
+                                    alignment: Alignment.center,
+                                    children: [
+                                      Icon(Icons.check_box,
+                                          color: Colors.green,
+                                          size: 18), // Green box
+                                      Icon(Icons.check,
+                                          color: Colors.white,
+                                          size: 14), // White tick on top
+                                    ],
+                                  ),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    "Fill in the missing parts",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 14,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 5),
+                              Row(
+                                children: [
+                                  Stack(
+                                    alignment: Alignment.center,
+                                    children: [
+                                      Icon(Icons.check_box,
+                                          color: Colors.green,
+                                          size: 18), // Green box
+                                      Icon(Icons.check,
+                                          color: Colors.white,
+                                          size: 14), // White tick on top
+                                    ],
+                                  ),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    "Try again!",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 14,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      actions: [
+                        Center(
+                          child: GestureDetector(
+                            onTap: () {
+                              Navigator.pop(context);
+                            },
+                            child: Container(
+                              padding: EdgeInsets.symmetric(
+                                  vertical: 12, horizontal: 20),
+                              decoration: BoxDecoration(
+                                color: Color(0xff003060), // ✅ Button color
+                                borderRadius: BorderRadius.circular(
+                                    20), // ✅ Rounded corners
+                              ),
+                              child: Text(
+                                "Go Back",
+                                style: GoogleFonts.poppins(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white, // ✅ Button text color
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+
+                    showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return alert;
+                        });
+                  }else {
+                    AlertDialog alert = AlertDialog(
+                      backgroundColor: Colors.blue, // ✅ Dialog background color
+                      title: Text(
+                        "Alert",
+                        style: GoogleFonts.poppins(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white, // ✅ Title text color
+                        ),
+                      ),
+                      content: Text(
+                        goingForwardMessage,
+                        style: GoogleFonts.poppins(
+                          fontSize: 16,
+                          color: Colors.white, // ✅ Content text color
+                        ),
+                      ),
+                      actions: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment
+                              .spaceEvenly, // ✅ Evenly spaced buttons
+                          children: [
+                            if (currentSurvey[0]["answerType"]
+                                    .contains("Rating") ||
+                                (currentSurvey[0]["answerType"]
+                                        .contains("Multimedia/Descriptive") &&
+                                    goingForwardMessage.contains("options")) ||
+                                (currentSurvey[0]["answerType"]
+                                        .contains("Audio/Descriptive") &&
+                                    goingForwardMessage.contains("options")))
+                              GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    questionIndex++;
+                                    ratingsArrayLoaded = false;
+                                  });
+                                  Navigator.pop(context);
+                                },
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(
+                                      vertical: 12, horizontal: 20),
+                                  decoration: BoxDecoration(
+                                    color: Color(0xff003060), // ✅ Button color
+                                    borderRadius: BorderRadius.circular(
+                                        20), // ✅ Rounded corners
+                                  ),
+                                  child: Text(
+                                    "Continue",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                      color:
+                                          Colors.white, // ✅ Button text color
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            GestureDetector(
+                              onTap: () {
+                                Navigator.pop(context);
+                              },
+                              child: Container(
+                                padding: EdgeInsets.symmetric(
+                                    vertical: 12, horizontal: 20),
+                                decoration: BoxDecoration(
+                                  color: Color(0xff003060), // ✅ Button color
+                                  borderRadius: BorderRadius.circular(
+                                      20), // ✅ Rounded corners
+                                ),
+                                child: Text(
+                                  "Cancel",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white, // ✅ Button text color
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    );
+
+                    showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return alert;
+                        });
+                  }
                 } else {
-                  setState(() {
-                    questionIndex++;
-                    ratingsArrayLoaded = false;
-                  });
+
+                  if(surveys[0]["feedbackQuestion"][questionIndex]["answer"] == "No" &&
+                      surveys[0]["feedbackQuestion"][questionIndex]["titleLine"].contains("Please let us know about any unreported problems/issues with your"))
+                  {
+                    setState(() {
+                      showThankyouMessage = true;
+                      questionIndex = 0;
+                      superIndex = 0;
+                      setNextSurvey(true);
+                      showSpinner = false;
+                      showSpinnerMyFeedback = false;
+
+                    });
+                  }
+                  else{
+                    setState(() {
+                      questionIndex++;
+                      ratingsArrayLoaded = false;
+                    });
+                  }
                 }
               })
         ],
@@ -2541,14 +4554,54 @@ class _HomePageState extends State<HomePage>
                     if (surveys[0]["surveyId"] == "ReplacementSurvey") {
                       if (!GetValidResponses(currentSurvey)) {
                         AlertDialog alert = AlertDialog(
-                          title: Text("Alert"),
-                          content: Text(goingForwardMessage),
+                          backgroundColor:
+                              Colors.blue, // ✅ Dialog background color
+                          title: Text(
+                            "Alert",
+                            style: GoogleFonts.poppins(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white, // ✅ Title text color
+                            ),
+                          ),
+                          content: Text(
+                            goingForwardMessage,
+                            style: GoogleFonts.poppins(
+                              fontSize: 16,
+                              color: Colors.white, // ✅ Content text color
+                            ),
+                          ),
                           actions: [
-                            TextButton(
-                                onPressed: () {
-                                  Navigator.pop(context);
-                                },
-                                child: Text("Cancel")),
+                            Row(
+                              mainAxisAlignment:
+                                  MainAxisAlignment.center, // ✅ Centered button
+                              children: [
+                                GestureDetector(
+                                  onTap: () {
+                                    Navigator.pop(context);
+                                  },
+                                  child: Container(
+                                    padding: EdgeInsets.symmetric(
+                                        vertical: 12, horizontal: 20),
+                                    decoration: BoxDecoration(
+                                      color:
+                                          Color(0xff003060), // ✅ Button color
+                                      borderRadius: BorderRadius.circular(
+                                          20), // ✅ Rounded corners
+                                    ),
+                                    child: Text(
+                                      "Cancel",
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        color:
+                                            Colors.white, // ✅ Button text color
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ],
                         );
 
@@ -2565,35 +4618,95 @@ class _HomePageState extends State<HomePage>
                         "ReplacementSurvey")) {
                       if (!GetValidResponses(currentSurvey)) {
                         AlertDialog alert = AlertDialog(
-                          title: Text("Alert"),
-                          content: Text(goingForwardMessage),
+                          backgroundColor:
+                              Colors.blue, // ✅ Dialog background color
+                          title: Text(
+                            "Alert",
+                            style: GoogleFonts.poppins(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white, // ✅ Title text color
+                            ),
+                          ),
+                          content: Text(
+                            goingForwardMessage,
+                            style: GoogleFonts.poppins(
+                              fontSize: 16,
+                              color: Colors.white, // ✅ Content text color
+                            ),
+                          ),
                           actions: [
-                            currentSurvey[0]["answerType"].contains("Rating") ||
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment
+                                  .spaceEvenly, // ✅ Even spacing for buttons
+                              children: [
+                                if (currentSurvey[0]["answerType"]
+                                        .contains("Rating") ||
                                     (currentSurvey[0]["answerType"].contains(
                                             "Multimedia/Descriptive") &&
                                         goingForwardMessage
                                             .contains("options")) ||
                                     (currentSurvey[0]["answerType"]
                                             .contains("Audio/Descriptive") &&
-                                        goingForwardMessage.contains("options"))
-                                ? TextButton(
-                                    onPressed: () {
+                                        goingForwardMessage
+                                            .contains("options")))
+                                  GestureDetector(
+                                    onTap: () {
                                       setState(() {
                                         showThankyouMessage = true;
                                         questionIndex = 0;
                                         superIndex = 0;
                                         setNextSurvey(true);
-                                        showSpinner = false;
+
                                       });
                                       Navigator.pop(context);
                                     },
-                                    child: Text("Continue"))
-                                : Text(""),
-                            TextButton(
-                                onPressed: () {
-                                  Navigator.pop(context);
-                                },
-                                child: Text("Cancel"))
+                                    child: Container(
+                                      padding: EdgeInsets.symmetric(
+                                          vertical: 12, horizontal: 20),
+                                      decoration: BoxDecoration(
+                                        color:
+                                            Color(0xff003060), // ✅ Button color
+                                        borderRadius: BorderRadius.circular(
+                                            20), // ✅ Rounded corners
+                                      ),
+                                      child: Text(
+                                        "Continue",
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors
+                                              .white, // ✅ Button text color
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                GestureDetector(
+                                  onTap: () {
+                                    Navigator.pop(context);
+                                  },
+                                  child: Container(
+                                    padding: EdgeInsets.symmetric(
+                                        vertical: 12, horizontal: 20),
+                                    decoration: BoxDecoration(
+                                      color:
+                                          Color(0xff003060), // ✅ Button color
+                                      borderRadius: BorderRadius.circular(
+                                          20), // ✅ Rounded corners
+                                    ),
+                                    child: Text(
+                                      "Cancel",
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        color:
+                                            Colors.white, // ✅ Button text color
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ],
                         );
 
@@ -2609,6 +4722,7 @@ class _HomePageState extends State<HomePage>
                           superIndex = 0;
                           setNextSurvey(true);
                           showSpinner = false;
+                          showSpinnerMyFeedback = false;
                         });
                       }
                     }
@@ -2654,10 +4768,58 @@ class _HomePageState extends State<HomePage>
         child: Text(
           processQuestion(
               "Thank you very much for completing your first experience check-in!Your feedback will help to improve the quality and functionality of future \"products\".  We will contact you for an update of your experience in …. months."),
-          style: TextStyle(color: Colors.red, fontSize: MediaQuery.textScalerOf(context).scale(15)),
+          style: TextStyle(
+              color: Colors.red,
+              fontSize: MediaQuery.textScalerOf(context).scale(15)),
         ),
       );
     }
+  }
+
+  Widget getBottomButtonSetDev() {
+    if (!kDebugMode) return SizedBox.shrink(); // Don't render if not in dev
+
+    return Column(
+      children: [
+        SizedBox(height: 20),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ElevatedButton.icon(
+              icon: Icon(Icons.bolt, color: Colors.white),
+              label: Text("Skip Validation & Next"),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.redAccent,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                textStyle: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
+              onPressed: () {
+                setState(()  {
+                  showThankyouMessage = true;
+                  questionIndex = 0;
+                  superIndex = 0;
+                  setNextSurvey(true);
+                  showSpinner = false;
+                  showSpinnerMyFeedback = false;
+
+                });
+              },
+            ),
+          ],
+        ),
+        SizedBox(height: 10),
+        Text(
+          "🚨 Dev mode: skipping validation 🚨",
+          style: TextStyle(color: Colors.redAccent, fontSize: 12),
+        )
+      ],
+    );
   }
 
   void setBrand(myProductSelected) {
@@ -2671,20 +4833,37 @@ class _HomePageState extends State<HomePage>
 
   String processQuestion(String question) {
     if (question.isNotEmpty) {
-      var values = <String>[];
-      values = productSelected.toString().split("-");
-      question = question.replaceAll("product", values[0].toLowerCase());
+      question = question.replaceAll("product", productSelected.toString());
       question = question.replaceAll("\"", "");
       question = question.replaceAll("\\n", "\n");
+
     }
 
     return question;
   }
 
   getRatingsArray(answerType, int index) {
+
     responseArray = [];
-    for (int i = 0; i < ratings[answerType].length; i++) {
-      responseArray.add(ratings[answerType][i].toString());
+
+    bool hasRatings = ratings[answerType] != null;
+    bool hasCheckboxes = checkBoxes[answerType] != null;
+
+    if (hasRatings) {
+      for (var value in ratings[answerType]) {
+        responseArray.add(value.toString());
+      }
+    }
+
+    if (hasCheckboxes) {
+      for (var value in checkBoxes[answerType]) {
+        responseArray.add(value.toString());
+      }
+    }
+
+    if (!hasRatings && !hasCheckboxes) {
+      responseArray.add("Lower Value");
+      responseArray.add("Upper Value");
     }
   }
 
@@ -2693,25 +4872,35 @@ class _HomePageState extends State<HomePage>
       var url = Uri.parse(Apis.ratingsArray());
       var response = await http.get(url);
 
-      List<dynamic> responseList = jsonDecode(response.body);
+      if (response.statusCode == 200)
+        {
+          List<dynamic> responseList = jsonDecode(response.body);
 
-      for (int i = 0; i < responseList.length; i++) {
-        ratings[responseList[i]["answerType"].toString()] =
+          for (int i = 0; i < responseList.length; i++) {
+            ratings[responseList[i]["answerType"].toString()] =
             responseList[i]["ratingValues"];
+            checkBoxes[responseList[i]["answerType"].toString()] =
+            responseList[i]["checkBoxValues"];
+          }
+
+          ratingsArrayLoaded = true;
+        }
+      else{
+        print("Rating array could not be loaded");
       }
 
-      ratingsArrayLoaded = true;
+
+
     }
   }
 
   startFeedback() {
+
     String titleLine =
         surveys[0]["feedbackQuestion"][questionIndex]["titleLine"].toString();
-
     if (lastTitle.isNotEmpty &&
         titleLine.isNotEmpty &&
         (lastTitle == "LoadLastLine" || lastTitle != titleLine)) {
-      lastTitle = titleLine;
       return Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -2721,9 +4910,9 @@ class _HomePageState extends State<HomePage>
             child: Text(
               processQuestion(titleLine),
               style: GoogleFonts.poppins(
-                  fontSize: MediaQuery.textScalerOf(context).scale(18),
-                  color: Colors.blue,
-                  fontWeight: FontWeight.bold,
+                fontSize: MediaQuery.textScalerOf(context).scale(18),
+                color: Colors.blue,
+                fontWeight: FontWeight.bold,
               ),
             ),
           ),
@@ -2733,7 +4922,8 @@ class _HomePageState extends State<HomePage>
           MaterialButton(
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20.0), // ✅ Rounded Borders
-              side: BorderSide(color: Colors.black, width: 1.5), // ✅ Optional border
+              side: BorderSide(
+                  color: Colors.black, width: 1.5), // ✅ Optional border
             ),
             color: Color(0xff003060),
             height: 50,
@@ -2745,156 +4935,172 @@ class _HomePageState extends State<HomePage>
             },
             child: Text(
               "Continue",
-              style: GoogleFonts.poppins(color: Colors.white,
+              style: GoogleFonts.poppins(
+                  color: Colors.white,
                   fontSize: MediaQuery.textScalerOf(context).scale(14),
-                fontWeight: FontWeight.bold
-              ),
+                  fontWeight: FontWeight.bold),
             ),
           )
         ],
       );
-    }
-
-    return SingleChildScrollView(
-      physics: BouncingScrollPhysics(),
-      child: Column(
-        children: [
-          const SizedBox(height: 10.0),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              Material(
-                child: ElevatedButton(
-                    style: const ButtonStyle(
-                      backgroundColor: MaterialStatePropertyAll(Colors.white),
-                    ),
-                    child: Image.asset("images/homeButton.png",height: 35,width: 35,),
-                    onPressed: () async {
-                      setState(() {
-                        AlertDialog alert = AlertDialog(
-                          backgroundColor: Colors.blue, // ✅ Background color
-                          title: Text(
-                            "Warning",
-                            style: GoogleFonts.poppins(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white, // ✅ Title text color
-                            ),
-                          ),
-                          content: Text(
-                            "You are leaving the survey while it's not complete. If you proceed, it may reset and not "
-                                "get recorded.\n\nDo you wish to abort feedback?",
-                            style: GoogleFonts.poppins(
-                              fontSize: 16,
-                              color: Colors.white, // ✅ Content text color
-                            ),
-                          ),
-                          actions: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly, // ✅ Evenly spaced buttons
-                              children: [
-                                GestureDetector(
-                                  onTap: () {
-                                    setState(() {
-                                      showThankyouMessage = false;
-                                      showFeedback = false;
-                                      showRegistrationPage = false;
-                                      showSpinnerMyProducts = true;
-                                      goToHome = true;
-                                    });
-
-                                    // ✅ Save survey data to myProductSelected
-                                    if (isDefectSurvey) {
-                                      setState(() {
-                                        myProductSelected["currentDefectSurvey"] = surveys[0];
-                                      });
-                                    } else {
-                                      setState(() {
-                                        myProductSelected["currentMainSurvey"] = surveys[0];
-                                        print(myProductSelected["currentMainSurvey"]);
-                                      });
-                                    }
-
-                                    Navigator.pop(context);
-                                    questionIndex = 0;
-
-                                    setState(() {
-                                      showSpinnerMyProducts = false;
-                                    });
-                                  },
-                                  child: Container(
-                                    padding: EdgeInsets.symmetric(vertical: 12, horizontal: 20),
-                                    decoration: BoxDecoration(
-                                      color: Color(0xff003060), // ✅ Button color
-                                      borderRadius: BorderRadius.circular(20), // ✅ Rounded corners
-                                    ),
-                                    child: Text(
-                                      "Continue",
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white, // ✅ Button text color
-                                      ),
-                                    ),
-                                  ),
-                                ),
-
-                                GestureDetector(
-                                  onTap: () {
-                                    Navigator.pop(context);
-                                  },
-                                  child: Container(
-                                    padding: EdgeInsets.symmetric(vertical: 12, horizontal: 20),
-                                    decoration: BoxDecoration(
-                                      color: Color(0xff003060), // ✅ Button color
-                                      borderRadius: BorderRadius.circular(20), // ✅ Rounded corners
-                                    ),
-                                    child: Text(
-                                      "Cancel",
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white, // ✅ Button text color
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        );
-
-
-                        showDialog(
-                            context: context,
-                            builder: (BuildContext context) {
-                              return alert;
-                            });
-                      });
-                    }),
-              ),
-              SizedBox(
-                width: 10,
-              )
-            ],
-          ),
-          Container(
-            color: Colors.white,
-            child: Column(
+    } else {
+      return SingleChildScrollView(
+        physics: BouncingScrollPhysics(),
+        child: Column(
+          children: [
+            const SizedBox(height: 10.0),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                const SizedBox(
-                  height: 20,
+                Material(
+                  child: ElevatedButton(
+                      style: const ButtonStyle(
+                        backgroundColor: MaterialStatePropertyAll(Colors.white),
+                      ),
+                      child: Image.asset(
+                        "images/homeButton.png",
+                        height: 35,
+                        width: 35,
+                      ),
+                      onPressed: () async {
+                        setState(() {
+                          AlertDialog alert = AlertDialog(
+                            backgroundColor: Colors.blue, // ✅ Background color
+                            title: Text(
+                              "Warning",
+                              style: GoogleFonts.poppins(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white, // ✅ Title text color
+                              ),
+                            ),
+                            content: Text(
+                              "You are leaving the survey while it's not complete. If you proceed, it may reset and not "
+                              "get recorded.\n\nDo you wish to abort feedback?",
+                              style: GoogleFonts.poppins(
+                                fontSize: 16,
+                                color: Colors.white, // ✅ Content text color
+                              ),
+                            ),
+                            actions: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment
+                                    .spaceEvenly, // ✅ Evenly spaced buttons
+                                children: [
+                                  GestureDetector(
+                                    onTap: () {
+                                      setState(() {
+                                        showThankyouMessage = false;
+                                        showFeedback = false;
+                                        showRegistrationPage = false;
+                                        showSpinnerMyProducts = true;
+                                        showSpinner = true;
+                                        showSpinnerMyFeedback = true;
+                                        goToHome = true;
+                                      });
+
+                                      // ✅ Save survey data to myProductSelected
+                                      if (isDefectSurvey) {
+                                        setState(() {
+                                          myProductSelected[
+                                                  "currentDefectSurvey"] =
+                                              surveys[0];
+                                        });
+                                      } else {
+                                        setState(() {
+                                          myProductSelected[
+                                              "currentMainSurvey"] = surveys[0];
+
+                                        });
+                                      }
+
+                                      Navigator.pop(context);
+                                      questionIndex = 0;
+
+                                      setState(() {
+                                        showSpinnerMyProducts = false;
+                                      });
+                                    },
+                                    child: Container(
+                                      padding: EdgeInsets.symmetric(
+                                          vertical: 12, horizontal: 20),
+                                      decoration: BoxDecoration(
+                                        color:
+                                            Color(0xff003060), // ✅ Button color
+                                        borderRadius: BorderRadius.circular(
+                                            20), // ✅ Rounded corners
+                                      ),
+                                      child: Text(
+                                        "Continue",
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors
+                                              .white, // ✅ Button text color
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  GestureDetector(
+                                    onTap: () {
+                                      Navigator.pop(context);
+                                    },
+                                    child: Container(
+                                      padding: EdgeInsets.symmetric(
+                                          vertical: 12, horizontal: 20),
+                                      decoration: BoxDecoration(
+                                        color:
+                                            Color(0xff003060), // ✅ Button color
+                                        borderRadius: BorderRadius.circular(
+                                            20), // ✅ Rounded corners
+                                      ),
+                                      child: Text(
+                                        "Cancel",
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors
+                                              .white, // ✅ Button text color
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          );
+
+                          showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return alert;
+                              });
+                        });
+                      }),
                 ),
-                const SizedBox(
-                  height: 20,
-                ),
-                getQuestionAndResponse(),
+                SizedBox(
+                  width: 10,
+                )
               ],
             ),
-          ),
-        ],
-      ),
-    );
+            Container(
+              color: Colors.white,
+              child: Column(
+                children: [
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  getQuestionAndResponse(),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
   }
 
   MyProducts(BuildContext context) {
@@ -2923,11 +5129,12 @@ class _HomePageState extends State<HomePage>
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Text("In this section, you can view your saved products or add new ones."
-                    "Tap the info icon for more details or the bin icon to remove a product."
-                    ,style: GoogleFonts.poppins(
-                      color: Color(0xff003060),
-                      fontSize: MediaQuery.textScalerOf(context).scale(14),
+                child: Text(
+                  "In this section, you can view your saved products or add new ones."
+                  "Tap the info icon for more details or the bin icon to remove a product.",
+                  style: GoogleFonts.poppins(
+                    color: Color(0xff003060),
+                    fontSize: MediaQuery.textScalerOf(context).scale(14),
                   ),
                 ),
               ),
@@ -2967,14 +5174,17 @@ class _HomePageState extends State<HomePage>
                                 width: 1, // Border thickness
                               ), // ⬅️ Table Borders
                               columnWidths: const {
-                                0: FlexColumnWidth(3), // Product Name + Info column
+                                0: FlexColumnWidth(
+                                    3), // Product Name + Info column
                                 1: FlexColumnWidth(3), // Purchase Date column
                               }, // ⬅️ Define table column widths
                               children: [
                                 // 📌 HEADER ROW (Only Shown for First Product)
                                 if (product == myProducts.first)
                                   TableRow(
-                                    decoration: BoxDecoration(color: Color(0xff003060)), // Header Background
+                                    decoration: BoxDecoration(
+                                        color: Color(
+                                            0xff003060)), // Header Background
                                     children: [
                                       Padding(
                                         padding: const EdgeInsets.all(8.0),
@@ -3012,7 +5222,7 @@ class _HomePageState extends State<HomePage>
                                         children: [
                                           Expanded(
                                             child: Text(
-                                              product["productName"].toString(),
+                                              product["shortName"],
                                               style: GoogleFonts.poppins(
                                                 fontSize: 12,
                                                 color: Color(0xff184B2A),
@@ -3028,40 +5238,58 @@ class _HomePageState extends State<HomePage>
                                             ), // ⬅️ Column 1: Info Icon
                                             onTap: () {
                                               AlertDialog alert = AlertDialog(
-                                                backgroundColor: Colors.blue, // ✅ Background color
+                                                backgroundColor: Colors
+                                                    .blue, // ✅ Background color
                                                 title: Text(
                                                   "Product Details",
                                                   style: GoogleFonts.poppins(
                                                     fontSize: 18,
                                                     fontWeight: FontWeight.bold,
-                                                    color: Colors.white, // ✅ Title text color
+                                                    color: Colors
+                                                        .white, // ✅ Title text color
                                                   ),
                                                 ),
                                                 content: SingleChildScrollView(
-                                                  physics: BouncingScrollPhysics(), // ✅ Smooth scrolling
+                                                  physics:
+                                                      BouncingScrollPhysics(), // ✅ Smooth scrolling
                                                   child: Column(
-                                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                                    children: getFeaturesAsRowWidget(product), // ✅ Keeps existing functionality
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children:
+                                                        getFeaturesAsRowWidget(
+                                                            product), // ✅ Keeps existing functionality
                                                   ),
                                                 ),
                                                 actions: [
-                                                  Center( // ✅ Centering the button
+                                                  Center(
+                                                    // ✅ Centering the button
                                                     child: GestureDetector(
                                                       onTap: () {
                                                         Navigator.pop(context);
                                                       },
                                                       child: Container(
-                                                        padding: EdgeInsets.symmetric(vertical: 12, horizontal: 20),
-                                                        decoration: BoxDecoration(
-                                                          color: Color(0xff003060), // ✅ Button color
-                                                          borderRadius: BorderRadius.circular(20), // ✅ Rounded corners
+                                                        padding: EdgeInsets
+                                                            .symmetric(
+                                                                vertical: 12,
+                                                                horizontal: 20),
+                                                        decoration:
+                                                            BoxDecoration(
+                                                          color: Color(
+                                                              0xff003060), // ✅ Button color
+                                                          borderRadius:
+                                                              BorderRadius.circular(
+                                                                  20), // ✅ Rounded corners
                                                         ),
                                                         child: Text(
                                                           "Back",
-                                                          style: GoogleFonts.poppins(
+                                                          style: GoogleFonts
+                                                              .poppins(
                                                             fontSize: 14,
-                                                            fontWeight: FontWeight.bold,
-                                                            color: Colors.white, // ✅ Button text color
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                            color: Colors
+                                                                .white, // ✅ Button text color
                                                           ),
                                                         ),
                                                       ),
@@ -3070,10 +5298,10 @@ class _HomePageState extends State<HomePage>
                                                 ],
                                               );
 
-
                                               showDialog(
                                                 context: context,
-                                                builder: (BuildContext context) {
+                                                builder:
+                                                    (BuildContext context) {
                                                   return alert;
                                                 },
                                               );
@@ -3086,12 +5314,141 @@ class _HomePageState extends State<HomePage>
                                     // 📌 PURCHASE DATE COLUMN
                                     Padding(
                                       padding: const EdgeInsets.all(8.0),
-                                      child: Text(
-                                        product["features"]["Purchase Date"].toString(),
-                                        style: GoogleFonts.poppins(
-                                          fontSize: 12,
-                                          color: Color(0xff184B2A),
-                                        ),
+                                      child: Row(
+                                        children: [
+                                          Expanded(
+                                            child: Text(
+                                              product["features"]
+                                                      ["Purchase Date"]
+                                                  .toString(),
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 12,
+                                                color: Color(0xff184B2A),
+                                              ),
+                                            ),
+                                          ),
+                                          InkWell(
+                                            child: const Icon(
+                                              Icons.delete,
+                                              color: Colors.blue,
+                                            ), // ⬅️ Delete Icon
+                                            onTap: () {
+                                              AlertDialog alert = AlertDialog(
+                                                backgroundColor: Colors
+                                                    .blue, // ✅ Background color
+                                                title: Text(
+                                                  "Alert",
+                                                  style: GoogleFonts.poppins(
+                                                    fontSize: 18,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Colors
+                                                        .white, // ✅ Title text color
+                                                  ),
+                                                ),
+                                                content: Text(
+                                                  "Do you wish to remove ${product["productName"].toString()} "
+                                                  "from your list of products?",
+                                                  style: GoogleFonts.poppins(
+                                                    fontSize: 16,
+                                                    color: Colors
+                                                        .white, // ✅ Content text color
+                                                  ),
+                                                ),
+                                                actions: [
+                                                  Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .spaceEvenly, // ✅ Evenly spaced buttons
+                                                    children: [
+                                                      GestureDetector(
+                                                        onTap: () {
+                                                          setState(() {
+                                                            myProducts.remove(
+                                                                product);
+                                                          });
+                                                          RemoveProductFromUser(
+                                                              product);
+                                                          Navigator.pop(
+                                                              context);
+                                                        },
+                                                        child: Container(
+                                                          padding: EdgeInsets
+                                                              .symmetric(
+                                                                  vertical: 12,
+                                                                  horizontal:
+                                                                      20),
+                                                          decoration:
+                                                              BoxDecoration(
+                                                            color: Color(
+                                                                0xff003060), // ✅ Button color
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        20), // ✅ Rounded corners
+                                                          ),
+                                                          child: Text(
+                                                            "Continue",
+                                                            style: GoogleFonts
+                                                                .poppins(
+                                                              fontSize: 14,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold,
+                                                              color: Colors
+                                                                  .white, // ✅ Button text color
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      GestureDetector(
+                                                        onTap: () {
+                                                          Navigator.pop(
+                                                              context);
+                                                        },
+                                                        child: Container(
+                                                          padding: EdgeInsets
+                                                              .symmetric(
+                                                                  vertical: 12,
+                                                                  horizontal:
+                                                                      20),
+                                                          decoration:
+                                                              BoxDecoration(
+                                                            color: Color(
+                                                                0xff003060), // ✅ Button color
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        20), // ✅ Rounded corners
+                                                          ),
+                                                          child: Text(
+                                                            "Cancel",
+                                                            style: GoogleFonts
+                                                                .poppins(
+                                                              fontSize: 14,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold,
+                                                              color: Colors
+                                                                  .white, // ✅ Button text color
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ],
+                                              );
+
+                                              showDialog(
+                                                context: context,
+                                                builder:
+                                                    (BuildContext context) {
+                                                  return alert;
+                                                },
+                                              );
+                                            },
+                                          ), // ⬅️ Delete Button for Each Product
+                                        ],
                                       ),
                                     ), // ⬅️ Column 2: Purchase Date
                                   ],
@@ -3099,95 +5456,6 @@ class _HomePageState extends State<HomePage>
                               ],
                             ), // ⬅️ End of Table
                           ), // ⬅️ End of Table inside Row
-
-                          // ✅ DELETE BUTTON (OUTSIDE TABLE, ALIGNED AS THIRD COLUMN)
-                          SizedBox(width: 10), // Space between table and delete button
-                          InkWell(
-                            child: const Icon(
-                              Icons.delete,
-                              color: Colors.blue,
-                            ), // ⬅️ Delete Icon
-                            onTap: () {
-                              AlertDialog alert = AlertDialog(
-                                backgroundColor: Colors.blue, // ✅ Background color
-                                title: Text(
-                                  "Alert",
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white, // ✅ Title text color
-                                  ),
-                                ),
-                                content: Text(
-                                  "Do you wish to remove ${product["productName"].toString()} "
-                                      "from your list of products?",
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 16,
-                                    color: Colors.white, // ✅ Content text color
-                                  ),
-                                ),
-                                actions: [
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceEvenly, // ✅ Evenly spaced buttons
-                                    children: [
-                                      GestureDetector(
-                                        onTap: () {
-                                          setState(() {
-                                            myProducts.remove(product);
-                                          });
-                                          RemoveProductFromUser(product);
-                                          Navigator.pop(context);
-                                        },
-                                        child: Container(
-                                          padding: EdgeInsets.symmetric(vertical: 12, horizontal: 20),
-                                          decoration: BoxDecoration(
-                                            color: Color(0xff003060), // ✅ Button color
-                                            borderRadius: BorderRadius.circular(20), // ✅ Rounded corners
-                                          ),
-                                          child: Text(
-                                            "Continue",
-                                            style: GoogleFonts.poppins(
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.white, // ✅ Button text color
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                      GestureDetector(
-                                        onTap: () {
-                                          Navigator.pop(context);
-                                        },
-                                        child: Container(
-                                          padding: EdgeInsets.symmetric(vertical: 12, horizontal: 20),
-                                          decoration: BoxDecoration(
-                                            color: Color(0xff003060), // ✅ Button color
-                                            borderRadius: BorderRadius.circular(20), // ✅ Rounded corners
-                                          ),
-                                          child: Text(
-                                            "Cancel",
-                                            style: GoogleFonts.poppins(
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.white, // ✅ Button text color
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              );
-
-
-                              showDialog(
-                                context: context,
-                                builder: (BuildContext context) {
-                                  return alert;
-                                },
-                              );
-                            },
-                          ), // ⬅️ Delete Button for Each Product
                         ],
                       ), // ⬅️ End of Row
                   ],
@@ -3196,26 +5464,22 @@ class _HomePageState extends State<HomePage>
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 child: GestureDetector(
-                  onTap: () async{
-                    setState(() async {
-                      for (int i = 0; i < featureList.keys.length; i++) {
-                        featureList[featureList.keys.elementAt(i)] = "";
-                      }
-                      await loadProducts();
-                      year = null;
-                      month = null;
-                      type = null;
-                      showRegistrationPage = true;
-                      isFirstRegistration = true;
-                    });
+                  onTap: () async {
+                    for (int i = 0; i < featureList.keys.length; i++) {
+                      featureList[featureList.keys.elementAt(i)] = "";
+                    }
+                    await loadProducts();
+                    year = null;
+                    month = null;
+                    type = null;
+                    showRegistrationPage = true;
+                    isFirstRegistration = true;
                   },
                   child: Container(
                     height: 60.0,
                     width: 250.0, // Adjust width as needed
                     padding: EdgeInsets.symmetric(horizontal: 16.0),
-                    decoration: BoxDecoration(
-                     color: Color(0xff003060)
-                    ),
+                    decoration: BoxDecoration(color: Color(0xff003060)),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -3232,7 +5496,8 @@ class _HomePageState extends State<HomePage>
                           "Add a new product",
                           textAlign: TextAlign.center,
                           style: GoogleFonts.poppins(
-                            fontSize: MediaQuery.textScalerOf(context).scale(12),
+                            fontSize:
+                                MediaQuery.textScalerOf(context).scale(12),
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
                           ),
@@ -3242,7 +5507,6 @@ class _HomePageState extends State<HomePage>
                   ),
                 ),
               ),
-
             ],
           ),
         ),
@@ -3250,19 +5514,17 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-
   MyProductsPage(BuildContext context) {
     if (showRegistrationPage) {
       return RegisterProduct(context);
     } else {
-
       return MyProducts(context);
     }
   }
 
   Future<void> RemoveProductFromUser(product) async {
-    var url =
-        Uri.parse(Apis.deleteProductFromUser(product["productName"], mobile));
+    var url = Uri.parse(
+        Apis.deleteProductFromUser(product["productName"], widget.mobileNum));
     print(url);
     var response = await http.delete(url, body: jsonEncode(product));
     print('Deleted user product successfully - ${response.body}');
@@ -3273,49 +5535,138 @@ class _HomePageState extends State<HomePage>
       return MaterialButton(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20.0), // ✅ Rounded Borders
-          side: BorderSide(color: Colors.black, width: 1.5), // ✅ Optional border
+          side:
+              BorderSide(color: Colors.black, width: 1.5), // ✅ Optional border
         ),
         color: Colors.white,
         onPressed: () {
-          if (product["currentMainSurvey"]["surveyId"] == "QS2") {
-            setState(() {
-              ApplicationData.audioMessage =
-              "Voice record your reason for not complaining. Limit 02 minutes";
+
+          setState(() {
+            myProductSelected = product;
+            setBrand(myProductSelected);
             });
-          }
-          if (product["currentMainSurvey"]["surveyId"] == "QS1") {
-            setState(() {
-              myProductSelected = product;
-              setBrand(myProductSelected);
-              startSurveyProcess(myProductSelected["currentMainSurvey"]);
-              isDefectSurvey = false;
-            });
-          } else {
-            for (var survey in allSurveys) {
-              if (survey["surveyId"] == "ReplacementSurvey") {
-                setState(() {
-                  myProductSelected = product;
-                  setBrand(myProductSelected);
-                  startSurveyProcess(survey);
-                  isDefectSurvey = false;
+
+          if (product["currentMainSurvey"]["name"] != "QS1") {
+            AlertDialog successAlert = AlertDialog(
+              backgroundColor:
+              Colors.blue, // ✅ Set background color
+              title: Text(
+                "Confirm Replacement",
+                style: GoogleFonts.poppins(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors
+                      .white, // ✅ Title text color
+                ),
+              ),
+              content: Text(
+                "Did you replace your ${getProductName(myProductSelected).toString().toLowerCase()} with new one since last survey? If So, please proceed with new registration. "
+                    "Else press 'cancel' to continue with this survey.",
+                style: GoogleFonts.poppins(
+                  fontSize: 16,
+                  color: Colors
+                      .white, // ✅ Content text color
+                ),
+              ),
+              actions: [
+                GestureDetector(
+                  onTap: () async {
+                    tabController.animateTo(0);
+                    setState(() {
+                    showRegistrationPage = true;
+                    showFeedback = false;
+                    });
+                   Navigator.pop(context);
+                  },
+                  child: Container(
+                    padding: EdgeInsets.symmetric(
+                        vertical: 12, horizontal: 20),
+                    decoration: BoxDecoration(
+                      color: Color(
+                          0xff003060), // ✅ Button color
+                      borderRadius:
+                      BorderRadius.circular(
+                          20), // ✅ Rounded corners
+                    ),
+                    child: Text(
+                      "Register New one",
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: Colors
+                            .white, // ✅ Button text color
+                      ),
+                    ),
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () async {
+                    setState(() {
+                      startSurveyProcess(myProductSelected["currentMainSurvey"]);
+                      isDefectSurvey = false;
+                    });
+                    Navigator.pop(context);
+                  },
+                  child: Container(
+                    padding: EdgeInsets.symmetric(
+                        vertical: 12, horizontal: 20),
+                    decoration: BoxDecoration(
+                      color: Color(
+                          0xff003060), // ✅ Button color
+                      borderRadius:
+                      BorderRadius.circular(
+                          20), // ✅ Rounded corners
+                    ),
+                    child: Text(
+                      "Cancel",
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: Colors
+                            .white, // ✅ Button text color
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            );
+            
+            showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return successAlert;
                 });
-              }
-            }
           }
+
+
+
+
         },
         child: Text(
-         "Regular Feedback",
-         style: GoogleFonts.poppins(color: Colors.black, fontSize: MediaQuery.textScalerOf(context).scale(10)),
-         maxLines: 2,
-                  ),
+          "Regular Feedback",
+          style: GoogleFonts.poppins(
+              color: Colors.black,
+              fontSize: MediaQuery.textScalerOf(context).scale(10)),
+          maxLines: 2,
+        ),
       );
     }
-    return  Text(
-      "No Pending Feedback",
-      style: GoogleFonts.poppins(color: Colors.black, fontSize: MediaQuery.textScalerOf(context).scale(10)),
+    return MaterialButton(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20.0), // ✅ Rounded Borders
+        side: BorderSide(color: Colors.black, width: 1.5), // ✅ Optional border
+      ),
+      color: Colors.white,
+      onPressed: () {},
+      child: Text(
+        "No Pending Feedback",
+        style: GoogleFonts.poppins(
+            color: Colors.black,
+            fontSize: MediaQuery.textScalerOf(context).scale(10)),
+        maxLines: 2,
+      ),
     );
   }
-
 
   Widget SetDefectReportAndGetWidget(product) {
     myProductSelected = product;
@@ -3334,9 +5685,9 @@ class _HomePageState extends State<HomePage>
           startSurveyProcess(myProductSelected["currentDefectSurvey"]);
           isDefectSurvey = true;
           ApplicationData.audioMessage =
-          "Voice record your issue in detail. Limit 02 minutes";
+              "Voice record your issue in detail. Note that the limit 02 minutes";
         });
-        print('Product is ' + product["productName"]);
+
       },
       child: Text(
         "Report a problem",
@@ -3346,12 +5697,10 @@ class _HomePageState extends State<HomePage>
         ),
       ),
     );
-
   }
 
-
   void setIsSelected(int index) {
-    print('Question index is $questionIndex');
+
     List<bool> selectedList = [];
     for (int i = 0; i < index; i++) {
       selectedList.add(false);
@@ -3448,13 +5797,15 @@ class _HomePageState extends State<HomePage>
       children: [
         Text(
           "Audio",
-          style: TextStyle(fontSize: MediaQuery.textScalerOf(context).scale(15), color: Colors.brown),
+          style: TextStyle(
+              fontSize: MediaQuery.textScalerOf(context).scale(15),
+              color: Colors.brown),
         ),
         InkResponse(
           onTap: (() {
             AudioPlayer(
-              source: ApplicationData.multimediaUrls[surveys[0]["feedbackQuestion"][superIndex]["answer"]
-              ["audio"]]!,
+              source: ApplicationData.multimediaUrls[surveys[0]
+                  ["feedbackQuestion"][superIndex]["answer"]["audio"]]!,
               onDelete: () {},
             );
           }),
@@ -3509,57 +5860,88 @@ class _HomePageState extends State<HomePage>
 
     setState(() {
       showSpinner = true;
+      showSpinnerMyFeedback = true;
     });
-    var url = ProcessUrl(Apis.setNextSurveyForFeedback(mobile,
-        myProductSelected["productName"], surveyId, isReplacementSurvey));
-    print(url);
+    try {
+      var url = ProcessUrl(Apis.setNextSurveyForFeedback(
+          widget.mobileNum,
+          myProductSelected["productName"],
+          currentSurvey["surveyId"],
+          isReplacementSurvey));
+      print(url);
 
-    for (var i = 0; i < currentSurvey["feedbackQuestion"].length; i++) {
-      var question = currentSurvey["feedbackQuestion"][i];
-      if (question["answerType"] == "Audio/Descriptive" ||
-          question["answerType"] == "Multimedia/Descriptive") {
-        setState(() {
-          currentSurvey["feedbackQuestion"][i]["answer"] =
-              getStringFormatForMultimedia(
-                  currentSurvey["feedbackQuestion"][i]["answer"]);
-        });
-        //print(currentSurvey["feedbackQuestion"][i]["answer"]);
+      for (var i = 0; i < currentSurvey["feedbackQuestion"].length; i++) {
+        var question = currentSurvey["feedbackQuestion"][i];
+        if (question["answerType"] == "Audio/Descriptive" ||
+            question["answerType"] == "Multimedia/Descriptive") {
+          setState(() {
+            currentSurvey["feedbackQuestion"][i]["answer"] =
+                getStringFormatForMultimedia(
+                    currentSurvey["feedbackQuestion"][i]["answer"]);
+          });
+          //print(currentSurvey["feedbackQuestion"][i]["answer"]);
+        }
       }
+
+      var response = await http.post(Uri.parse(url),
+          headers: <String, String>{
+            'Content-Type': 'application/json; charset=UTF-8',
+          },
+          body: jsonEncode(currentSurvey));
+      print("Response to setNextSurvey = ${response.body}");
+      await loadMyProducts();
+    } on Exception catch (e) {
+      // TODO
+    }finally{
+      setState(() {
+        showSpinner = false;
+        showSpinnerMyFeedback = false;
+
+      });
     }
 
-    var response = await http.post(Uri.parse(url),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-        body: jsonEncode(currentSurvey));
-    print("Response to setNextSurvey = ${response.body}");
-    loadMyProducts();
-    setState(() {
-      showSpinner = false;
-    });
   }
 
   Future<void> loadAllSurveys() async {
-    setState(() {
-      showSpinner = true;
-    });
-    var response = await http.get(Uri.parse(Apis.getAllSurveys()));
+    try {
+      setState(() {
+        showSpinner = true;
+        showSpinnerMyFeedback = true;
+      });
 
-    print(Apis.getAllSurveys());
-    var data = json.decode(response.body);
+      // Make the HTTP request
+      var response = await http.get(Uri.parse(Apis.getAllSurveys()));
 
-    for (var element in data) {
-      if (element["surveyId"] == "QS2   Defect") {
-        qs2DefectSurveyLength = element["feedbackQuestion"].length;
+      // Check the status code
+      if (response.statusCode == 200) {
+        // Response is OK, try to parse JSON
+        var data = json.decode(response.body);
+        for (var element in data) {
+          if (element["surveyId"] == "QS2   Defect") {
+            qs2DefectSurveyLength = element["feedbackQuestion"].length;
+          }
+          allSurveys.add(element);
+        }
+      } else {
+        // Log error with status code and response body
+        print('Error: HTTP ${response.statusCode} - ${response.body}');
+        // Optionally show a user-friendly error message
+
       }
-      allSurveys.add(element);
-    }
-    // productSelected = products[0];
-    setState(() {
-      //  productSelected = products[0];
 
-      showSpinner = false;
-    });
+      setState(() {
+        showSpinner = false;
+        showSpinnerMyFeedback = false;
+      });
+    } catch (e) {
+      // Handle any other errors
+      print('Error in loadAllSurveys: $e');
+
+      setState(() {
+        showSpinner = false;
+        showSpinnerMyFeedback = false;
+      });
+    }
   }
 
   String ProcessUrl(String url) {
@@ -3570,36 +5952,87 @@ class _HomePageState extends State<HomePage>
   void ProcessReplacementSurveyResponse(String response) {
     if (response == "Yes") {
       AlertDialog alert = AlertDialog(
-        title: Text("Alert"),
+        backgroundColor: Colors.blue, // ✅ Dialog background color
+        title: Text(
+          "Alert",
+          style: GoogleFonts.poppins(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.white, // ✅ Title text color
+          ),
+        ),
         content: Text(
-            "You have chosen that your ${getProductName(myProductSelected).toString().toLowerCase()}"
-            " has been replaced. You will be redirected to register the new product. "),
+          "You have chosen that your ${getProductName(myProductSelected).toString().toLowerCase()} "
+          "has been replaced. You will be redirected to register the new product.",
+          style: GoogleFonts.poppins(
+            fontSize: 16,
+            color: Colors.white, // ✅ Content text color
+          ),
+        ),
         actions: [
-          TextButton(
-              onPressed: () {
-                showRegistrationPage = true;
-                setState(() {
-                  for (int i = 0; i < featureList.keys.length; i++) {
-                    featureList[featureList.keys.elementAt(i)] = "";
-                  }
-                  year = null;
-                  month = null;
-                  type = null;
+          Row(
+            mainAxisAlignment:
+                MainAxisAlignment.spaceEvenly, // ✅ Even spacing for buttons
+            children: [
+              GestureDetector(
+                onTap: () {
                   showRegistrationPage = true;
-                });
-                productSelected = getProductName(myProductSelected);
-                tabController.animateTo(0);
-                loadFeaturesListForSelectedProduct();
-                Navigator.pop(context);
-                setNextSurvey(false);
-                MyFeedback(context);
-              },
-              child: Text("Continue")),
-          TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: Text("Cancel"))
+                  setState(() {
+                    for (int i = 0; i < featureList.keys.length; i++) {
+                      featureList[featureList.keys.elementAt(i)] = "";
+                    }
+                    year = null;
+                    month = null;
+                    type = null;
+                    showRegistrationPage = true;
+                  });
+                  productSelected = getProductName(myProductSelected);
+                  tabController.animateTo(0);
+                  loadFeaturesListForSelectedProduct();
+                  Navigator.pop(context);
+                  setNextSurvey(false);
+                  MyFeedback(context);
+                },
+                child: Container(
+                  padding: EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                  decoration: BoxDecoration(
+                    color: Color(0xff003060), // ✅ Button color
+                    borderRadius:
+                        BorderRadius.circular(20), // ✅ Rounded corners
+                  ),
+                  child: Text(
+                    "Continue",
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white, // ✅ Button text color
+                    ),
+                  ),
+                ),
+              ),
+              GestureDetector(
+                onTap: () {
+                  Navigator.pop(context);
+                },
+                child: Container(
+                  padding: EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                  decoration: BoxDecoration(
+                    color: Color(0xff003060), // ✅ Button color
+                    borderRadius:
+                        BorderRadius.circular(20), // ✅ Rounded corners
+                  ),
+                  child: Text(
+                    "Cancel",
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white, // ✅ Button text color
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ],
       );
 
@@ -3648,9 +6081,7 @@ class _HomePageState extends State<HomePage>
 
   void uploadSurveyToCurrentSurvey(survey) {
     //Emptying Survey for previous complaint/noncomplaint
-    print(
-        "surveys[0]['feedbackQuestion'].length - ${surveys[0]["feedbackQuestion"].length}");
-    print("qs2DefectSurveyLength - $qs2DefectSurveyLength");
+
     if (surveys[0]["feedbackQuestion"].length > qs2DefectSurveyLength) {
       int i = qs2DefectSurveyLength;
       int count = surveys[0]["feedbackQuestion"].length - qs2DefectSurveyLength;
@@ -3723,18 +6154,29 @@ class _HomePageState extends State<HomePage>
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                ApplicationData.audioMessage,
-                style: TextStyle(
-                    fontSize: MediaQuery.textScalerOf(context).scale(13),
-                    color: Colors.red,
-                    overflow: TextOverflow.ellipsis),
-                overflow: TextOverflow.ellipsis,
-              )
-            ],
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Expanded(
+                  // ✅ Allows text to wrap instead of overflow
+                  child: Text(
+                    ApplicationData.audioMessage,
+                    style: GoogleFonts.poppins(
+                      fontSize: MediaQuery.textScalerOf(context).scale(18),
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xff003060),
+                    ),
+                    textAlign: TextAlign
+                        .center, // ✅ Ensures centered alignment inside the row
+                    softWrap: true, // ✅ Enables text wrapping
+                    overflow:
+                        TextOverflow.visible, // ✅ Ensures text is not clipped
+                  ),
+                ),
+              ],
+            ),
           ),
           SizedBox(
             height: ApplicationData.screenHeight * .25,
@@ -3743,19 +6185,194 @@ class _HomePageState extends State<HomePage>
               onStop: (path) async {
                 if (kDebugMode) print('Recorded file path: $path');
 
-                setState(() {
-                  showSpinner = true;
-                });
-                var link = await uploadMediaToDrive(path);
+                showDialog(
+                  context: context,
+                  barrierDismissible:
+                      false, // Prevent dismissing while uploading
+                  builder: (BuildContext context) {
+                    return Dialog(
+                      backgroundColor: Colors.transparent,
+                      child: Container(
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.shade600, // Blue background
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              "Uploading your Audio file — word by word! 📁🌟",
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.poppins(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                              softWrap: true,
+                              overflow: TextOverflow.visible,
+                            ),
+                            const SizedBox(height: 24),
+                            Center(
+                              child: CircularProgressIndicator(),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                );
 
-                setState(() {
-                  surveys[0]["feedbackQuestion"][superIndex]["answer"]
-                      ["audio"] = "https://drive.google.com/uc?id=$link";
-                    ApplicationData.multimediaUrls[surveys[0]["feedbackQuestion"][superIndex]["answer"]
-                    ["audio"]] = path;
-                  showSpinner = false;
-                });
-                print('Recorded file path: $path ');
+                try {
+                  var link = await uploadMediaToDrive(path);
+
+                  setState(() {
+                    surveys[0]["feedbackQuestion"][superIndex]["answer"]
+                        ["audio"] = "https://drive.google.com/uc?id=$link";
+                    ApplicationData.multimediaUrls[surveys[0]
+                            ["feedbackQuestion"][superIndex]["answer"]
+                        ["audio"]] = path;
+                  });
+                  if (kDebugMode) print('Uploaded file link: $link');
+
+                  // Close the spinner dialog
+                  Navigator.pop(context);
+
+                  AlertDialog alert = AlertDialog(
+                    backgroundColor: Colors.blue, // ✅ Background color
+                    title: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Expanded(
+                          // ✅ Ensures text wraps properly inside Row
+                          child: Text(
+                            "Your audio has been uploaded! 🎉",
+                            textAlign: TextAlign.center, // ✅ Keeps it centered
+                            style: GoogleFonts.poppins(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white, // ✅ Title text color
+                            ),
+                            softWrap: true, // ✅ Ensures wrapping
+                            overflow:
+                                TextOverflow.visible, // ✅ Prevents clipping
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    content: Column(
+                      mainAxisSize:
+                          MainAxisSize.min, // ✅ Prevents unnecessary spacing
+                      crossAxisAlignment: CrossAxisAlignment
+                          .start, // ✅ Aligns content to the left
+                      children: [
+                        Flexible(
+                          // ✅ Ensures text wraps within its available space
+                          child: Text(
+                            "Your audio file has been successfully uploaded. 🙌\nThank you for sharing!",
+                            style: GoogleFonts.poppins(
+                              fontSize: 16,
+                              color: Colors.white, // ✅ Content text color
+                            ),
+                            softWrap:
+                                true, // ✅ Allows text to break into multiple lines
+                            overflow: TextOverflow
+                                .visible, // ✅ Ensures text is not clipped
+                          ),
+                        ),
+                        SizedBox(
+                            height: 20), // ✅ Space between text and checklist
+                      ],
+                    ),
+
+                    actions: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.pop(context);
+                              setState(() {
+                                showFeedback = true;
+                                showRecording = false;
+                                showSpinner = false;
+                                showSpinnerMyFeedback = false;
+                              });
+                            },
+                            child: Container(
+                              padding: EdgeInsets.symmetric(
+                                  vertical: 12, horizontal: 20),
+                              decoration: BoxDecoration(
+                                color: Color(0xff003060), // ✅ Button color
+                                borderRadius: BorderRadius.circular(
+                                    20), // ✅ Rounded corners
+                              ),
+                              child: Text(
+                                "Ok",
+                                style: GoogleFonts.poppins(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white, // ✅ Button text color
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  );
+
+                  showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return alert;
+                      });
+                } catch (e) {
+                  Navigator.pop(context);
+
+                  // Show error dialog
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: Text(
+                          "Upload Failed",
+                          style: GoogleFonts.poppins(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        content: Text(
+                          "An error occurred while uploading the audio. Please try again.",
+                          style: GoogleFonts.poppins(fontSize: 16),
+                        ),
+                        actions: [
+                          GestureDetector(
+                            onTap: () =>
+                                {Navigator.pop(context), showFeedback = true},
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 12, horizontal: 20),
+                              decoration: BoxDecoration(
+                                color: const Color(0xff003060),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                "Ok",
+                                style: GoogleFonts.poppins(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                }
               },
             ),
           ),
@@ -3822,8 +6439,8 @@ class _HomePageState extends State<HomePage>
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 25),
               child: AudioPlayer(
-                source: ApplicationData.multimediaUrls[surveys[0]["feedbackQuestion"][superIndex]["answer"]
-                ["audio"]]!,
+                source: ApplicationData.multimediaUrls[surveys[0]
+                    ["feedbackQuestion"][superIndex]["answer"]["audio"]]!,
                 onDelete: () {
                   setState(() {
                     surveys[0]["feedbackQuestion"][superIndex]["answer"]
@@ -3853,7 +6470,8 @@ class _HomePageState extends State<HomePage>
               height: 32.0,
               child: Text(
                 'Back',
-                style: TextStyle(fontSize: MediaQuery.textScalerOf(context).scale(14)),
+                style: TextStyle(
+                    fontSize: MediaQuery.textScalerOf(context).scale(14)),
               ),
             ),
           ),
@@ -3876,7 +6494,9 @@ class _HomePageState extends State<HomePage>
         ),
         Text(
           "Audio File uploaded.",
-          style: TextStyle(color: Colors.deepOrange, fontSize:MediaQuery.textScalerOf(context).scale(16)),
+          style: TextStyle(
+              color: Colors.deepOrange,
+              fontSize: MediaQuery.textScalerOf(context).scale(16)),
         ),
         const SizedBox(
           width: 20,
@@ -3927,7 +6547,9 @@ class _HomePageState extends State<HomePage>
         ),
         Text(
           "Image File uploaded.",
-          style: TextStyle(color: Colors.deepPurple, fontSize: MediaQuery.textScalerOf(context).scale(16)),
+          style: TextStyle(
+              color: Colors.deepPurple,
+              fontSize: MediaQuery.textScalerOf(context).scale(16)),
         ),
         const SizedBox(
           width: 20,
@@ -3939,8 +6561,9 @@ class _HomePageState extends State<HomePage>
                   context: context,
                   builder: (context) {
                     return AlertDialog(
-                        content: Image.file(File(ApplicationData.multimediaUrls[surveys[0]["feedbackQuestion"]
-                        [index]["answer"]["image"]]
+                        content: Image.file(File(ApplicationData.multimediaUrls[
+                                surveys[0]["feedbackQuestion"][index]["answer"]
+                                    ["image"]]
                             .toString())),
                         actions: [
                           Material(
@@ -3961,7 +6584,9 @@ class _HomePageState extends State<HomePage>
                               height: 32.0,
                               child: Text(
                                 'Back',
-                                style: TextStyle(fontSize: MediaQuery.textScalerOf(context).scale(14)),
+                                style: TextStyle(
+                                    fontSize: MediaQuery.textScalerOf(context)
+                                        .scale(14)),
                               ),
                             ),
                           ),
@@ -4009,7 +6634,9 @@ class _HomePageState extends State<HomePage>
         ),
         Text(
           "Video File uploaded.",
-          style: TextStyle(color: Colors.deepPurple, fontSize: MediaQuery.textScalerOf(context).scale(16)),
+          style: TextStyle(
+              color: Colors.deepPurple,
+              fontSize: MediaQuery.textScalerOf(context).scale(16)),
         ),
         const SizedBox(
           width: 20,
@@ -4020,8 +6647,8 @@ class _HomePageState extends State<HomePage>
               showDialog(
                   context: context,
                   builder: (context) {
-                    return VideoApp(ApplicationData.multimediaUrls[surveys[0]["feedbackQuestion"][index]
-                    ["answer"]["video"]]!);
+                    return VideoApp(ApplicationData.multimediaUrls[surveys[0]
+                        ["feedbackQuestion"][index]["answer"]["video"]]!);
                   });
             });
           },
@@ -4060,24 +6687,191 @@ class _HomePageState extends State<HomePage>
           setState(() {
             ApplicationData.showVideoPlayer = false;
             showSpinner = true;
+            showSpinnerMyFeedback = true;
           });
-          var link = await uploadMediaToDrive(path);
-          if (path.contains('jpg')) {
-            print("Path is $path");
-            setState(() {
-              surveys[0]["feedbackQuestion"][superIndex]["answer"]["image"] =
-                  "https://drive.google.com/uc?id=$link";
-              ApplicationData.multimediaUrls["https://drive.google.com/uc?id=$link"] = path;
-              showFeedback = true;
-              showSpinner = false;
-            });
-            print(surveys[0]["feedbackQuestion"][superIndex]["answer"]);
-          } else {
-            setState(() {
-              ApplicationData.showVideoPlayer = false;
-              showFeedback = true;
-              showSpinner = false;
-            });
+
+          showDialog(
+            context: context,
+            barrierDismissible: false, // Prevent dismissing while uploading
+            builder: (BuildContext context) {
+              return Dialog(
+                backgroundColor: Colors.transparent,
+                child: Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.shade600, // Blue background
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        "Hold tight! Your image is flying through the digital skies 🚀📸",
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.poppins(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                        softWrap: true,
+                        overflow: TextOverflow.visible,
+                      ),
+                      const SizedBox(height: 24),
+                      const Center(
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          );
+          try {
+            var link = await uploadMediaToDrive(path);
+
+            Navigator.pop(context);
+
+            if (path.contains('jpg')) {
+              print("Path is $path");
+              setState(() {
+                surveys[0]["feedbackQuestion"][superIndex]["answer"]["image"] =
+                    "https://drive.google.com/uc?id=$link";
+                ApplicationData.multimediaUrls[
+                    "https://drive.google.com/uc?id=$link"] = path;
+              });
+             } else {}
+            AlertDialog alert = AlertDialog(
+              backgroundColor: Colors.blue, // ✅ Background color
+              title: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Expanded(
+                    // ✅ Ensures text wraps properly inside Row
+                    child: Text(
+                      "Your Image has been uploaded! 🎉",
+                      textAlign: TextAlign.center, // ✅ Keeps it centered
+                      style: GoogleFonts.poppins(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white, // ✅ Title text color
+                      ),
+                      softWrap: true, // ✅ Ensures wrapping
+                      overflow: TextOverflow.visible, // ✅ Prevents clipping
+                    ),
+                  ),
+                ],
+              ),
+
+              content: Column(
+                mainAxisSize:
+                    MainAxisSize.min, // ✅ Prevents unnecessary spacing
+                crossAxisAlignment:
+                    CrossAxisAlignment.start, // ✅ Aligns content to the left
+                children: [
+                  Flexible(
+                    // ✅ Ensures text wraps within its available space
+                    child: Text(
+                      "Your Image file has been successfully uploaded. 🙌\nThank you for sharing!",
+                      style: GoogleFonts.poppins(
+                        fontSize: 16,
+                        color: Colors.white, // ✅ Content text color
+                      ),
+                      softWrap:
+                          true, // ✅ Allows text to break into multiple lines
+                      overflow:
+                          TextOverflow.visible, // ✅ Ensures text is not clipped
+                    ),
+                  ),
+                  SizedBox(height: 20), // ✅ Space between text and checklist
+                ],
+              ),
+
+              actions: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.pop(context);
+                        setState(() {
+                          ApplicationData.showVideoPlayer = false;
+                          showFeedback = true;
+                        });
+                      },
+                      child: Container(
+                        padding:
+                            EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                        decoration: BoxDecoration(
+                          color: Color(0xff003060), // ✅ Button color
+                          borderRadius:
+                              BorderRadius.circular(20), // ✅ Rounded corners
+                        ),
+                        child: Text(
+                          "Ok",
+                          style: GoogleFonts.poppins(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white, // ✅ Button text color
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            );
+
+            showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return alert;
+                });
+          } catch (e) {
+            Navigator.pop(context);
+
+            // Show error dialog
+            showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return AlertDialog(
+                  title: Text(
+                    "Upload Failed",
+                    style: GoogleFonts.poppins(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  content: Text(
+                    "An error occurred while uploading the Image. Please try again.",
+                    style: GoogleFonts.poppins(fontSize: 16),
+                  ),
+                  actions: [
+                    GestureDetector(
+                      onTap: () =>
+                          {Navigator.pop(context), showFeedback = true},
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 12, horizontal: 20),
+                        decoration: BoxDecoration(
+                          color: const Color(0xff003060),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          "Ok",
+                          style: GoogleFonts.poppins(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            );
           }
         },
         onVideoRecorded: (value) async {
@@ -4085,19 +6879,192 @@ class _HomePageState extends State<HomePage>
           setState(() {
             ApplicationData.showVideoPlayer = false;
             showSpinner = true;
+            showSpinnerMyFeedback = true;
           });
           print('::::::::::::::::::::::::;; $path');
-          var link = await uploadMediaToDrive(path);
-          setState(() {
-            surveys[0]["feedbackQuestion"][superIndex]["answer"]["video"] =
-                "https://drive.google.com/uc?id=$link";
-            ApplicationData.multimediaUrls["https://drive.google.com/uc?id=$link"] = path;
-            showFeedback = true;
-            showSpinner = false;
-          });
-          print(surveys[0]["feedbackQuestion"][superIndex]["answer"]);
 
-          ///Show video preview .mp4
+          showDialog(
+            context: context,
+            barrierDismissible: false, // Prevent dismissing while uploading
+            builder: (BuildContext context) {
+              return Dialog(
+                backgroundColor: Colors.transparent, // Make dialog background transparent
+                child: Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.shade700, // Blue background
+                    borderRadius: BorderRadius.circular(16), // Rounded corners
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min, // Wrap content, not full screen
+                    children: [
+                      Text(
+                        "Please wait as video files are known to take time to upload 😎✨",
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.poppins(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                        softWrap: true,
+                        overflow: TextOverflow.visible,
+                      ),
+                      const SizedBox(height: 24),
+                      const Center(
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          );
+          try {
+            var link = await uploadMediaToDrive(path);
+            Navigator.pop(context);
+
+            setState(() {
+              surveys[0]["feedbackQuestion"][superIndex]["answer"]["video"] =
+                  "https://drive.google.com/uc?id=$link";
+              ApplicationData
+                      .multimediaUrls["https://drive.google.com/uc?id=$link"] =
+                  path;
+            });
+
+
+            AlertDialog alert = AlertDialog(
+              backgroundColor: Colors.blue, // ✅ Background color
+              title: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Expanded(
+                    // ✅ Ensures text wraps properly inside Row
+                    child: Text(
+                      "Your Video has been uploaded! 🎉",
+                      textAlign: TextAlign.center, // ✅ Keeps it centered
+                      style: GoogleFonts.poppins(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white, // ✅ Title text color
+                      ),
+                      softWrap: true, // ✅ Ensures wrapping
+                      overflow: TextOverflow.visible, // ✅ Prevents clipping
+                    ),
+                  ),
+                ],
+              ),
+
+              content: Column(
+                mainAxisSize:
+                    MainAxisSize.min, // ✅ Prevents unnecessary spacing
+                crossAxisAlignment:
+                    CrossAxisAlignment.start, // ✅ Aligns content to the left
+                children: [
+                  Flexible(
+                    // ✅ Ensures text wraps within its available space
+                    child: Text(
+                      "Your Video file has been successfully uploaded. 🙌\nThank you for sharing!",
+                      style: GoogleFonts.poppins(
+                        fontSize: 16,
+                        color: Colors.white, // ✅ Content text color
+                      ),
+                      softWrap:
+                          true, // ✅ Allows text to break into multiple lines
+                      overflow:
+                          TextOverflow.visible, // ✅ Ensures text is not clipped
+                    ),
+                  ),
+                  SizedBox(height: 20), // ✅ Space between text and checklist
+                ],
+              ),
+
+              actions: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.pop(context);
+                        setState(() {
+                          ApplicationData.showVideoPlayer = false;
+                          showFeedback = true;
+                        });
+                      },
+                      child: Container(
+                        padding:
+                            EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                        decoration: BoxDecoration(
+                          color: Color(0xff003060), // ✅ Button color
+                          borderRadius:
+                              BorderRadius.circular(20), // ✅ Rounded corners
+                        ),
+                        child: Text(
+                          "Ok",
+                          style: GoogleFonts.poppins(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white, // ✅ Button text color
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            );
+
+            showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return alert;
+                });
+          } catch (e) {
+            Navigator.pop(context);
+
+            // Show error dialog
+            showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return AlertDialog(
+                  title: Text(
+                    "Upload Failed",
+                    style: GoogleFonts.poppins(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  content: Text(
+                    "An error occurred while uploading the Video. Please try again.",
+                    style: GoogleFonts.poppins(fontSize: 16),
+                  ),
+                  actions: [
+                    GestureDetector(
+                      onTap: () =>
+                          {Navigator.pop(context), showFeedback = true},
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 12, horizontal: 20),
+                        decoration: BoxDecoration(
+                          color: const Color(0xff003060),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          "Ok",
+                          style: GoogleFonts.poppins(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            );
+          }
         },
         onClose: () {
           print("``closed camera~~");
@@ -4142,32 +7109,216 @@ class _HomePageState extends State<HomePage>
     }
     if (!mounted) return;
 
-    setState(() {
-      showSpinner = true;
-    });
-    var link = await uploadMediaToDrive(_paths![0].path.toString());
-    setState(() {
-      if (_paths != null) {
-        if (fileType == "image") {
-          setState(() {
-            surveys[0]["feedbackQuestion"][superIndex]["answer"]["image"] =
-            "https://drive.google.com/uc?id=$link";
-            ApplicationData.multimediaUrls["https://drive.google.com/uc?id=$link"] = _paths![0].path.toString() ;
-          });
+    showDialog(
+      context: context,
+      barrierDismissible: false, // Prevent dismissing while uploading
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.blue.shade600, // Blue background
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Column(
+                  children: [
+                    Column(
+                      children: [
+                        Text(
+                          "Uploading your file — almost ready for glory! 📁🌟",
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.poppins(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                          softWrap: true,
+                          overflow: TextOverflow.visible,
+                        ),
+                        const SizedBox(height: 24),
+                      ],
+                    ),
+                  ],
+                ),
+                const Center(
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+    try {
+      var link = await uploadMediaToDrive(_paths![0].path.toString());
+      Navigator.pop(context);
 
-        } else {
-          setState(() {
-            surveys[0]["feedbackQuestion"][superIndex]["answer"]["video"] =
-            "https://drive.google.com/uc?id=$link";
-            ApplicationData.multimediaUrls["https://drive.google.com/uc?id=$link"] = _paths![0].path.toString();
-          });
+      setState(() {
+        if (_paths != null) {
+          if (fileType == "image") {
+            setState(() {
+              surveys[0]["feedbackQuestion"][superIndex]["answer"]["image"] =
+              "https://drive.google.com/uc?id=$link";
+              ApplicationData
+                  .multimediaUrls["https://drive.google.com/uc?id=$link"] =
+                  _paths![0].path.toString();
+            });
+          } else {
+            setState(() {
+              surveys[0]["feedbackQuestion"][superIndex]["answer"]["video"] =
+              "https://drive.google.com/uc?id=$link";
+              ApplicationData
+                  .multimediaUrls["https://drive.google.com/uc?id=$link"] =
+                  _paths![0].path.toString();
+            });
+          }
 
         }
-        showSpinner = false;
-      }
-    });
-    print("link is " + surveys[0]["feedbackQuestion"][superIndex]["answer"]);
+      });
+
+      AlertDialog alert = AlertDialog(
+        backgroundColor: Colors.blue, // ✅ Background color
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Expanded(
+              // ✅ Ensures text wraps properly inside Row
+              child: Text(
+                "Your file has been uploaded! 🎉",
+                textAlign: TextAlign.center, // ✅ Keeps it centered
+                style: GoogleFonts.poppins(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white, // ✅ Title text color
+                ),
+                softWrap: true, // ✅ Ensures wrapping
+                overflow: TextOverflow.visible, // ✅ Prevents clipping
+              ),
+            ),
+          ],
+        ),
+
+        content: Column(
+          mainAxisSize:
+          MainAxisSize.min, // ✅ Prevents unnecessary spacing
+          crossAxisAlignment:
+          CrossAxisAlignment.start, // ✅ Aligns content to the left
+          children: [
+            Flexible(
+              // ✅ Ensures text wraps within its available space
+              child: Text(
+                "Your file has been successfully uploaded. 🙌\nThank you for sharing!",
+                style: GoogleFonts.poppins(
+                  fontSize: 16,
+                  color: Colors.white, // ✅ Content text color
+                ),
+                softWrap:
+                true, // ✅ Allows text to break into multiple lines
+                overflow:
+                TextOverflow.visible, // ✅ Ensures text is not clipped
+              ),
+            ),
+            SizedBox(height: 20), // ✅ Space between text and checklist
+          ],
+        ),
+
+        actions: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              GestureDetector(
+                onTap: () {
+                  Navigator.pop(context);
+                  setState(() {
+                    showFeedback = true;
+                  });
+                },
+                child: Container(
+                  padding:
+                  EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                  decoration: BoxDecoration(
+                    color: Color(0xff003060), // ✅ Button color
+                    borderRadius:
+                    BorderRadius.circular(20), // ✅ Rounded corners
+                  ),
+                  child: Text(
+                    "Ok",
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white, // ✅ Button text color
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      );
+
+      showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return alert;
+          });
+    } catch (e) {
+      Navigator.pop(context);
+      print("Uplaod error - ${e.toString()}");
+      // Show error dialog
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text(
+              "Upload Failed",
+              style: GoogleFonts.poppins(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            content: Text(
+              "An error occurred while uploading the File. Please try again.",
+              style: GoogleFonts.poppins(fontSize: 16),
+            ),
+            actions: [
+              GestureDetector(
+                onTap: () =>
+                {Navigator.pop(context), showFeedback = true},
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                      vertical: 12, horizontal: 20),
+                  decoration: BoxDecoration(
+                    color: const Color(0xff003060),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    "Ok",
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+      );
+    }
+
+
+
+
   }
+
+
 
   void setAnswerAsValue(String ansType, String value) {
     List<String> values = List.filled(
@@ -4237,12 +7388,6 @@ class _HomePageState extends State<HomePage>
   }
 
   bool GetValidResponses(currentSurvey) {
-    for (var item in currentSurvey) {
-      print("item is $item");
-      print("Question is " + item["question"]);
-      print("Answer is " + item["answer"].toString());
-      print("Answer type is " + item["answerType"] + "\n\n");
-    }
 
     for (var i = 0; i < currentSurvey.length; i++) {
       if (currentSurvey[i]["answerType"].contains("Rating")) {
@@ -4292,6 +7437,10 @@ class _HomePageState extends State<HomePage>
         }
       }
       if (currentSurvey[i]["answerType"].contains("Audio/Descriptive")) {
+        print("in audio descriptive");
+        print(currentSurvey[i]["answer"]);
+        print(currentSurvey[i]["answer"]["text"] == "");
+        print(currentSurvey[i]["answer"]["audio"] == "");
         if (currentSurvey[i]["answer"]["text"] == "" &&
             currentSurvey[i]["answer"]["audio"] == "") {
           setState(() {
@@ -4305,20 +7454,16 @@ class _HomePageState extends State<HomePage>
             currentSurvey[i]["answer"]["audio"] == "") {
           setState(() {
             goingForwardMessage =
-                "You have not used all given options to response, you can record audio and state detailed problem. Are you sure you want to continue? ";
+                "You have not used all given options to response, you can record audio and state detailed problem. Are you sure you want to continue?";
           });
-
+          print(goingForwardMessage);
           return false;
         }
-      } // } else if (currentSurvey[i]["answerType"].contains("NumberBox")) {
-      //   if (currentSurvey[i]["answer"] == "") {
-      //     setState(() {
-      //       goingForwardMessage = "Enter the number as response";
-      //     });
-      //     return false;
-      //   }
-      // }
+      }
 
+      if (currentSurvey[i]["answer"] == "") {
+        return false;
+      }
     }
     return true;
   }
@@ -4382,7 +7527,7 @@ class _HomePageState extends State<HomePage>
       final driveApi = drive.DriveApi(client);
       final file = await driveApi.files.get(fileId) as drive.File;
 
-      print(file.permissions);
+
       // Check if the file is accessible to anyone with the link
       if (file.permissions != null) {
         final linkPermission = file.permissions!.firstWhere(
@@ -4411,32 +7556,35 @@ class _HomePageState extends State<HomePage>
   }
 
   getStringFormatForMultimedia(survey) {
-    print('survey["text"] - ' + survey["text"]);
-    print('survey["image"] - ' + survey["image"]);
-    print('survey["audio"] - ' + survey["audio"]);
-    print('survey["video"] - ' + survey["video"]);
-    return "text - " +
-        survey["text"] +
-        ",image - " +
-        survey["image"] +
-        ",audio - " +
-        survey["audio"] +
-        ",video - " +
-        survey["video"];
+    print("survey is $survey");
+    print("is survey empty ? ${survey.isEmpty}");
+
+    if (survey.isNotEmpty) {
+      String text = survey["text"] ?? "N/A";
+      String image = survey["image"] ?? "N/A";
+      String audio = survey["audio"] ?? "N/A";
+      String video = survey["video"] ?? "N/A";
+
+
+      return "text - $text, image - $image, audio - $audio, video - $video";
+    } else {
+      return "";
+    }
   }
 
   Widget getRowOfEndPoints() {
     final double screenWidth = MediaQuery.of(context).size.width;
-    final double padding = 40.0; // Total horizontal padding (20 left + 20 right)
+    final double padding =
+        40.0; // Total horizontal padding (20 left + 20 right)
 
     // Calculate the widths of the two texts
     final TextPainter leftTextPainter = TextPainter(
       text: TextSpan(
         text: responseArray[0],
-        style: GoogleFonts.roboto(
+        style: GoogleFonts.poppins(
           fontWeight: FontWeight.bold,
           fontSize: MediaQuery.textScalerOf(context).scale(15),
-          color: Colors.red,
+          color: Color(0xff003060),
         ),
       ),
       textDirection: TextDirection.ltr,
@@ -4446,34 +7594,30 @@ class _HomePageState extends State<HomePage>
     final TextPainter rightTextPainter = TextPainter(
       text: TextSpan(
         text: responseArray[responseArray.length - 1],
-        style: GoogleFonts.roboto(
+        style: GoogleFonts.poppins(
           fontWeight: FontWeight.bold,
           fontSize: MediaQuery.textScalerOf(context).scale(15),
-          color: Colors.deepPurple,
+          color: Color(0xff003060),
         ),
       ),
       textDirection: TextDirection.ltr,
     )..layout();
     final double rightTextWidth = rightTextPainter.size.width;
 
-    print("Screenwidth 80% : ${screenWidth*.8}");
 
-    print("Left Text: ${responseArray[0]}");
-    print("Left Text Width: $leftTextWidth");
-    print("Right Text: ${responseArray[responseArray.length - 1]}");
-    print("Right Text Width: $rightTextWidth");
-    print("Padding : $padding");
+
 
     // Check if the combined width exceeds the available width
-    final bool isOverflowing = (leftTextWidth + rightTextWidth + padding) >= screenWidth*.8;
+    final bool isOverflowing =
+        (leftTextWidth + rightTextWidth + padding) >= screenWidth * .8;
 
-    print("Combined Width: ${leftTextWidth + rightTextWidth + padding}");
-    print("Is Overflowing: $isOverflowing");
+
 
     if (isOverflowing) {
       // Return two rows if text overflows
       return Padding(
-        padding: const EdgeInsets.only(left: 20.0, top: 10, right: 20, bottom: 0),
+        padding:
+            const EdgeInsets.only(left: 20.0, top: 10, right: 20, bottom: 0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -4481,10 +7625,10 @@ class _HomePageState extends State<HomePage>
               alignment: Alignment.centerLeft,
               child: Text(
                 responseArray[0],
-                style: GoogleFonts.roboto(
-                  fontWeight: FontWeight.bold,
+                style: GoogleFonts.poppins(
                   fontSize: MediaQuery.textScalerOf(context).scale(15),
-                  color: Colors.red,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xff003060),
                 ),
               ),
             ),
@@ -4492,10 +7636,10 @@ class _HomePageState extends State<HomePage>
               alignment: Alignment.centerRight,
               child: Text(
                 responseArray[responseArray.length - 1],
-                style: GoogleFonts.roboto(
-                  fontWeight: FontWeight.bold,
+                style: GoogleFonts.poppins(
                   fontSize: MediaQuery.textScalerOf(context).scale(15),
-                  color: Colors.deepPurple,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xff003060),
                 ),
               ),
             ),
@@ -4505,7 +7649,8 @@ class _HomePageState extends State<HomePage>
     } else {
       // Return a single row if no overflow
       return Padding(
-        padding: const EdgeInsets.only(left: 20.0, top: 10, right: 20, bottom: 0),
+        padding:
+            const EdgeInsets.only(left: 20.0, top: 10, right: 20, bottom: 0),
         child: Row(
           children: [
             Text(
@@ -4536,23 +7681,22 @@ class _HomePageState extends State<HomePage>
   }
 
   bool checkIfItsFirstQuestion(currentSurvey) {
-
-    if(surveys[0]["feedbackQuestion"][0]["mainScreentitle"] == currentSurvey[0]["mainScreentitle"]
-    && surveys[0]["feedbackQuestion"][0]["titleLine"] == currentSurvey[0]["titleLine"]
-    && surveys[0]["feedbackQuestion"][0]["questionTitle"] == currentSurvey[0]["questionTitle"])
-      {
-        return true;
-      }
+    if (surveys[0]["feedbackQuestion"][0]["mainScreentitle"] ==
+            currentSurvey[0]["mainScreentitle"] &&
+        surveys[0]["feedbackQuestion"][0]["titleLine"] ==
+            currentSurvey[0]["titleLine"] &&
+        surveys[0]["feedbackQuestion"][0]["questionTitle"] ==
+            currentSurvey[0]["questionTitle"]) {
+      return true;
+    }
 
     return false;
-
   }
 
-  Future<void> _launchUrl() async{
-    final url ;
+  Future<void> _launchUrl() async {
+    final url;
 
-    switch(urlId)
-    {
+    switch (urlId) {
       case 1:
         url = Uri.parse("https://qualtrack-privacypolicy.web.app/faq.html");
         break;
@@ -4562,12 +7706,12 @@ class _HomePageState extends State<HomePage>
         break;
 
       case 3:
-        url = Uri.parse("https://qualtrack-privacypolicy.web.app/help-us-improve.html");
+        url = Uri.parse(
+            "https://qualtrack-privacypolicy.web.app/help-us-improve.html");
         break;
 
       default:
         url = Uri.parse("https://qualtrack-privacypolicy.web.app/");
-
     }
     if (!await launchUrl(url)) {
       throw Exception('Could not launch $url');
@@ -4576,6 +7720,11 @@ class _HomePageState extends State<HomePage>
     }
   }
 
+  String processResponse(String? thankYouMessage) {
+    if (thankYouMessage?.isNotEmpty ?? false) {
+      return thankYouMessage!.replaceAll('"', '');
+    } else {
+      return '';
+    }
+  }
 }
-
-

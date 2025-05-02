@@ -183,7 +183,7 @@ class _AudioRecorderState extends State<AudioRecorder> {
     }
 
     return  Text(
-      "Waiting to record",
+      "Click on the mic to start recording",
       style: TextStyle(fontSize: MediaQuery.textScalerOf(context).scale(17)),
     );
   }

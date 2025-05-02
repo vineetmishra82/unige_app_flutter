@@ -15,18 +15,16 @@ void main() async {
   runApp(UnigeApp());
 }
 
-Future<bool> checkIfUserLoggedIn() async {
-  SharedPreferences loginCheck = await SharedPreferences.getInstance();
-  bool? isLoggedIn = loginCheck.getBool('isLoggedIn') ?? false;
+Future<String?> getLoggedInMobile() async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  bool isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
 
-  ApplicationData.mobile = loginCheck.getString("LoginMobileInThisSuperliciousApp") ?? "";
-  ApplicationData.countryCodeISO = loginCheck.getString("CountryCodeISO") ?? "";
+  if (!isLoggedIn) return null;
 
-  // Ensure ApplicationData.mobile is valid (not null and not empty)
-  bool isMobileValid = ApplicationData.mobile.isNotEmpty ;
-
-  return isLoggedIn && isMobileValid;
+  String? mobile = prefs.getString("LoginMobileInThisSuperliciousApp");
+  return (mobile != null && mobile.isNotEmpty) ? mobile : null;
 }
+
 
 class ApplicationData {
   static String mobile = "";
@@ -43,28 +41,35 @@ class UnigeApp extends StatelessWidget {
           bodyMedium: TextStyle(color: Colors.white),
         ),
       ),
-      home: FutureBuilder<bool>(
-        future: checkIfUserLoggedIn(),
-        builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
+      home: FutureBuilder<String?>(
+        future: getLoggedInMobile(),
+        builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            // Show a loading indicator while waiting for the Future
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError || snapshot.data == false) {
-            // Go to LoginScreen if not logged in or an error occurs
+            return Center(child: CircularProgressIndicator());
+          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return LoginScreen();
           } else {
-            // Go to HomePage if logged in
-            return HomePage(ApplicationData.mobile);
+            // Now it's guaranteed to be loaded
+            return HomePage(snapshot.data!); // ← pass clean mobile number
           }
         },
       ),
+
       routes: {
         LoginScreen.id: (context) => LoginScreen(),
         HomePage.id: (context) => HomePage(ApplicationData.mobile),
         RegisterUser.id: (context) => RegisterUser(),
-        LandingPageDetail.id: (context) => LandingPageDetail(),
+        LandingPageDetail.id: (context) => LandingPageDetail(ApplicationData.mobile),
       },
     );
+  }
+
+  Future<String> getMobileFromPrefs() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    ApplicationData.mobile = prefs.getString("LoginMobileInThisSuperliciousApp") ?? "";
+    print("in main ApplicationData.mobile is ${ApplicationData.mobile}");
+    return prefs.getString("LoginMobileInThisSuperliciousApp") ?? "";
   }
 }
 

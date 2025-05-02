@@ -33,10 +33,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      body: SingleChildScrollView(
-        physics: BouncingScrollPhysics(),
-        child: ModalProgressHUD(
-          inAsyncCall: showSpinner,
+      body: ModalProgressHUD(
+        inAsyncCall: showSpinner,
+        child: SingleChildScrollView(
+          physics: BouncingScrollPhysics(),
           child: Column(
             children: [
               Padding(
@@ -146,7 +146,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             print("trying to log in ${LoginScreen.mobile}");
                             var url = Uri.parse(Apis.userExists(LoginScreen.mobile));
                             var response = await http.get(url);
-        
+                            print(url);
                             if (response.body == "true") {
                               setState(() {
                                 showSpinner = false;
