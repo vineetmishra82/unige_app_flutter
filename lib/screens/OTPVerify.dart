@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
@@ -32,7 +31,8 @@ class OTPVerify extends StatefulWidget {
 
 class _OTPVerifyState extends State<OTPVerify> {
   bool showSpinner = false;
-  String otp = "", verificationId = "";
+  String otp = "",
+      verificationId = "";
   bool authCredStatus = true;
 
   @override
@@ -42,7 +42,9 @@ class _OTPVerifyState extends State<OTPVerify> {
 
   @override
   Widget build(BuildContext context) {
-    Size size = MediaQuery.of(context).size;
+    Size size = MediaQuery
+        .of(context)
+        .size;
     return Scaffold(
       backgroundColor: Colors.white,
       body: SingleChildScrollView(
@@ -63,7 +65,7 @@ class _OTPVerifyState extends State<OTPVerify> {
                     child: Image.asset(
                       'images/logo.png',
                       height: 35,
-                      width: size.width! * 0.4,// Ensures proper scaling
+                      width: size.width! * 0.4, // Ensures proper scaling
                     ),
                   ),
                   const SizedBox(
@@ -81,7 +83,7 @@ class _OTPVerifyState extends State<OTPVerify> {
                       maxLength: 6,
                       obscureText: true,
                       keyboardType: TextInputType.number,
-                      decoration:  InputDecoration(
+                      decoration: InputDecoration(
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.all(Radius.circular(32.0)),
                         ),
@@ -109,7 +111,8 @@ class _OTPVerifyState extends State<OTPVerify> {
                         vertical: 16.0, horizontal: 50.0),
                     child: Material(
                       color: Colors.blue,
-                      borderRadius: const BorderRadius.all(Radius.circular(30.0)),
+                      borderRadius: const BorderRadius.all(
+                          Radius.circular(30.0)),
                       elevation: 5.0,
                       child: MaterialButton(
                         onPressed: () async {
@@ -122,7 +125,7 @@ class _OTPVerifyState extends State<OTPVerify> {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
                                   content:
-                                      Text('No of tries exceeded...Redirecting'),
+                                  Text('No of tries exceeded...Redirecting'),
                                 ),
                               );
 
@@ -140,7 +143,7 @@ class _OTPVerifyState extends State<OTPVerify> {
                             }
                           } else {
                             SharedPreferences loginCheck =
-                                await SharedPreferences.getInstance();
+                            await SharedPreferences.getInstance();
                             loginCheck.setBool("isLoggedIn", true);
                             loginCheck.setString(
                                 "LoginMobileInThisSuperliciousApp",
@@ -167,7 +170,8 @@ class _OTPVerifyState extends State<OTPVerify> {
                               print(url);
                               if (response.body == "true") {
                                 AlertDialog alert = AlertDialog(
-                                  backgroundColor: Colors.blue, // ✅ Dialog background color
+                                  backgroundColor: Colors.blue,
+                                  // ✅ Dialog background color
                                   title: Text(
                                     "Success",
                                     style: GoogleFonts.poppins(
@@ -180,7 +184,8 @@ class _OTPVerifyState extends State<OTPVerify> {
                                     "Welcome, User created successfully!",
                                     style: GoogleFonts.poppins(
                                       fontSize: 16,
-                                      color: Colors.white, // ✅ Content text color
+                                      color: Colors
+                                          .white, // ✅ Content text color
                                     ),
                                   ),
                                   actions: [
@@ -190,24 +195,31 @@ class _OTPVerifyState extends State<OTPVerify> {
                                           Navigator.pop(context);
                                           Navigator.push(
                                             context,
-                                            MaterialPageRoute(builder: (context) => LandingPageDetail(widget.mobile)),
+                                            MaterialPageRoute(
+                                                builder: (context) =>
+                                                    LandingPageDetail(
+                                                        widget.mobile)),
                                           );
                                           setState(() {
                                             showSpinner = false;
                                           });
                                         },
                                         child: Container(
-                                          padding: EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                                          padding: EdgeInsets.symmetric(
+                                              vertical: 12, horizontal: 20),
                                           decoration: BoxDecoration(
-                                            color: Color(0xff003060), // ✅ Button color
-                                            borderRadius: BorderRadius.circular(20), // ✅ Rounded corners
+                                            color: Color(0xff003060),
+                                            // ✅ Button color
+                                            borderRadius: BorderRadius.circular(
+                                                20), // ✅ Rounded corners
                                           ),
                                           child: Text(
                                             "Continue",
                                             style: GoogleFonts.poppins(
                                               fontSize: 14,
                                               fontWeight: FontWeight.bold,
-                                              color: Colors.white, // ✅ Button text color
+                                              color: Colors
+                                                  .white, // ✅ Button text color
                                             ),
                                           ),
                                         ),
@@ -225,7 +237,8 @@ class _OTPVerifyState extends State<OTPVerify> {
                                 print(ApplicationData.mobile + " - true");
                               } else {
                                 AlertDialog alert = AlertDialog(
-                                  backgroundColor: Colors.blue, // ✅ Dialog background color
+                                  backgroundColor: Colors.blue,
+                                  // ✅ Dialog background color
                                   title: Text(
                                     "Error",
                                     style: GoogleFonts.poppins(
@@ -238,7 +251,8 @@ class _OTPVerifyState extends State<OTPVerify> {
                                     "Could not create user... Try again!",
                                     style: GoogleFonts.poppins(
                                       fontSize: 16,
-                                      color: Colors.white, // ✅ Content text color
+                                      color: Colors
+                                          .white, // ✅ Content text color
                                     ),
                                   ),
                                   actions: [
@@ -251,17 +265,21 @@ class _OTPVerifyState extends State<OTPVerify> {
                                           });
                                         },
                                         child: Container(
-                                          padding: EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                                          padding: EdgeInsets.symmetric(
+                                              vertical: 12, horizontal: 20),
                                           decoration: BoxDecoration(
-                                            color: Color(0xff003060), // ✅ Button color
-                                            borderRadius: BorderRadius.circular(20), // ✅ Rounded corners
+                                            color: Color(0xff003060),
+                                            // ✅ Button color
+                                            borderRadius: BorderRadius.circular(
+                                                20), // ✅ Rounded corners
                                           ),
                                           child: Text(
                                             "Continue",
                                             style: GoogleFonts.poppins(
                                               fontSize: 14,
                                               fontWeight: FontWeight.bold,
-                                              color: Colors.white, // ✅ Button text color
+                                              color: Colors
+                                                  .white, // ✅ Button text color
                                             ),
                                           ),
                                         ),
@@ -283,7 +301,7 @@ class _OTPVerifyState extends State<OTPVerify> {
                                   context,
                                   MaterialPageRoute(
                                       builder: (context) =>
-                                        LandingPageDetail(widget.mobile)));
+                                          LandingPageDetail(widget.mobile)));
                               setState(() {
                                 showSpinner = false;
                               });
@@ -292,9 +310,11 @@ class _OTPVerifyState extends State<OTPVerify> {
                         },
                         minWidth: 200.0,
                         height: 42.0,
-                        child:  Text(
+                        child: Text(
                           'Submit',
-                          style: TextStyle(fontSize: MediaQuery.textScalerOf(context).scale(16)),
+                          style: TextStyle(
+                              fontSize: MediaQuery.textScalerOf(context).scale(
+                                  16)),
                         ),
                       ),
                     ),
@@ -308,95 +328,6 @@ class _OTPVerifyState extends State<OTPVerify> {
     );
   }
 
-  Future<void> generateOTPandVerify() async {
-    String mobileWithCode = ("+" + widget.mobile);
-
-    await FirebaseAuth.instance.verifyPhoneNumber(
-      phoneNumber: (mobileWithCode),
-      verificationCompleted: (PhoneAuthCredential credential) async {
-        await FirebaseAuth.instance.signInWithCredential(credential);
-        print('Successful verification');
-      },
-      verificationFailed: (FirebaseAuthException e) {
-        print('UNSuccessful verification - ' + e.message.toString());
-      },
-      codeSent: (String verificationId, int? resendToken) async {
-        this.verificationId = verificationId;
-        print('code sent');
-      },
-      codeAutoRetrievalTimeout: (String verificationId) {},
-    );
-  }
-
-  verifyOTP() async {
-    setState(() {
-      showSpinner = true;
-    });
-    Future<bool> result;
-    PhoneAuthCredential phoneAuthCredential = PhoneAuthProvider.credential(
-        verificationId: verificationId, smsCode: otp);
-    print('OTP is ' + phoneAuthCredential.smsCode.toString());
-    print("phoneauthcred is " + phoneAuthCredential.toString());
-
-    try {
-      final authCredential =
-          await FirebaseAuth.instance.signInWithCredential(phoneAuthCredential);
-
-      if (authCredential.user != null) {
-        print('inside authcred');
-        SharedPreferences loginCheck = await SharedPreferences.getInstance();
-
-        loginCheck.setBool("isLoggedIn", true);
-        loginCheck.setString("LoginMobileInThisSuperliciousApp", widget.mobile);
-        loginCheck.setString("CountryCodeISO", widget.countryCodeISO);
-        ApplicationData.mobile = widget.mobile;
-        print('ApplicationData.mobile' + ApplicationData.mobile);
-        ApplicationData.countryCodeISO = widget.countryCodeISO;
-
-        if (widget.id == 2) {
-          var url = Uri.parse(
-              Apis.createUser(widget.name, widget.mobile, widget.email));
-          var response = await http.post(url);
-          print(url);
-          if (response.body == "true") {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('User Created...Welcome !'),
-              ),
-            );
-          } else {
-            final snackBar = SnackBar(
-              content: const Text("Could not register user"),
-              action: SnackBarAction(
-                label: 'Server Error',
-                onPressed: () {},
-              ),
-            );
-            ScaffoldMessenger.of(context).showSnackBar(snackBar);
-            setState(() {
-              showSpinner = false;
-            });
-          }
-        }
-
-        Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) => HomePage(widget.mobile)));
-
-      } else {
-        authCredStatus = false;
-        setState(() {
-          showSpinner = false;
-        });
-      }
-    } on FirebaseAuthException catch (e) {
-      String error = "catch " + e.message.toString();
-      print(error);
-      authCredStatus = false;
-      setState(() {
-        showSpinner = false;
-      });
-    }
-  }
 }
+
+

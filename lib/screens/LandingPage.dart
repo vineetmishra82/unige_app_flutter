@@ -71,9 +71,7 @@ class _LandingPageDetailState extends State<LandingPageDetail> {
                 children: [
                   TextSpan(
                     text:
-                    "We're a team dedicated to improving the product experience. "
-                        "Through this app, we gather valuable insights to help shape the "
-                        "future of products and ensure they meet your needs.\n ",
+                    "We are a team of researchers and professionals committed to enhancing customer experiences with products and services. This app is designed to collect valuable feedback that will help shape future offerings to better meet your needs.\n ",
                     style: GoogleFonts.poppins(
                       color: Color(0xFF003060), // Text color
                       fontSize: 16.0,
@@ -126,9 +124,7 @@ class _LandingPageDetailState extends State<LandingPageDetail> {
               children: [
                 TextSpan(
                   text:
-                  "Your feedback is crucial. It directly influences product development, "
-                      "helping manufacturers and service providers understand and "
-                      "address your concerns for a better consumer experience. ",
+                  "Your feedback is essential — it directly guides the product development and process design of manufacturers and service providers, ultimately resulting in improved products and services experiences for all customers!",
                   style: GoogleFonts.poppins(
                     color: Color(0xFF003060), // Text color
                     fontSize: 16.0,
@@ -165,7 +161,7 @@ class _LandingPageDetailState extends State<LandingPageDetail> {
   }
 
   Future<void> _launchUrl() async{
-    final url = Uri.parse("https://qualtrack-privacypolicy.web.app/");
+    final url = Uri.parse("https://qualtrack-privacypolicy.web.app/aboutUs.html");
     if (!await launchUrl(url)) {
       throw Exception('Could not launch $url');
     } else {

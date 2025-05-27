@@ -29,11 +29,8 @@ dependencies:
   cupertino_icons: ^1.0.2
   pinput: ^5.0.0
   modal_progress_hud_nsn: ^0.5.1
-  firebase_core: ^3.8.0
-  firebase_phone_auth_handler: ^1.0.3
   shared_preferences: ^2.0.13
   http: ^1.2.2
-  firebase_auth: ^5.3.3
   syncfusion_flutter_datepicker: ^27.2.4
   toggle_switch: ^2.0.1
   syncfusion_flutter_sliders: ^27.2.4
@@ -44,11 +41,9 @@ dependencies:
   flutter_camera: ^1.0.0
   record: ^4.4.3
   audioplayers: ^6.1.0
-  chewie: ^1.3.6
   video_player: ^2.4.10
   file_picker: ^8.1.4
   googleapis: any
-  google_sign_in: any
   googleapis_auth: any
   url_launcher: ^6.3.1
   month_picker_dialog: ^2.0.2
