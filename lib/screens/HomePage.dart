@@ -2129,7 +2129,7 @@ class _HomePageState extends State<HomePage>
           ),
         ],
         getBottomButtonSet(currentSurvey),
-        getBottomButtonSetDev(),
+      //  getBottomButtonSetDev(),
       ],
     );
   }
@@ -2960,7 +2960,6 @@ class _HomePageState extends State<HomePage>
                 FocusScope.of(context).unfocus();
                 if (!GetValidResponses(currentSurvey)) {
                   print("Abhi goingForwardmessage is $goingForwardMessage");
-                  print(goingForwardMessage.contains("What made this experience special ?"));
                   if (goingForwardMessage.contains(
                       "A response is needed to continue, you can record audio/video, upload pic")) {
                     print("line 2833 coming to goingForwardMessage.contains(A response is needed to continue, you can record audio/video, upload pic");
@@ -3580,6 +3579,121 @@ class _HomePageState extends State<HomePage>
                         },
                       );
                     }
+                  }else if(goingForwardMessage.contains("What was missing?"))
+                  {
+                    print("in missing exp");
+                    AlertDialog alert = AlertDialog(
+                      backgroundColor: Colors.blue,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15), // Consistent corners
+                      ),
+                      title: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.star, color: Colors.yellow, size: 24),
+                          const SizedBox(width: 8), // Add spacing
+                          Flexible(
+                            child: Text(
+                              "Anything missing ?",
+                              style: GoogleFonts.poppins(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                              textAlign: TextAlign.center,
+                              softWrap: true,
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 2, // Allow wrapping
+                            ),
+                          ),
+                          const SizedBox(width: 8), // Add spacing
+                          const Icon(Icons.star, color: Colors.yellow, size: 24),
+                        ],
+                      ),
+                      content: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          maxWidth: MediaQuery.of(context).size.width * 0.8, // 80% screen width
+                          minWidth: 200, // Minimum for small screens
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "What was missing? Please describe in detail through typing or recording. Otherwise please select none and move to the next section.",
+                              style: GoogleFonts.poppins(
+                                fontSize: 14,
+                                color: Colors.white,
+                              ),
+                              softWrap: true,
+                              overflow: TextOverflow.visible, // Allow wrapping
+                            ),
+                          ],
+                        ),
+                      ),
+                      actions: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            GestureDetector(
+                              onTap: () {
+                                Navigator.pop(context);
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xff003060),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text(
+                                  "Share experience",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            GestureDetector(
+                              onTap: () {
+
+                                setState(() {
+                                  questionIndex++;
+                                  ratingsArrayLoaded = false;
+                                });
+
+                                Navigator.pop(context);
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xff003060),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text(
+                                  "None",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    );
+
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return alert;
+                        },
+                      );
+
                   }
                   else {
                     print("oops in line 3292");
@@ -4742,6 +4856,122 @@ class _HomePageState extends State<HomePage>
 
 
                   }
+                  else if(goingForwardMessage.contains("What was missing?"))
+                  {
+                    print("in missing exp");
+                    AlertDialog alert = AlertDialog(
+                      backgroundColor: Colors.blue,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15), // Consistent corners
+                      ),
+                      title: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.star, color: Colors.yellow, size: 24),
+                          const SizedBox(width: 8), // Add spacing
+                          Flexible(
+                            child: Text(
+                              "Anything missing ?",
+                              style: GoogleFonts.poppins(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                              textAlign: TextAlign.center,
+                              softWrap: true,
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 2, // Allow wrapping
+                            ),
+                          ),
+                          const SizedBox(width: 8), // Add spacing
+                          const Icon(Icons.star, color: Colors.yellow, size: 24),
+                        ],
+                      ),
+                      content: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          maxWidth: MediaQuery.of(context).size.width * 0.8, // 80% screen width
+                          minWidth: 200, // Minimum for small screens
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "What was missing? Please describe in detail through typing or recording. Otherwise please select none and move to the next section.",
+                              style: GoogleFonts.poppins(
+                                fontSize: 14,
+                                color: Colors.white,
+                              ),
+                              softWrap: true,
+                              overflow: TextOverflow.visible, // Allow wrapping
+                            ),
+                          ],
+                        ),
+                      ),
+                      actions: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            GestureDetector(
+                              onTap: () {
+                                Navigator.pop(context);
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xff003060),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text(
+                                  "Share experience",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            GestureDetector(
+                              onTap: () {
+
+                                setState(() {
+                                  questionIndex++;
+                                  ratingsArrayLoaded = false;
+                                });
+
+                                Navigator.pop(context);
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xff003060),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text(
+                                  "None",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    );
+
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return alert;
+                      },
+                    );
+
+                  }
                   else {
                     AlertDialog alert = AlertDialog(
                       backgroundColor: Colors.blue, // ✅ Dialog background color
@@ -4887,30 +5117,126 @@ class _HomePageState extends State<HomePage>
                   onPressed: () {
                     if (surveys[0]["surveyId"] == "ReplacementSurvey") {
                       if (!GetValidResponses(currentSurvey)) {
-                        AlertDialog alert = AlertDialog(
-                          backgroundColor:
-                              Colors.blue, // ✅ Dialog background color
-                          title: Text(
-                            "Alert",
-                            style: GoogleFonts.poppins(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white, // ✅ Title text color
-                            ),
-                          ),
-                          content: Text(
-                            goingForwardMessage,
-                            style: GoogleFonts.poppins(
-                              fontSize: 16,
-                              color: Colors.white, // ✅ Content text color
-                            ),
-                          ),
-                          actions: [
-                            Row(
-                              mainAxisAlignment:
-                                  MainAxisAlignment.center, // ✅ Centered button
+                        FocusScope.of(context).unfocus();
+
+                        if (goingForwardMessage.contains(
+                            "A response is needed to continue, select any one for Yes or No") ||
+                            goingForwardMessage.isEmpty) {
+                          print("oops in line 3478");
+                          AlertDialog alert = AlertDialog(
+                            backgroundColor: Colors.blue, // ✅ Background color
+                            title: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                GestureDetector(
+                                Text(
+                                  "Oops! Missing Info",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white, // ✅ Title text color
+                                  ),
+                                ),
+                                SizedBox(width: 8), // ✅ Spacing
+                                Icon(Icons.warning, color: Colors.yellow, size: 30),
+                              ],
+                            ),
+                            content: Column(
+                              mainAxisSize:
+                              MainAxisSize.min, // ✅ Prevents unnecessary spacing
+                              crossAxisAlignment: CrossAxisAlignment
+                                  .start, // ✅ Aligns content to the left
+                              children: [
+                                Text(
+                                  "We need all fields filled out to continue.",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 16,
+                                    color: Colors.white, // ✅ Content text color
+                                  ),
+                                ),
+                                SizedBox(
+                                    height: 20), // ✅ Space between text and checklist
+                                Column(
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Stack(
+                                          alignment: Alignment.center,
+                                          children: [
+                                            Icon(Icons.check_box,
+                                                color: Colors.green,
+                                                size: 18), // Green box
+                                            Icon(Icons.check,
+                                                color: Colors.white,
+                                                size: 14), // White tick on top
+                                          ],
+                                        ), // ✅ Check Icon
+                                        SizedBox(width: 8), // ✅ Spacing
+                                        Text(
+                                          "Check your info",
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 14,
+                                            color: Colors.white, // ✅ Text color
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    SizedBox(
+                                        height:
+                                        5), // ✅ Spacing between checklist items
+                                    Row(
+                                      children: [
+                                        Stack(
+                                          alignment: Alignment.center,
+                                          children: [
+                                            Icon(Icons.check_box,
+                                                color: Colors.green,
+                                                size: 18), // Green box
+                                            Icon(Icons.check,
+                                                color: Colors.white,
+                                                size: 14), // White tick on top
+                                          ],
+                                        ),
+                                        SizedBox(width: 8),
+                                        Text(
+                                          "Fill in the missing parts",
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 14,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    SizedBox(height: 5),
+                                    Row(
+                                      children: [
+                                        Stack(
+                                          alignment: Alignment.center,
+                                          children: [
+                                            Icon(Icons.check_box,
+                                                color: Colors.green,
+                                                size: 18), // Green box
+                                            Icon(Icons.check,
+                                                color: Colors.white,
+                                                size: 14), // White tick on top
+                                          ],
+                                        ),
+                                        SizedBox(width: 8),
+                                        Text(
+                                          "Try again!",
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 14,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                            actions: [
+                              Center(
+                                child: GestureDetector(
                                   onTap: () {
                                     Navigator.pop(context);
                                   },
@@ -4918,32 +5244,1066 @@ class _HomePageState extends State<HomePage>
                                     padding: EdgeInsets.symmetric(
                                         vertical: 12, horizontal: 20),
                                     decoration: BoxDecoration(
-                                      color:
-                                          Color(0xff003060), // ✅ Button color
+                                      color: Color(0xff003060), // ✅ Button color
                                       borderRadius: BorderRadius.circular(
                                           20), // ✅ Rounded corners
                                     ),
                                     child: Text(
-                                      "Cancel",
+                                      "Go Back",
                                       style: GoogleFonts.poppins(
                                         fontSize: 14,
                                         fontWeight: FontWeight.bold,
-                                        color:
-                                            Colors.white, // ✅ Button text color
+                                        color: Colors.white, // ✅ Button text color
                                       ),
                                     ),
                                   ),
                                 ),
+                              ),
+                            ],
+                          );
+
+                          showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return alert;
+                              });
+                        } else if (goingForwardMessage.contains("You have not used all given options to response, you can record audio and state detailed problem. Are you sure you want to continue?")) {
+                          AlertDialog alert = AlertDialog(
+                            backgroundColor: Colors.blue,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                            title: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.star, color: Colors.yellow, size: 24),
+                                const SizedBox(width: 8),
+                                Flexible(
+                                  child: Text(
+                                    "Enhance Your Feedback!",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                    softWrap: true,
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 2,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                const Icon(Icons.star, color: Colors.yellow, size: 24),
                               ],
                             ),
-                          ],
-                        );
+                            content: ConstrainedBox(
+                              constraints: BoxConstraints(
+                                maxWidth: MediaQuery.of(context).size.width * 0.8,
+                                minWidth: 200,
+                              ),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    goingForwardMessage?.isNotEmpty == true
+                                        ? goingForwardMessage!
+                                        : "Please provide your feedback to help us improve.",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 14,
+                                      color: Colors.white,
+                                    ),
+                                    softWrap: true,
+                                    overflow: TextOverflow.visible,
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Text(
+                                    "Your input helps us improve—thank you! 🚀",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 14,
+                                      color: Colors.white,
+                                    ),
+                                    softWrap: true,
+                                    overflow: TextOverflow.visible,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            actions: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  Flexible(
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        Navigator.pop(context);
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xff003060),
+                                          borderRadius: BorderRadius.circular(10),
+                                        ),
+                                        child: Text(
+                                          "Improve Feedback",
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Flexible(
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        if (mounted) {
+                                          setState(() {
+                                            questionIndex++;
+                                            ratingsArrayLoaded = false;
+                                          });
+                                        }
+                                        Navigator.pop(context);
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xff003060),
+                                          borderRadius: BorderRadius.circular(10),
+                                        ),
+                                        child: Text(
+                                          "Continue as is",
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          );
 
-                        showDialog(
+                          showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return alert;
+                              });
+                        }else if (goingForwardMessage.contains(
+                            "You have not used all given options to response, you can record audio/video, upload pic")) {
+                          AlertDialog alert = AlertDialog(
+                            backgroundColor: Colors.blue,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                            title: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.star, color: Colors.yellow, size: 24),
+                                const SizedBox(width: 8),
+                                Flexible(
+                                  child: Text(
+                                    "Enhance Your Feedback!",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                    softWrap: true,
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 2,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                const Icon(Icons.star, color: Colors.yellow, size: 24),
+                              ],
+                            ),
+                            content: ConstrainedBox(
+                              constraints: BoxConstraints(
+                                maxWidth: MediaQuery.of(context).size.width * 0.8,
+                                minWidth: 200,
+                              ),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "Add more impact with:",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 14,
+                                      color: Colors.white,
+                                    ),
+                                    softWrap: true,
+                                    overflow: TextOverflow.visible,
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Text(
+                                    "📷 Photo | 🎥 Video | 🎙️ Audio",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 14,
+                                      color: Colors.white,
+                                    ),
+                                    softWrap: true,
+                                    overflow: TextOverflow.visible,
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Column(
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Stack(
+                                            alignment: Alignment.center,
+                                            children: const [
+                                              Icon(Icons.check_box, color: Colors.green, size: 18),
+                                              Icon(Icons.check, color: Colors.white, size: 14),
+                                            ],
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Flexible(
+                                            child: Text(
+                                              "Choose an option",
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 14,
+                                                color: Colors.white,
+                                              ),
+                                              softWrap: true,
+                                              overflow: TextOverflow.visible,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 5),
+                                      Row(
+                                        children: [
+                                          Stack(
+                                            alignment: Alignment.center,
+                                            children: const [
+                                              Icon(Icons.check_box, color: Colors.green, size: 18),
+                                              Icon(Icons.check, color: Colors.white, size: 14),
+                                            ],
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Flexible(
+                                            child: Text(
+                                              "Upload or add details",
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 14,
+                                                color: Colors.white,
+                                              ),
+                                              softWrap: true,
+                                              overflow: TextOverflow.visible,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 5),
+                                      Row(
+                                        children: [
+                                          Stack(
+                                            alignment: Alignment.center,
+                                            children: const [
+                                              Icon(Icons.check_box, color: Colors.green, size: 18),
+                                              Icon(Icons.check, color: Colors.white, size: 14),
+                                            ],
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Flexible(
+                                            child: Text(
+                                              "Submit again!",
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 14,
+                                                color: Colors.white,
+                                              ),
+                                              softWrap: true,
+                                              overflow: TextOverflow.visible,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Text(
+                                    "Your input helps us improve—thank you! 🚀",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 14,
+                                      color: Colors.white,
+                                    ),
+                                    softWrap: true,
+                                    overflow: TextOverflow.visible,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            actions: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  Flexible(
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        Navigator.pop(context);
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xff003060),
+                                          borderRadius: BorderRadius.circular(10),
+                                        ),
+                                        child: Text(
+                                          "Improve Feedback",
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Flexible(
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        if (mounted) {
+                                          setState(() {
+                                            questionIndex++;
+                                            ratingsArrayLoaded = false;
+                                          });
+                                        }
+                                        Navigator.pop(context);
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xff003060),
+                                          borderRadius: BorderRadius.circular(10),
+                                        ),
+                                        child: Text(
+                                          "Continue as is",
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          );
+
+                          showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return alert;
+                              });
+                        } else if (goingForwardMessage.contains(
+                            "you can record audio and state detailed problem")) {
+                          AlertDialog alert = AlertDialog(
+                            backgroundColor: Colors.blue,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                            title: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.star, color: Colors.yellow, size: 24),
+                                const SizedBox(width: 8),
+                                Flexible(
+                                  child: Text(
+                                    "Enhance Your Feedback!",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                    softWrap: true,
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 2,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                const Icon(Icons.star, color: Colors.yellow, size: 24),
+                              ],
+                            ),
+                            content: ConstrainedBox(
+                              constraints: BoxConstraints(
+                                maxWidth: MediaQuery.of(context).size.width * 0.8,
+                                minWidth: 200,
+                              ),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "Add more impact with:",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 14,
+                                      color: Colors.white,
+                                    ),
+                                    softWrap: true,
+                                    overflow: TextOverflow.visible,
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Text(
+                                    "Give Description and 🎙️ Audio",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 14,
+                                      color: Colors.white,
+                                    ),
+                                    softWrap: true,
+                                    overflow: TextOverflow.visible,
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Column(
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Stack(
+                                            alignment: Alignment.center,
+                                            children: const [
+                                              Icon(Icons.check_box, color: Colors.green, size: 18),
+                                              Icon(Icons.check, color: Colors.white, size: 14),
+                                            ],
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Flexible(
+                                            child: Text(
+                                              "Choose an option",
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 14,
+                                                color: Colors.white,
+                                              ),
+                                              softWrap: true,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 5),
+                                      Row(
+                                        children: [
+                                          Stack(
+                                            alignment: Alignment.center,
+                                            children: const [
+                                              Icon(Icons.check_box, color: Colors.green, size: 18),
+                                              Icon(Icons.check, color: Colors.white, size: 14),
+                                            ],
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Flexible(
+                                            child: Text(
+                                              "Upload or add details",
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 14,
+                                                color: Colors.white,
+                                              ),
+                                              softWrap: true,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 5),
+                                      Row(
+                                        children: [
+                                          Stack(
+                                            alignment: Alignment.center,
+                                            children: const [
+                                              Icon(Icons.check_box, color: Colors.green, size: 18),
+                                              Icon(Icons.check, color: Colors.white, size: 14),
+                                            ],
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Flexible(
+                                            child: Text(
+                                              "Submit again!",
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 14,
+                                                color: Colors.white,
+                                              ),
+                                              softWrap: true,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Text(
+                                    "Your input helps us improve—thank you! 🚀",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 14,
+                                      color: Colors.white,
+                                    ),
+                                    softWrap: true,
+                                    overflow: TextOverflow.visible,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            actions: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  Flexible(
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        Navigator.pop(context);
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xff003060),
+                                          borderRadius: BorderRadius.circular(10),
+                                        ),
+                                        child: Text(
+                                          "Improve Feedback",
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Flexible(
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        if (mounted) {
+                                          setState(() {
+                                            questionIndex++;
+                                            ratingsArrayLoaded = false;
+                                          });
+                                        }
+                                        Navigator.pop(context);
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xff003060),
+                                          borderRadius: BorderRadius.circular(10),
+                                        ),
+                                        child: Text(
+                                          "Continue as is",
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          );
+
+                          showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return alert;
+                              });
+                        } else if (goingForwardMessage.contains(
+                            "A response is needed to continue, you can record audio or state detailed problem.")) {
+                          print("oops in line 4136");
+                          AlertDialog alert = AlertDialog(
+                            backgroundColor: Colors.blue, // ✅ Background color
+                            title: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  "Oops! Missing Info",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white, // ✅ Title text color
+                                  ),
+                                ),
+                                SizedBox(width: 8), // ✅ Spacing
+                                Icon(Icons.warning, color: Colors.yellow, size: 30),
+                              ],
+                            ),
+                            content: Column(
+                              mainAxisSize:
+                              MainAxisSize.min, // ✅ Prevents unnecessary spacing
+                              crossAxisAlignment: CrossAxisAlignment
+                                  .start, // ✅ Aligns content to the left
+                              children: [
+                                Text(
+                                  "We need all fields filled out to continue.",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 16,
+                                    color: Colors.white, // ✅ Content text color
+                                  ),
+                                ),
+                                SizedBox(
+                                    height: 20), // ✅ Space between text and checklist
+                                Column(
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Stack(
+                                          alignment: Alignment.center,
+                                          children: [
+                                            Icon(Icons.check_box,
+                                                color: Colors.green,
+                                                size: 18), // Green box
+                                            Icon(Icons.check,
+                                                color: Colors.white,
+                                                size: 14), // White tick on top
+                                          ],
+                                        ), // ✅ Check Icon
+                                        SizedBox(width: 8), // ✅ Spacing
+                                        Text(
+                                          "Check your info",
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 14,
+                                            color: Colors.white, // ✅ Text color
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    SizedBox(
+                                        height:
+                                        5), // ✅ Spacing between checklist items
+                                    Row(
+                                      children: [
+                                        Stack(
+                                          alignment: Alignment.center,
+                                          children: [
+                                            Icon(Icons.check_box,
+                                                color: Colors.green,
+                                                size: 18), // Green box
+                                            Icon(Icons.check,
+                                                color: Colors.white,
+                                                size: 14), // White tick on top
+                                          ],
+                                        ),
+                                        SizedBox(width: 8),
+                                        Text(
+                                          "Fill in the missing parts",
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 14,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    SizedBox(height: 5),
+                                    Row(
+                                      children: [
+                                        Stack(
+                                          alignment: Alignment.center,
+                                          children: [
+                                            Icon(Icons.check_box,
+                                                color: Colors.green,
+                                                size: 18), // Green box
+                                            Icon(Icons.check,
+                                                color: Colors.white,
+                                                size: 14), // White tick on top
+                                          ],
+                                        ),
+                                        SizedBox(width: 8),
+                                        Text(
+                                          "Try again!",
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 14,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                            actions: [
+                              Center(
+                                child: GestureDetector(
+                                  onTap: () {
+                                    Navigator.pop(context);
+                                  },
+                                  child: Container(
+                                    padding: EdgeInsets.symmetric(
+                                        vertical: 12, horizontal: 20),
+                                    decoration: BoxDecoration(
+                                      color: Color(0xff003060), // ✅ Button color
+                                      borderRadius: BorderRadius.circular(
+                                          20), // ✅ Rounded corners
+                                    ),
+                                    child: Text(
+                                      "Go Back",
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white, // ✅ Button text color
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+
+                          showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return alert;
+                              });
+                        }else if(goingForwardMessage.contains("What made this experience special ?"))
+                        {
+                          print("in positive exp");
+                          AlertDialog alert = AlertDialog(
+                            backgroundColor: Colors.blue,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15), // Consistent corners
+                            ),
+                            title: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.star, color: Colors.yellow, size: 24),
+                                const SizedBox(width: 8), // Add spacing
+                                Flexible(
+                                  child: Text(
+                                    "Confirm positive experience!",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                    softWrap: true,
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 2, // Allow wrapping
+                                  ),
+                                ),
+                                const SizedBox(width: 8), // Add spacing
+                                const Icon(Icons.star, color: Colors.yellow, size: 24),
+                              ],
+                            ),
+                            content: ConstrainedBox(
+                              constraints: BoxConstraints(
+                                maxWidth: MediaQuery.of(context).size.width * 0.8, // 80% screen width
+                                minWidth: 200, // Minimum for small screens
+                              ),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "What made this experience special? Please describe in detail through typing or recording. Otherwise please select none and move to the next section.",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 14,
+                                      color: Colors.white,
+                                    ),
+                                    softWrap: true,
+                                    overflow: TextOverflow.visible, // Allow wrapping
+                                  ),
+                                ],
+                              ),
+                            ),
+                            actions: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  GestureDetector(
+                                    onTap: () {
+                                      Navigator.pop(context);
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xff003060),
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      child: Text(
+                                        "Share experience",
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  GestureDetector(
+                                    onTap: () {
+
+                                      setState(() {
+                                        questionIndex++;
+                                        ratingsArrayLoaded = false;
+                                      });
+
+                                      Navigator.pop(context);
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xff003060),
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      child: Text(
+                                        "None",
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          );
+
+                          // Show dialog with safe context
+
+                          showDialog(
                             context: context,
                             builder: (BuildContext context) {
                               return alert;
-                            });
+                            },
+                          );
+
+
+
+                        }
+                        else if(goingForwardMessage.contains("What was missing?"))
+                        {
+                          print("in missing exp");
+                          AlertDialog alert = AlertDialog(
+                            backgroundColor: Colors.blue,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15), // Consistent corners
+                            ),
+                            title: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.star, color: Colors.yellow, size: 24),
+                                const SizedBox(width: 8), // Add spacing
+                                Flexible(
+                                  child: Text(
+                                    "Anything missing ?",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                    softWrap: true,
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 2, // Allow wrapping
+                                  ),
+                                ),
+                                const SizedBox(width: 8), // Add spacing
+                                const Icon(Icons.star, color: Colors.yellow, size: 24),
+                              ],
+                            ),
+                            content: ConstrainedBox(
+                              constraints: BoxConstraints(
+                                maxWidth: MediaQuery.of(context).size.width * 0.8, // 80% screen width
+                                minWidth: 200, // Minimum for small screens
+                              ),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "What was missing? Please describe in detail through typing or recording. Otherwise please select none and move to the next section.",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 14,
+                                      color: Colors.white,
+                                    ),
+                                    softWrap: true,
+                                    overflow: TextOverflow.visible, // Allow wrapping
+                                  ),
+                                ],
+                              ),
+                            ),
+                            actions: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  GestureDetector(
+                                    onTap: () {
+                                      Navigator.pop(context);
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xff003060),
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      child: Text(
+                                        "Share experience",
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  GestureDetector(
+                                    onTap: () {
+
+                                      setState(() {
+                                        questionIndex++;
+                                        ratingsArrayLoaded = false;
+                                      });
+
+                                      Navigator.pop(context);
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xff003060),
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      child: Text(
+                                        "None",
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          );
+
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return alert;
+                            },
+                          );
+
+                        }
+                        else {
+                          AlertDialog alert = AlertDialog(
+                            backgroundColor: Colors.blue, // ✅ Dialog background color
+                            title: Text(
+                              "Alert",
+                              style: GoogleFonts.poppins(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white, // ✅ Title text color
+                              ),
+                            ),
+                            content: Text(
+                              goingForwardMessage,
+                              style: GoogleFonts.poppins(
+                                fontSize: 16,
+                                color: Colors.white, // ✅ Content text color
+                              ),
+                            ),
+                            actions: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment
+                                    .spaceEvenly, // ✅ Evenly spaced buttons
+                                children: [
+                                  if (currentSurvey[0]["answerType"]
+                                      .contains("Rating") ||
+                                      (currentSurvey[0]["answerType"]
+                                          .contains("Multimedia/Descriptive") &&
+                                          goingForwardMessage.contains("options")) ||
+                                      (currentSurvey[0]["answerType"]
+                                          .contains("Audio/Descriptive") &&
+                                          goingForwardMessage.contains("options")))
+                                    GestureDetector(
+                                      onTap: () {
+                                        setState(() {
+                                          questionIndex++;
+                                          ratingsArrayLoaded = false;
+                                        });
+                                        Navigator.pop(context);
+                                      },
+                                      child: Container(
+                                        padding: EdgeInsets.symmetric(
+                                            vertical: 12, horizontal: 20),
+                                        decoration: BoxDecoration(
+                                          color: Color(0xff003060), // ✅ Button color
+                                          borderRadius: BorderRadius.circular(
+                                              20), // ✅ Rounded corners
+                                        ),
+                                        child: Text(
+                                          "Continue",
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.bold,
+                                            color:
+                                            Colors.white, // ✅ Button text color
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  GestureDetector(
+                                    onTap: () {
+                                      Navigator.pop(context);
+                                    },
+                                    child: Container(
+                                      padding: EdgeInsets.symmetric(
+                                          vertical: 12, horizontal: 20),
+                                      decoration: BoxDecoration(
+                                        color: Color(0xff003060), // ✅ Button color
+                                        borderRadius: BorderRadius.circular(
+                                            20), // ✅ Rounded corners
+                                      ),
+                                      child: Text(
+                                        "Cancel",
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white, // ✅ Button text color
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          );
+
+                          showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return alert;
+                              });
+                        }
                       } else {
                         ProcessReplacementSurveyResponse(surveys[0]
                             ["feedbackQuestion"][superIndex]["answer"]);
@@ -7741,7 +9101,11 @@ class _HomePageState extends State<HomePage>
 
   bool GetValidResponses(currentSurvey) {
 
+    print("in get vaalid response");
+    goingForwardMessage = "";
+
     for (var i = 0; i < currentSurvey.length; i++) {
+      print(currentSurvey[i]["answerType"]);
       if (currentSurvey[i]["answerType"].contains("Rating")) {
         if (currentSurvey[i]["answer"] == "1") {
           setState(() {
@@ -7805,6 +9169,18 @@ class _HomePageState extends State<HomePage>
               return false;
 
             }
+
+          if(currentSurvey[i]["mainScreentitle"] == "Missing Features and Functionalities")
+          {
+            setState(() {
+              goingForwardMessage =
+              "What was missing? Please describe in detail through typing or recording!";
+            });
+            return false;
+
+          }
+
+
 
 
           setState(() {
