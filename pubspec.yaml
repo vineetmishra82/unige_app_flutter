@@ -1,30 +1,16 @@
 name: unige_app
 description: Marketing Data Collection App
 
-# The following line prevents the package from being accidentally published to
-# pub.dev using `flutter pub publish`. This is preferred for private packages.
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+publish_to: 'none'
 
-# The following defines the version and build number for your application.
-# A version number is three numbers separated by dots, like 1.2.43
-# followed by an optional build number separated by a +.
-# Both the version and the builder number may be overridden in flutter
-# build by specifying --build-name and --build-number, respectively.
-# In Android, build-name is used as versionName while build-number used as versionCode.
-# Read more about Android versioning at https://developer.android.com/studio/publish/versioning
-# In iOS, build-name is used as CFBundleShortVersionString while build-number used as CFBundleVersion.
-# Read more about iOS versioning at
-# https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 version: 1.0.0+1
 
 environment:
   sdk: ">=3.0.0 <4.0.0"
 
-
 dependencies:
   flutter:
     sdk: flutter
-
 
   cupertino_icons: ^1.0.2
   pinput: ^5.0.0
@@ -35,7 +21,7 @@ dependencies:
   toggle_switch: ^2.0.1
   syncfusion_flutter_sliders: ^27.2.4
   flutter_sound: ^9.2.13
-  permission_handler: ^11.3.1
+  permission_handler: ^12.0.0+1
   google_fonts: ^6.2.1
   path_provider: ^2.0.11
   flutter_camera: ^1.0.0
@@ -48,23 +34,19 @@ dependencies:
   url_launcher: ^6.3.1
   month_picker_dialog: ^2.0.2
   intl: ^0.18.1
-
-
-
-
-
+  flutter_launcher_icons: ^0.14.3
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
-
-
-
   flutter_lints: ^5.0.0
 
-flutter:
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "images/logo.png"
 
+flutter:
   uses-material-design: true
 
   assets:
