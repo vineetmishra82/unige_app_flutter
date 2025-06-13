@@ -13,7 +13,7 @@ import 'package:googleapis_auth/auth_io.dart';
 import 'package:http/http.dart' as http;
 import 'package:modal_progress_hud_nsn/modal_progress_hud_nsn.dart';
 import 'package:month_picker_dialog/month_picker_dialog.dart';
-import 'package:record/record.dart';
+import 'package:record/record.dart' hide AudioRecorder;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:toggle_switch/toggle_switch.dart';
 import 'package:unige_app/screens/ApplicationData.dart';
@@ -529,6 +529,199 @@ class _HomePageState extends State<HomePage>
                   ),
                 ),
               ),
+            if (Platform.isIOS)...[
+              const SizedBox(
+                height: 20.0,
+              ),
+              GestureDetector(
+                onTap: () {
+                  AlertDialog alert = AlertDialog(
+                    backgroundColor: Colors.blue, // Consistent blue background
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15), // Rounded corners
+                    ),
+                    title: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.star, color: Colors.yellow, size: 24),
+                        const SizedBox(width: 8),
+                        Flexible(
+                          child: Text(
+                            "Are You Sure?",
+                            style: GoogleFonts.poppins(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                            textAlign: TextAlign.center,
+                            softWrap: true,
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 2,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        const Icon(Icons.star, color: Colors.yellow, size: 24),
+                      ],
+                    ),
+                    content: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: MediaQuery.of(context).size.width * 0.8, // 80% screen width
+                        minWidth: 200, // Minimum for small screens
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Are you certain you want to delete your account? This action will permanently remove all your survey data and account details. To confirm, press 'Yes, I’m Sure.' If you selected this by mistake, press 'No' to return to your account.",
+                            style: GoogleFonts.poppins(
+                              fontSize: 14,
+                              color: Colors.white,
+                            ),
+                            softWrap: true,
+                            overflow: TextOverflow.visible,
+                          ),
+                        ],
+                      ),
+                    ),
+                    actions: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          GestureDetector(
+                            onTap: () async {
+                              setState(() {
+                                showSpinnerMyProfile = true; // Show spinner
+                              });
+                              Navigator.pop(context);
+                              try {
+                                print("Starting delete");
+                                var url = Uri.parse(Apis.deleteUser(widget.mobileNum));
+                                print(url);
+                                var response = await http.delete(url);
+                                print(response.body);
+
+                                if (response.body=="true") {
+                                  logout(); // Clear user session
+                                  Navigator.pushAndRemoveUntil(
+                                    context,
+                                    MaterialPageRoute(builder: (context) => LoginScreen()),
+                                        (route) => false, // Clear navigation stack
+                                  );
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text("Account deletion failed. Please try again."),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                }
+
+                              } catch (e) {
+                                Navigator.pop(context); // Close dialog
+
+
+                              }finally{
+                                print("reaced finally");
+                                setState(() {
+                                  showSpinnerMyProfile = false; // Hide spinner
+                                });
+                              }
+                            }
+                            ,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                              decoration: BoxDecoration(
+                                color: const Color(0xff003060), // Dark blue button
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: showSpinnerMyProfile
+                                  ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                                  : Text(
+                                "Yes, I’m Sure",
+                                style: GoogleFonts.poppins(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          GestureDetector(
+                            onTap: showSpinnerMyProfile
+                                ? null // Disable button during loading
+                                : () {
+                              Navigator.pop(context); // Close dialog
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                              decoration: BoxDecoration(
+                                color: const Color(0xff003060), // Dark blue button
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                "No",
+                                style: GoogleFonts.poppins(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      )
+
+                    ],
+                  );
+
+                  // Show dialog with safe context
+                  if (context.mounted) {
+                    showDialog(
+                      context: context,
+                      barrierDismissible: !showSpinnerMyProfile, // Prevent dismissal during loading
+                      builder: (BuildContext context) {
+                        return alert;
+                      },
+                    );
+                  }
+
+
+                },
+                child: Padding(
+                  padding: EdgeInsets.only(left: 20),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Image.asset(
+                        'images/deleteProfile.png',
+                        height: 40.0,
+                      ),
+                      SizedBox(width: 20),
+                      Text(
+                        "Delete My Account",
+                        style: GoogleFonts.poppins(
+                          fontSize: MediaQuery.textScalerOf(context).scale(18),
+                          color: Colors.red,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+            ]
+
+
             ]),
       ),
     );

@@ -27,12 +27,12 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>This app requires access to the camera to capture photos and videos.</string>
-	<key>NSMicrophoneUsageDescription</key>
-	<string>This app requires access to the microphone to record audio.</string>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>This app requires access to the photo library to select images and videos.</string>
-	<key>UIApplicationSupportsIndirectInputEvents</key>
+        <string>QualTrack uses the camera to capture photos or videos for survey responses, allowing you to share your experience with the product, such as demonstrating its features.</string>
+        <key>NSMicrophoneUsageDescription</key>
+        <string>QualTrack uses the microphone to record audio feedback for survey responses, enabling you to describe your experience with the product verbally.</string>
+        <key>NSPhotoLibraryUsageDescription</key>
+        <string>QualTrack accesses your photo library to select images or videos for survey responses, letting you upload visuals that illustrate your product experience.</string>
+        <key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>

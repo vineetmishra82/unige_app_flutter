@@ -76,4 +76,8 @@ class Apis extends StatelessWidget {
   static String submitUserFeedback(){
     return "${baseUrl}submitUserFeedback";
   }
+
+  static String deleteUser(mobileNum){
+    return "${baseUrl}removeUser?mobile=$mobileNum";
+  }
 }

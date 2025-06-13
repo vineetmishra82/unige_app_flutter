@@ -1,11 +1,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.kpts.unige_app_flutter">
+    package="com.kpts.unige_app">
 
     <uses-feature
         android:name="android.hardware.camera"
         android:required="false" />
     <application
-        android:label="unige_app_flutter"
+        android:label="unige_app"
         android:name="android.app.Application"
         android:icon="@mipmap/ic_launcher">
         <activity
