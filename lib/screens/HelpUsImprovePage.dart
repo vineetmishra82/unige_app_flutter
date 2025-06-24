@@ -349,6 +349,24 @@ class _HelpUsImprovePageState extends State<HelpUsImprovePage> {
                 ),
               ),
               const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.pop(context);
+                    },
+                    child: Text(
+                      "Not now, Go back!",
+                      style: GoogleFonts.poppins(
+                        fontSize: MediaQuery.textScalerOf(context).scale(15),
+                        color: const Color(0xff003060),
+                        decoration: TextDecoration.underline,
+                      ),
+                    ),
+                  ),
+                ],
+              )
             ],
           ),
         ),
