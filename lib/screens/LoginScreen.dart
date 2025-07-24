@@ -144,35 +144,45 @@ class _LoginScreenState extends State<LoginScreen> {
                               showSpinner = true;
                             });
                             print("trying to log in ${LoginScreen.mobile}");
-                            var url = Uri.parse(Apis.userExists(LoginScreen.mobile));
-                            var response = await http.get(url);
-                            print(url);
-                            if (response.body == "true") {
-                              setState(() {
-                                showSpinner = false;
-                              });
-        
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => OTPVerify(
-                                    1,
-                                    LoginScreen.mobile,
-                                    LoginScreen.countryCode,
-                                    LoginScreen.countryCodeISO,
-                                    "",
-                                    "",
-                                    "",
-                                  ),
-                                ),
-                              );
-                            } else {
-                              showSnackBar("User not registered");
-                              setState(() {
-                                showSpinner = false;
-                              });
-                              resetLoginVariables();
-                            }
+                       try{
+                         var url = Uri.parse(Apis.userExists(LoginScreen.mobile));
+                         print(url);
+
+                         var response = await http.get(url);
+
+                         if (response.body == "true") {
+                           setState(() {
+                             showSpinner = false;
+                           });
+
+                           Navigator.push(
+                             context,
+                             MaterialPageRoute(
+                               builder: (context) => OTPVerify(
+                                 1,
+                                 LoginScreen.mobile,
+                                 LoginScreen.countryCode,
+                                 LoginScreen.countryCodeISO,
+                                 "",
+                                 "",
+                                 "",
+                               ),
+                             ),
+                           );
+                         } else {
+                           showSnackBar("User not registered");
+                           setState(() {
+                             showSpinner = false;
+                           });
+                           resetLoginVariables();
+                         }
+                       }catch (e) {
+                         debugPrint("Network error: $e");
+                         setState(() {
+                           showSpinner = false;
+                         });
+                       }
+
                           } else {
                             showSnackBar("Need a mobile number to login");
                             setState(() {

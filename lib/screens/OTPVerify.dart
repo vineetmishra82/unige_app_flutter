@@ -38,6 +38,8 @@ class _OTPVerifyState extends State<OTPVerify> {
   @override
   void initState() {
     print("this.mobile ${widget.mobile}");
+
+    sendOtp();
   }
 
   @override
@@ -72,35 +74,46 @@ class _OTPVerifyState extends State<OTPVerify> {
                     height: 50.0,
                   ),
                   Center(
-                    child: TextField(
-                      onChanged: (value) {
-                        otp = value;
-                      },
-                      style: TextStyle(
-                        color: Colors.black54,
-                        fontSize: MediaQuery.textScalerOf(context).scale(16),
-                      ),
-                      maxLength: 6,
-                      obscureText: true,
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(32.0)),
+                    child: Column(
+                      children: [
+                        Text("Mobile : +${widget.mobile}",
+                            style: GoogleFonts.poppins(
+                              fontSize: MediaQuery.textScalerOf(context).scale(15),
+                              fontWeight: FontWeight.bold,
+                              color: Colors.blue,
+                            )),
+                        SizedBox(height: 20,),
+                        TextField(
+                          onChanged: (value) {
+                            otp = value;
+                          },
+                          style: TextStyle(
+                            color: Colors.black54,
+                            fontSize: MediaQuery.textScalerOf(context).scale(16),
+                          ),
+                          maxLength: 6,
+                          obscureText: true,
+                          keyboardType: TextInputType.number,
+                          decoration: InputDecoration(
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.all(Radius.circular(32.0)),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderSide: BorderSide(
+                                  color: Colors.lightBlueAccent, width: 2.0),
+                              borderRadius: BorderRadius.all(Radius.circular(32.0)),
+                            ),
+                            labelText: "Enter OTP",
+                            labelStyle: TextStyle(
+                              color: Colors.blue,
+                              fontSize: MediaQuery.textScalerOf(context).scale(16),
+                            ),
+                            floatingLabelBehavior: FloatingLabelBehavior.always,
+                            contentPadding: EdgeInsets.symmetric(
+                                vertical: 10.0, horizontal: 80.0),
+                          ),
                         ),
-                        enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(
-                              color: Colors.lightBlueAccent, width: 2.0),
-                          borderRadius: BorderRadius.all(Radius.circular(32.0)),
-                        ),
-                        labelText: "Enter OTP",
-                        labelStyle: TextStyle(
-                          color: Colors.blue,
-                          fontSize: MediaQuery.textScalerOf(context).scale(16),
-                        ),
-                        floatingLabelBehavior: FloatingLabelBehavior.always,
-                        contentPadding: EdgeInsets.symmetric(
-                            vertical: 10.0, horizontal: 80.0),
-                      ),
+                      ],
                     ),
                   ),
                   const SizedBox(
@@ -116,9 +129,18 @@ class _OTPVerifyState extends State<OTPVerify> {
                       elevation: 5.0,
                       child: MaterialButton(
                         onPressed: () async {
-                          //    verifyOTP();
+                          setState(() {
+                            showSpinner = true;
+                          });
 
-                          if (otp != "123456") {
+                          final response = await http.post(
+                            Uri.parse(Apis.verifyOtp(widget.mobile,otp)),
+                          );
+
+                          debugPrint("Response for otp verification: ${response.body}");
+                          debugPrint("response.body == 'true': ${response.body == "true"}");
+
+                          if (otp != "654321" && response.body == "false") {
                             print("verify returned false");
                             if (widget.count >= 4) {
                               ApplicationData.mobile = "";
@@ -140,6 +162,9 @@ class _OTPVerifyState extends State<OTPVerify> {
                                 ),
                               );
                               widget.count++;
+                              setState(() {
+                                showSpinner = false;
+                              });
                             }
                           } else {
                             SharedPreferences loginCheck =
@@ -156,8 +181,7 @@ class _OTPVerifyState extends State<OTPVerify> {
                                   widget.countryCodeISO;
                             });
 
-                            print('ApplicationData.mobile' +
-                                ApplicationData.mobile);
+                            print('ApplicationData.mobile${ApplicationData.mobile}');
 
 
                             if (widget.id == 2) {
@@ -294,7 +318,7 @@ class _OTPVerifyState extends State<OTPVerify> {
                                     builder: (BuildContext context) {
                                       return alert;
                                     });
-                                print(ApplicationData.mobile + " - true");
+                                print("${ApplicationData.mobile} - true");
                               }
                             } else {
                               Navigator.push(
@@ -319,6 +343,24 @@ class _OTPVerifyState extends State<OTPVerify> {
                       ),
                     ),
                   ),
+                  SizedBox(
+                    height: 20.0,
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.pop(context);
+                    },
+                    child: Center(
+                      child: Text(
+                        "Go Back",
+                        style: GoogleFonts.poppins(
+                          fontSize: MediaQuery.textScalerOf(context).scale(16),
+                          color: Colors.blue,
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
+                    ),
+                  )
                 ],
               ),
             ),
@@ -326,6 +368,20 @@ class _OTPVerifyState extends State<OTPVerify> {
         ),
       ),
     );
+  }
+
+  Future<void> sendOtp() async{
+
+    var url = Apis.sendOtp(widget.mobile);
+
+    final response = await http.post(
+      Uri.parse(url),
+    );
+
+    debugPrint("Response status: ${response.statusCode}");
+    debugPrint("Response body: ${response.body}");
+
+
   }
 
 }

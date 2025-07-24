@@ -22,68 +22,8 @@ void main() async {
 
   await Firebase.initializeApp();
   runApp(UnigeApp());
-  requestNotificationPermissions();
-  setUpFlutterNotifications();
-}
-
-void requestNotificationPermissions() async {
- FirebaseMessaging firebaseMessaging = FirebaseMessaging.instance;
- await firebaseMessaging.requestPermission(
-   alert: true,
-   announcement: false,
-   badge: true,
-   carPlay: false,
-   criticalAlert: false,
-   provisional: false,
-   sound: true,
-  );
-}
-
-void setUpFlutterNotifications() async {
-  const AndroidInitializationSettings initializationSettingsAndroid =
-  AndroidInitializationSettings('@mipmap/ic_launcher');
-
-  const DarwinInitializationSettings initializationSettingsDarwin =
-      DarwinInitializationSettings();
-
-  final InitializationSettings initializationSettings =
-  InitializationSettings(android: initializationSettingsAndroid,
-  iOS: initializationSettingsDarwin
-  );
-
-  await flutterLocalNotificationsPlugin.initialize(
-    initializationSettings);
-
-  //Front handler
-
-  FirebaseMessaging.onMessage.listen((RemoteMessage message){
-    RemoteNotification? notification = message.notification;
-    print("Notification received: ${message.data}");
-    if(notification!=null)
-      {
-        flutterLocalNotificationsPlugin.show(
-          notification.hashCode,
-          notification.title,
-          notification.body,
-          const NotificationDetails(
-            android: AndroidNotificationDetails('default_channel', 'Default', importance: Importance.max, priority: Priority.high),
-            iOS: DarwinNotificationDetails(),
-          ),
-        );
-      }
-    print("Current key state: $homePageKey");
-    print("Current HomePage state: ${homePageKey.currentState}");
-    if(homePageKey.currentState != null) {
-
-      homePageKey.currentState!.loadMyProducts();
-    } else {
-      print('HomePage is not mounted!');
-    }
-
-  });
 
 }
-
 
 
 Future<String?> getLoggedInMobile() async {
@@ -95,12 +35,6 @@ Future<String?> getLoggedInMobile() async {
   String? mobile = prefs.getString("LoginMobileInThisSuperliciousApp");
 
   return (mobile != null && mobile.isNotEmpty) ? mobile : null;
-}
-
-
-class ApplicationData {
-  static String mobile = "";
-  static String countryCodeISO = "";
 }
 
 class UnigeApp extends StatelessWidget {

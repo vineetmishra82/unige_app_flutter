@@ -84,4 +84,12 @@ class Apis extends StatelessWidget {
   static String testNotification(String mobileNum,String productName) {
     return "${baseUrl}testNotification?userMobile=$mobileNum&productName=$productName";
   }
+
+  static String sendOtp(String mobileNum) {
+    return "${baseUrl}send-otp?mobile=%2B$mobileNum";
+  }
+  static String verifyOtp(String mobileNum, String otp) {
+    return "${baseUrl}verify-otp?mobile=%2B$mobileNum&otp=$otp";
+  }
+
 }

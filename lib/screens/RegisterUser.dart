@@ -311,6 +311,10 @@ class _RegisterUserState extends State<RegisterUser> {
                             showSpinner = false;
                           });
                         }
+
+                        setState(() {
+                          showSpinner = false;
+                        });
                       } else {
                         print("mobile.length is " + mobile.length.toString());
                         if (name.isEmpty || email.isEmpty || mobile.isEmpty) {

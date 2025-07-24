@@ -1,20 +1,20 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:math';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:googleapis/drive/v3.dart' as drive;
 import 'package:googleapis_auth/auth_io.dart';
 import 'package:http/http.dart' as http;
 import 'package:modal_progress_hud_nsn/modal_progress_hud_nsn.dart';
 import 'package:month_picker_dialog/month_picker_dialog.dart';
-import 'package:record/record.dart' hide AudioRecorder;
+import 'package:record/record.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:toggle_switch/toggle_switch.dart';
 import 'package:unige_app/screens/ApplicationData.dart';
@@ -27,6 +27,7 @@ import '../Other_data/AudioPlayer.dart';
 import '../Other_data/AudioRecorder.dart';
 import '../Other_data/Camera.dart';
 import '../Other_data/VideoPlayer.dart';
+import '../main.dart';
 import 'EVLandingPage.dart';
 import 'LandingPage.dart';
 
@@ -45,8 +46,6 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage>
     with SingleTickerProviderStateMixin {
-
-
 
 
   bool showSpinnerRegisterProduct = false,
@@ -86,7 +85,9 @@ class _HomePageState extends State<HomePage>
   ];
   bool apiResult = true;
   int questionIndex = 0;
-  int startIndex = 0, endIndex = 0, len = 0;
+  int startIndex = 0,
+      endIndex = 0,
+      len = 0;
   String userInput = "";
   bool pressed1 = true,
       pressed2 = false,
@@ -104,7 +105,9 @@ class _HomePageState extends State<HomePage>
   Map<int, Set<String>> selectedCheckboxes = {};
 
   var featureList = {};
-  int val = 3, tabIndex = 0, qs2DefectSurveyLength = -1;
+  int val = 3,
+      tabIndex = 0,
+      qs2DefectSurveyLength = -1;
 
   bool showThankyouMessage = false,
       showRecording = false,
@@ -118,19 +121,19 @@ class _HomePageState extends State<HomePage>
   Map<int, List<bool>> isSelected = {};
   IconData icon = Icons.mic;
   late Size size;
-  int _recordDuration = 0;
-  Timer? _timer;
-  final _audioRecorder = Record;
 
   bool goToHome = false;
 
   bool isRecording = false;
 
   //Navigation icon sizes
-  double leftWidth = 40, leftHeight = 40, rightWidth = 40, rightHeight = 40;
+  double leftWidth = 40,
+      leftHeight = 40,
+      rightWidth = 40,
+      rightHeight = 40;
 
   Map<int, bool> isDropdownFocusedMap =
-      {}; // ✅ Stores focus state for each dropdown
+  {}; // ✅ Stores focus state for each dropdown
 
   void _updateFocusState(int index, bool isFocused) {
     setState(() {
@@ -143,6 +146,8 @@ class _HomePageState extends State<HomePage>
     super.initState();
     print("HomePage mounted! Key: $widget.key");
     mobile = widget.mobileNum;
+    requestNotificationPermissions();
+    setUpFlutterNotifications();
     getUserDetails();
     loadAllSurveys();
     loadProducts();
@@ -157,7 +162,7 @@ class _HomePageState extends State<HomePage>
 //    getMonths();
     tabController = TabController(length: 3, vsync: this);
     obtainAuthenticatedClient();
-    FirebaseMessaging.instance.subscribeToTopic(widget.mobileNum);
+
   }
 
   @override
@@ -167,7 +172,9 @@ class _HomePageState extends State<HomePage>
 
   @override
   Widget build(BuildContext context) {
-    size = MediaQuery.of(context).size;
+    size = MediaQuery
+        .of(context)
+        .size;
     return WillPopScope(
       onWillPop: () async => false,
       child: MaterialApp(
@@ -508,15 +515,15 @@ class _HomePageState extends State<HomePage>
               GestureDetector(
                 onTap: () {
                   final result =
-                     Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) =>
-                        HelpUsImprovePage(
-                          name: name,
-                          email: email,
-                          mobile: widget.mobileNum
-                  )));
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              HelpUsImprovePage(
+                                  name: name,
+                                  email: email,
+                                  mobile: widget.mobileNum
+                              )));
                 },
                 child: Padding(
                   padding: EdgeInsets.only(left: 20),
@@ -540,197 +547,212 @@ class _HomePageState extends State<HomePage>
                   ),
                 ),
               ),
-            if (Platform.isIOS)...[
-              const SizedBox(
-                height: 20.0,
-              ),
-              GestureDetector(
-                onTap: () {
-                  AlertDialog alert = AlertDialog(
-                    backgroundColor: Colors.blue, // Consistent blue background
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15), // Rounded corners
-                    ),
-                    title: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.star, color: Colors.yellow, size: 24),
-                        const SizedBox(width: 8),
-                        Flexible(
-                          child: Text(
-                            "Are You Sure?",
-                            style: GoogleFonts.poppins(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
+              if (Platform.isIOS)...[
+                const SizedBox(
+                  height: 20.0,
+                ),
+                GestureDetector(
+                  onTap: () {
+                    AlertDialog alert = AlertDialog(
+                      backgroundColor: Colors.blue,
+                      // Consistent blue background
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(
+                            15), // Rounded corners
+                      ),
+                      title: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.star, color: Colors.yellow,
+                              size: 24),
+                          const SizedBox(width: 8),
+                          Flexible(
+                            child: Text(
+                              "Are You Sure?",
+                              style: GoogleFonts.poppins(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                              textAlign: TextAlign.center,
+                              softWrap: true,
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 2,
                             ),
-                            textAlign: TextAlign.center,
-                            softWrap: true,
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 2,
+                          ),
+                          const SizedBox(width: 8),
+                          const Icon(Icons.star, color: Colors.yellow,
+                              size: 24),
+                        ],
+                      ),
+                      content: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          maxWidth: MediaQuery
+                              .of(context)
+                              .size
+                              .width * 0.8, // 80% screen width
+                          minWidth: 200, // Minimum for small screens
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Are you certain you want to delete your account? This action will permanently remove all your survey data and account details. To confirm, press 'Yes, I’m Sure.' If you selected this by mistake, press 'No' to return to your account.",
+                              style: GoogleFonts.poppins(
+                                fontSize: 14,
+                                color: Colors.white,
+                              ),
+                              softWrap: true,
+                              overflow: TextOverflow.visible,
+                            ),
+                          ],
+                        ),
+                      ),
+                      actions: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            GestureDetector(
+                              onTap: () async {
+                                setState(() {
+                                  showSpinnerMyProfile = true; // Show spinner
+                                });
+                                Navigator.pop(context);
+                                try {
+                                  print("Starting delete");
+                                  var url = Uri.parse(
+                                      Apis.deleteUser(widget.mobileNum));
+                                  print(url);
+                                  var response = await http.delete(url);
+                                  print(response.body);
+
+                                  if (response.body == "true") {
+                                    logout(); // Clear user session
+                                    Navigator.pushAndRemoveUntil(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) => LoginScreen()),
+                                          (
+                                          route) => false, // Clear navigation stack
+                                    );
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                            "Account deletion failed. Please try again."),
+                                        backgroundColor: Colors.red,
+                                      ),
+                                    );
+                                  }
+                                } catch (e) {
+                                  Navigator.pop(context); // Close dialog
+
+
+                                } finally {
+                                  print("reaced finally");
+                                  setState(() {
+                                    showSpinnerMyProfile =
+                                    false; // Hide spinner
+                                  });
+                                }
+                              }
+                              ,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 12, horizontal: 20),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xff003060),
+                                  // Dark blue button
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: showSpinnerMyProfile
+                                    ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                                    : Text(
+                                  "Yes, I’m Sure",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            GestureDetector(
+                              onTap: showSpinnerMyProfile
+                                  ? null // Disable button during loading
+                                  : () {
+                                Navigator.pop(context); // Close dialog
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 12, horizontal: 20),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xff003060),
+                                  // Dark blue button
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text(
+                                  "No",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        )
+
+                      ],
+                    );
+
+                    // Show dialog with safe context
+                    if (context.mounted) {
+                      showDialog(
+                        context: context,
+                        barrierDismissible: !showSpinnerMyProfile,
+                        // Prevent dismissal during loading
+                        builder: (BuildContext context) {
+                          return alert;
+                        },
+                      );
+                    }
+                  },
+                  child: Padding(
+                    padding: EdgeInsets.only(left: 20),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Image.asset(
+                          'images/deleteProfile.png',
+                          height: 40.0,
+                        ),
+                        SizedBox(width: 20),
+                        Text(
+                          "Delete My Account",
+                          style: GoogleFonts.poppins(
+                            fontSize: MediaQuery.textScalerOf(context).scale(
+                                18),
+                            color: Colors.red,
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        const Icon(Icons.star, color: Colors.yellow, size: 24),
                       ],
                     ),
-                    content: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        maxWidth: MediaQuery.of(context).size.width * 0.8, // 80% screen width
-                        minWidth: 200, // Minimum for small screens
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "Are you certain you want to delete your account? This action will permanently remove all your survey data and account details. To confirm, press 'Yes, I’m Sure.' If you selected this by mistake, press 'No' to return to your account.",
-                            style: GoogleFonts.poppins(
-                              fontSize: 14,
-                              color: Colors.white,
-                            ),
-                            softWrap: true,
-                            overflow: TextOverflow.visible,
-                          ),
-                        ],
-                      ),
-                    ),
-                    actions: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          GestureDetector(
-                            onTap: () async {
-                              setState(() {
-                                showSpinnerMyProfile = true; // Show spinner
-                              });
-                              Navigator.pop(context);
-                              try {
-                                print("Starting delete");
-                                var url = Uri.parse(Apis.deleteUser(widget.mobileNum));
-                                print(url);
-                                var response = await http.delete(url);
-                                print(response.body);
-
-                                if (response.body=="true") {
-                                  logout(); // Clear user session
-                                  Navigator.pushAndRemoveUntil(
-                                    context,
-                                    MaterialPageRoute(builder: (context) => LoginScreen()),
-                                        (route) => false, // Clear navigation stack
-                                  );
-                                } else {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text("Account deletion failed. Please try again."),
-                                      backgroundColor: Colors.red,
-                                    ),
-                                  );
-                                }
-
-                              } catch (e) {
-                                Navigator.pop(context); // Close dialog
-
-
-                              }finally{
-                                print("reaced finally");
-                                setState(() {
-                                  showSpinnerMyProfile = false; // Hide spinner
-                                });
-                              }
-                            }
-                            ,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
-                              decoration: BoxDecoration(
-                                color: const Color(0xff003060), // Dark blue button
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: showSpinnerMyProfile
-                                  ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 2,
-                                ),
-                              )
-                                  : Text(
-                                "Yes, I’m Sure",
-                                style: GoogleFonts.poppins(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          GestureDetector(
-                            onTap: showSpinnerMyProfile
-                                ? null // Disable button during loading
-                                : () {
-                              Navigator.pop(context); // Close dialog
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
-                              decoration: BoxDecoration(
-                                color: const Color(0xff003060), // Dark blue button
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Text(
-                                "No",
-                                style: GoogleFonts.poppins(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      )
-
-                    ],
-                  );
-
-                  // Show dialog with safe context
-                  if (context.mounted) {
-                    showDialog(
-                      context: context,
-                      barrierDismissible: !showSpinnerMyProfile, // Prevent dismissal during loading
-                      builder: (BuildContext context) {
-                        return alert;
-                      },
-                    );
-                  }
-
-
-                },
-                child: Padding(
-                  padding: EdgeInsets.only(left: 20),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Image.asset(
-                        'images/deleteProfile.png',
-                        height: 40.0,
-                      ),
-                      SizedBox(width: 20),
-                      Text(
-                        "Delete My Account",
-                        style: GoogleFonts.poppins(
-                          fontSize: MediaQuery.textScalerOf(context).scale(18),
-                          color: Colors.red,
-                        ),
-                      ),
-                    ],
                   ),
                 ),
-              ),
 
-            ]
+              ]
 
 
             ]),
@@ -745,17 +767,20 @@ class _HomePageState extends State<HomePage>
     }
     print("in profile ApplicationData.mobile is ${widget.mobileNum}");
     print(
-        "Getting user details as condition is ${widget.mobileNum.isNotEmpty && (name.isEmpty || email.isEmpty)}");
+        "Getting user details as condition is ${widget.mobileNum.isNotEmpty &&
+            (name.isEmpty || email.isEmpty)}");
     if (widget.mobileNum.isNotEmpty && (name.isEmpty || email.isEmpty)) {
       final startTime = DateTime.now();
       setState(() {
         showSpinnerMyProfile = true;
-        print("getUserDetails: showSpinnerMyProfile set to true at ${DateTime.now()}");
+        print("getUserDetails: showSpinnerMyProfile set to true at ${DateTime
+            .now()}");
       });
 
       try {
         var url = Uri.parse(Apis.getUser(widget.mobileNum));
-        print("getUserDetails: Fetching user details from $url at ${DateTime.now()}");
+        print("getUserDetails: Fetching user details from $url at ${DateTime
+            .now()}");
         var response = await http.get(url);
         Map<String, dynamic> values = json.decode(response.body);
 
@@ -763,14 +788,20 @@ class _HomePageState extends State<HomePage>
           setState(() {
             name = values["name"];
             email = values["email"];
-            print("getUserDetails: name and email updated at ${DateTime.now()}");
+            print(
+                "getUserDetails: name and email updated at ${DateTime.now()}");
             print("getUserDetails: Data received: $values");
           });
         } else {
-          print("getUserDetails: Skipped name and email update, widget not mounted at ${DateTime.now()}");
+          print(
+              "getUserDetails: Skipped name and email update, widget not mounted at ${DateTime
+                  .now()}");
         }
 
-        final elapsed = DateTime.now().difference(startTime).inMilliseconds;
+        final elapsed = DateTime
+            .now()
+            .difference(startTime)
+            .inMilliseconds;
         const minDuration = 500; // Minimum spinner duration in ms
         if (elapsed < minDuration) {
           await Future.delayed(Duration(milliseconds: minDuration - elapsed));
@@ -781,24 +812,34 @@ class _HomePageState extends State<HomePage>
             if (mounted) {
               setState(() {
                 showSpinnerMyProfile = false;
-                print("getUserDetails: showSpinnerMyProfile set to false at ${DateTime.now()}");
+                print(
+                    "getUserDetails: showSpinnerMyProfile set to false at ${DateTime
+                        .now()}");
               });
             } else {
-              print("getUserDetails: Skipped spinner hide, widget not mounted at ${DateTime.now()}");
+              print(
+                  "getUserDetails: Skipped spinner hide, widget not mounted at ${DateTime
+                      .now()}");
             }
           });
         } else {
-          print("getUserDetails: Skipped post-frame callback, widget not mounted at ${DateTime.now()}");
+          print(
+              "getUserDetails: Skipped post-frame callback, widget not mounted at ${DateTime
+                  .now()}");
         }
       } catch (e) {
         print("Error in getUserDetails: $e at ${DateTime.now()}");
         if (mounted) {
           setState(() {
             showSpinnerMyProfile = false;
-            print("getUserDetails: showSpinnerMyProfile set to false (error) at ${DateTime.now()}");
+            print(
+                "getUserDetails: showSpinnerMyProfile set to false (error) at ${DateTime
+                    .now()}");
           });
         } else {
-          print("getUserDetails: Skipped error handling, widget not mounted at ${DateTime.now()}");
+          print(
+              "getUserDetails: Skipped error handling, widget not mounted at ${DateTime
+                  .now()}");
         }
       }
     }
@@ -813,7 +854,8 @@ class _HomePageState extends State<HomePage>
     setState(() {
       showSpinnerMyProducts = true;
       showSpinnerMyFeedback = true;
-      print("loadProducts: showSpinnerMyProducts set to true at ${DateTime.now()}");
+      print("loadProducts: showSpinnerMyProducts set to true at ${DateTime
+          .now()}");
     });
     try {
       var response = await http.get(Uri.parse(Apis.getAllProducts()));
@@ -832,27 +874,39 @@ class _HomePageState extends State<HomePage>
           print("loadProducts: products updated at ${DateTime.now()}");
         });
       } else {
-        print("loadProducts: Skipped products update, widget not mounted at ${DateTime.now()}");
+        print(
+            "loadProducts: Skipped products update, widget not mounted at ${DateTime
+                .now()}");
       }
-      final elapsed = DateTime.now().difference(startTime).inMilliseconds;
+      final elapsed = DateTime
+          .now()
+          .difference(startTime)
+          .inMilliseconds;
       const minDuration = 1000; // Increased to 1000ms for visibility
       if (elapsed < minDuration) {
         await Future.delayed(Duration(milliseconds: minDuration - elapsed));
       }
       if (mounted) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted && !_isLoadingMyProducts) { // Check if loadMyProducts is still running
+          if (mounted &&
+              !_isLoadingMyProducts) { // Check if loadMyProducts is still running
             setState(() {
               showSpinnerMyProducts = false;
               showSpinnerMyFeedback = false;
-              print("loadProducts: showSpinnerMyProducts set to false at ${DateTime.now()}");
+              print(
+                  "loadProducts: showSpinnerMyProducts set to false at ${DateTime
+                      .now()}");
             });
           } else {
-            print("loadProducts: Skipped spinner hide, widget not mounted or loadMyProducts running at ${DateTime.now()}");
+            print(
+                "loadProducts: Skipped spinner hide, widget not mounted or loadMyProducts running at ${DateTime
+                    .now()}");
           }
         });
       } else {
-        print("loadProducts: Skipped post-frame callback, widget not mounted at ${DateTime.now()}");
+        print(
+            "loadProducts: Skipped post-frame callback, widget not mounted at ${DateTime
+                .now()}");
       }
     } catch (e) {
       print("Error in loadProducts: $e at ${DateTime.now()}");
@@ -860,10 +914,14 @@ class _HomePageState extends State<HomePage>
         setState(() {
           showSpinnerMyProducts = false;
           showSpinnerMyFeedback = false;
-          print("loadProducts: showSpinnerMyProducts set to false (error) at ${DateTime.now()}");
+          print(
+              "loadProducts: showSpinnerMyProducts set to false (error) at ${DateTime
+                  .now()}");
         });
       } else {
-        print("loadProducts: Skipped error handling, widget not mounted at ${DateTime.now()}");
+        print(
+            "loadProducts: Skipped error handling, widget not mounted at ${DateTime
+                .now()}");
       }
     }
   }
@@ -886,12 +944,9 @@ class _HomePageState extends State<HomePage>
             });
           }
         }
-
       } on Exception catch (e) {
         // TODO
       }
-
-
     });
 
     if (showThankyouMessage) {
@@ -913,16 +968,16 @@ class _HomePageState extends State<HomePage>
               elevation: 2.0,
               child: MaterialButton(
                 onPressed: () async {
-                    setState(() {
-                      showThankyouMessage = false;
-                      showFeedback = false;
-                      showRegistrationPage = false;
-                      showSpinnerMyProducts = true;
-                      showSpinner = true;
-                      showSpinnerMyFeedback = true;
-                      goToHome = true;
-                    });
-                    //   loadMyProducts();
+                  setState(() {
+                    showThankyouMessage = false;
+                    showFeedback = false;
+                    showRegistrationPage = false;
+                    showSpinnerMyProducts = true;
+                    showSpinner = true;
+                    showSpinnerMyFeedback = true;
+                    goToHome = true;
+                  });
+                  //   loadMyProducts();
                 },
                 minWidth: 50.0,
                 height: 32.0,
@@ -941,7 +996,7 @@ class _HomePageState extends State<HomePage>
     } else if (showAudioPlayer) {
       return getAudioPlayerApparatus();
     } else if (showFeedback) {
-        return startFeedback();
+      return startFeedback();
     } else if (goToHome) {
       tabController.animateTo(0);
 
@@ -979,7 +1034,7 @@ class _HomePageState extends State<HomePage>
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 10),
                   child: Text(
-                    isSurveyComplete
+                    isSurveyComplete || myProducts.isEmpty
                         ? ""
                         : "In this section, you can check the status of your feedback or report a recent issue.\nTo report an incident, simply click on Report a problem.",
                     style: GoogleFonts.poppins(
@@ -991,6 +1046,19 @@ class _HomePageState extends State<HomePage>
                 ),
                 const SizedBox(height: 20),
                 // Product Rows
+                if(myProducts.isEmpty && !showSpinnerMyProducts)
+                  Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  child: Text(
+                   "No products registered yet. Please register a product to start providing feedback.",
+                    style: GoogleFonts.poppins(
+                      color: const Color(0xff003060),
+                      fontSize: MediaQuery.textScalerOf(context).scale(14),
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                )
+                else
                 for (var product in myProducts)
                   if (product["active"] == true)
                     product["currentMainSurvey"]["surveyId"] == "Done"
@@ -1096,54 +1164,63 @@ class _HomePageState extends State<HomePage>
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             ElevatedButton(
-                              onPressed: () async{
+                              onPressed: () async {
                                 setState(() {
                                   showSpinnerMyProducts = true;
                                 });
 
-                                try{
-                                  final response = await http.get(Uri.parse(Apis.testNotification(widget.mobileNum,myProductSelected["productName"])));
-
-                                  if(response.body == "true")
-                                  {
+                                try {
+                                  final response = await http.get(Uri.parse(
+                                      Apis.testNotification(widget.mobileNum,
+                                          myProductSelected["productName"])));
+                                    print("Test notification returns - ${response.body}");
+                                    print("response.body == widget.mobileNum - ${response.body == widget.mobileNum}");
+                                  if (response.body == widget.mobileNum) {
                                     await loadMyProducts();
                                   }
-                                  else{
-                                    throw Exception("Notification response was not true");
+                                  else {
+                                    throw Exception(
+                                        "Notification response was not true");
                                   }
-                                }catch(e){
+                                } catch (e) {
                                   setState(() {
                                     showSpinnerMyProducts = false;
                                   });
-                                  print("Could not get notification response: $e");
+                                  print(
+                                      "Could not get notification response: $e");
                                 }
-
-
-
                               },
                               style: ButtonStyle(
-                                  shape: MaterialStateProperty.all<OutlinedBorder>(
+                                  shape: MaterialStateProperty.all<
+                                      OutlinedBorder>(
                                       RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(80.0))),
-                                  padding: MaterialStateProperty.all<EdgeInsetsGeometry>(
+                                          borderRadius: BorderRadius.circular(
+                                              80.0))),
+                                  padding: MaterialStateProperty.all<
+                                      EdgeInsetsGeometry>(
                                     EdgeInsets.all(0.0),
                                   )),
                               child: Ink(
                                 decoration: BoxDecoration(
                                     gradient: LinearGradient(
-                                      colors: [Color(0xff374ABE), Color(0xff64B6FF)],
+                                      colors: [
+                                        Color(0xff374ABE),
+                                        Color(0xff64B6FF)
+                                      ],
                                       begin: Alignment.centerLeft,
                                       end: Alignment.centerRight,
                                     ),
                                     borderRadius: BorderRadius.circular(30.0)),
                                 child: Container(
-                                  constraints: BoxConstraints(maxWidth: 150.0, minHeight: 40.0),
+                                  constraints: BoxConstraints(
+                                      maxWidth: 150.0, minHeight: 40.0),
                                   alignment: Alignment.center,
                                   child: Text(
                                     "Reset date and notify ",
                                     textAlign: TextAlign.center,
                                     style: GoogleFonts.roboto(
-                                      fontSize: MediaQuery.textScalerOf(context).scale(14),
+                                      fontSize: MediaQuery.textScalerOf(context)
+                                          .scale(14),
                                       fontWeight: FontWeight.bold,
                                       color: Colors.white,
                                     ),
@@ -1157,7 +1234,7 @@ class _HomePageState extends State<HomePage>
                       ],
                     ),
                 SizedBox(
-                  height: 20
+                    height: 20
                 ),
 
               ],
@@ -1185,7 +1262,7 @@ class _HomePageState extends State<HomePage>
                         child: ElevatedButton(
                             style: const ButtonStyle(
                               backgroundColor:
-                                  MaterialStatePropertyAll(Colors.white),
+                              MaterialStatePropertyAll(Colors.white),
                             ),
                             child: const Icon(Icons.home,
                                 size: 35, color: Colors.blue),
@@ -1231,7 +1308,7 @@ class _HomePageState extends State<HomePage>
                                 color: productSelected != null
                                     ? Colors.blue
                                     : Colors
-                                        .black, // ✅ Changes to blue when selected
+                                    .black, // ✅ Changes to blue when selected
                                 width: 2.0,
                               ), // Black thin border
                               borderRadius: BorderRadius.circular(
@@ -1243,7 +1320,8 @@ class _HomePageState extends State<HomePage>
                             child: DropdownButtonHideUnderline(
                               // Removes the default underline
                               child: DropdownButton<String>(
-                                isExpanded: true, // ✅ Prevents UI overflow
+                                isExpanded: true,
+                                // ✅ Prevents UI overflow
                                 style: GoogleFonts.poppins(
                                   fontSize: MediaQuery.textScalerOf(context)
                                       .scale(15),
@@ -1265,10 +1343,10 @@ class _HomePageState extends State<HomePage>
 
                                 // ✅ Ensure non-null and unique list
                                 items: (products.isEmpty
-                                        ? ["Loading..."]
-                                        : products
-                                            .toSet()
-                                            .toList()) // ✅ Ensure uniqueness
+                                    ? ["Loading..."]
+                                    : products
+                                    .toSet()
+                                    .toList()) // ✅ Ensure uniqueness
                                     .map((String prod) {
                                   return DropdownMenuItem(
                                     value: prod,
@@ -1276,8 +1354,8 @@ class _HomePageState extends State<HomePage>
                                       prod,
                                       style: GoogleFonts.poppins(
                                         fontSize:
-                                            MediaQuery.textScalerOf(context)
-                                                .scale(15),
+                                        MediaQuery.textScalerOf(context)
+                                            .scale(15),
                                         color: Color(0xff003060),
                                       ),
                                     ),
@@ -1338,7 +1416,7 @@ class _HomePageState extends State<HomePage>
                         title: Text("Confirm"),
                         content: Text(
                           "Please check all fields before registering your product. You will not"
-                          " be able to change it later.\n\n Do you wish to register the product ?",
+                              " be able to change it later.\n\n Do you wish to register the product ?",
                           style: GoogleFonts.poppins(),
                         ),
                         actions: [
@@ -1348,7 +1426,6 @@ class _HomePageState extends State<HomePage>
                             children: [
                               GestureDetector(
                                 onTap: () async {
-
                                   Navigator.pop(context);
                                   FocusScope.of(context).unfocus();
                                   setState(() {
@@ -1362,7 +1439,7 @@ class _HomePageState extends State<HomePage>
                                   var response = await http.post(url,
                                       headers: <String, String>{
                                         'Content-Type':
-                                            'application/json; charset=UTF-8',
+                                        'application/json; charset=UTF-8',
                                       },
                                       body: jsonEncode(featureList));
 
@@ -1373,7 +1450,8 @@ class _HomePageState extends State<HomePage>
                                     bool isElectricTwoWheeler = productSelected
                                         .toString()
                                         .toLowerCase()
-                                        .contains("electric vehicle".toLowerCase());
+                                        .contains(
+                                        "electric vehicle".toLowerCase());
                                     if (isFirstRegistration) {
                                       setState(() {
                                         myProductSelected =
@@ -1381,7 +1459,7 @@ class _HomePageState extends State<HomePage>
 
                                         if (!isElectricTwoWheeler) {
                                           startSurveyProcess(myProductSelected[
-                                              "currentMainSurvey"]);
+                                          "currentMainSurvey"]);
                                           isDefectSurvey = false;
                                           isFirstRegistration = false;
                                         }
@@ -1396,7 +1474,7 @@ class _HomePageState extends State<HomePage>
 
                                     AlertDialog successAlert = AlertDialog(
                                       backgroundColor:
-                                          Colors.blue, // ✅ Set background color
+                                      Colors.blue, // ✅ Set background color
                                       title: Text(
                                         "Success",
                                         style: GoogleFonts.poppins(
@@ -1407,7 +1485,8 @@ class _HomePageState extends State<HomePage>
                                         ),
                                       ),
                                       content: Text(
-                                        "Thank you for registering your ${productSelected.toString().toLowerCase()}",
+                                        "Thank you for registering your ${productSelected
+                                            .toString().toLowerCase()}",
                                         style: GoogleFonts.poppins(
                                           fontSize: 16,
                                           color: Colors
@@ -1427,11 +1506,11 @@ class _HomePageState extends State<HomePage>
 
                                             if (isElectricTwoWheeler) {
                                               final result =
-                                                  await Navigator.push(
+                                              await Navigator.push(
                                                 context,
                                                 MaterialPageRoute(
                                                     builder: (context) =>
-                                                        const EVLandingPage()),
+                                                    const EVLandingPage()),
                                               );
 
                                               if (result == true &&
@@ -1439,7 +1518,7 @@ class _HomePageState extends State<HomePage>
                                                 setState(() {
                                                   startSurveyProcess(
                                                       myProductSelected[
-                                                          "currentMainSurvey"]);
+                                                      "currentMainSurvey"]);
                                                   isDefectSurvey = false;
                                                   isFirstRegistration = false;
                                                 });
@@ -1453,8 +1532,8 @@ class _HomePageState extends State<HomePage>
                                               color: Color(
                                                   0xff003060), // ✅ Button color
                                               borderRadius:
-                                                  BorderRadius.circular(
-                                                      20), // ✅ Rounded corners
+                                              BorderRadius.circular(
+                                                  20), // ✅ Rounded corners
                                             ),
                                             child: Text(
                                               "Continue",
@@ -1570,7 +1649,7 @@ class _HomePageState extends State<HomePage>
                             ),
                             SizedBox(
                                 height:
-                                    20), // ✅ Space between text and checklist
+                                20), // ✅ Space between text and checklist
                             Column(
                               children: [
                                 Row(
@@ -1598,7 +1677,7 @@ class _HomePageState extends State<HomePage>
                                 ),
                                 SizedBox(
                                     height:
-                                        5), // ✅ Spacing between checklist items
+                                    5), // ✅ Spacing between checklist items
                                 Row(
                                   children: [
                                     Stack(
@@ -1746,7 +1825,8 @@ class _HomePageState extends State<HomePage>
     setState(() {
       showSpinnerMyProducts = true;
       showSpinnerMyFeedback = true;
-      print("loadMyProducts: showSpinnerMyProducts set to true at ${DateTime.now()}");
+      print("loadMyProducts: showSpinnerMyProducts set to true at ${DateTime
+          .now()}");
     });
     try {
       List<dynamic> tempProducts = [];
@@ -1771,15 +1851,23 @@ class _HomePageState extends State<HomePage>
             myProductSelected = myProducts[0];
             final brandStart = DateTime.now();
             setBrand(myProductSelected);
-            print("loadMyProducts: setBrand took ${DateTime.now().difference(brandStart).inMilliseconds}ms");
+            print("loadMyProducts: setBrand took ${DateTime
+                .now()
+                .difference(brandStart)
+                .inMilliseconds}ms");
           }
           print("loadMyProducts: myProducts updated at ${DateTime.now()}");
         });
       } else {
-        print("loadMyProducts: Skipped myProducts update, widget not mounted at ${DateTime.now()}");
+        print(
+            "loadMyProducts: Skipped myProducts update, widget not mounted at ${DateTime
+                .now()}");
       }
 
-      final elapsed = DateTime.now().difference(startTime).inMilliseconds;
+      final elapsed = DateTime
+          .now()
+          .difference(startTime)
+          .inMilliseconds;
       const minDuration = 1000; // Increased to 1000ms
       if (elapsed < minDuration) {
         await Future.delayed(Duration(milliseconds: minDuration - elapsed));
@@ -1792,14 +1880,20 @@ class _HomePageState extends State<HomePage>
               showSpinnerMyProducts = false;
               showSpinnerMyFeedback = false;
               showSpinner = false;
-              print("loadMyProducts: showSpinnerMyProducts set to false at ${DateTime.now()}");
+              print(
+                  "loadMyProducts: showSpinnerMyProducts set to false at ${DateTime
+                      .now()}");
             });
           } else {
-            print("loadMyProducts: Skipped spinner hide, widget not mounted at ${DateTime.now()}");
+            print(
+                "loadMyProducts: Skipped spinner hide, widget not mounted at ${DateTime
+                    .now()}");
           }
         });
       } else {
-        print("loadMyProducts: Skipped post-frame callback, widget not mounted at ${DateTime.now()}");
+        print(
+            "loadMyProducts: Skipped post-frame callback, widget not mounted at ${DateTime
+                .now()}");
       }
     } catch (e) {
       print("Error in loadMyProducts: $e at ${DateTime.now()}");
@@ -1808,10 +1902,14 @@ class _HomePageState extends State<HomePage>
           showSpinnerMyProducts = false;
           showSpinnerMyFeedback = false;
 
-          print("loadMyProducts: showSpinnerMyProducts set to false (error) at ${DateTime.now()}");
+          print(
+              "loadMyProducts: showSpinnerMyProducts set to false (error) at ${DateTime
+                  .now()}");
         });
       } else {
-        print("loadMyProducts: Skipped error handling, widget not mounted at ${DateTime.now()}");
+        print(
+            "loadMyProducts: Skipped error handling, widget not mounted at ${DateTime
+                .now()}");
       }
     } finally {
       _isLoadingMyProducts = false;
@@ -1990,7 +2088,7 @@ class _HomePageState extends State<HomePage>
                       featureList[featureList.keys.elementAt(i)] == ""
                           ? "Select Date"
                           : featureList[featureList.keys
-                              .elementAt(i)], // Display selected month-year
+                          .elementAt(i)], // Display selected month-year
                       style: GoogleFonts.poppins(
                         fontSize: MediaQuery.textScalerOf(context).scale(15),
                         color: Color(0xff003060),
@@ -2046,7 +2144,7 @@ class _HomePageState extends State<HomePage>
                   ),
                   enabledBorder: const OutlineInputBorder(
                     borderSide:
-                        BorderSide(color: Color(0xff003060), width: 1.0),
+                    BorderSide(color: Color(0xff003060), width: 1.0),
                     borderRadius: BorderRadius.all(Radius.circular(5.0)),
                   ),
                 ),
@@ -2087,7 +2185,7 @@ class _HomePageState extends State<HomePage>
                   width: 2.0,
                 ), // Black thin border
                 borderRadius:
-                    BorderRadius.circular(6), // Slightly rounded corners
+                BorderRadius.circular(6), // Slightly rounded corners
               ),
               padding: EdgeInsets.symmetric(
                   horizontal: 10, vertical: 1), // Padding inside the box
@@ -2115,7 +2213,7 @@ class _HomePageState extends State<HomePage>
                         prod,
                         style: GoogleFonts.poppins(
                             fontSize:
-                                MediaQuery.textScalerOf(context).scale(15),
+                            MediaQuery.textScalerOf(context).scale(15),
                             color: Color(0xff003060)),
                       ),
                     );
@@ -2154,7 +2252,7 @@ class _HomePageState extends State<HomePage>
             ),
             Padding(
               padding:
-                  const EdgeInsets.symmetric(vertical: 0, horizontal: 54.0),
+              const EdgeInsets.symmetric(vertical: 0, horizontal: 54.0),
               child: GestureDetector(
                 onTap: () {
                   print('Clicked outside');
@@ -2177,7 +2275,7 @@ class _HomePageState extends State<HomePage>
                     ),
                     enabledBorder: const OutlineInputBorder(
                       borderSide:
-                          BorderSide(color: Color(0xff003060), width: 1.0),
+                      BorderSide(color: Color(0xff003060), width: 1.0),
                       borderRadius: BorderRadius.all(Radius.circular(5.0)),
                     ),
                   ),
@@ -2191,17 +2289,18 @@ class _HomePageState extends State<HomePage>
   }
 
   void _pickMonthYear(BuildContext context, int i, String selectedMonthYear) {
+    DateTime now = DateTime.now();
+    // lastDate is set to the current month and year
     showMonthPicker(
       context: context,
-      firstDate: DateTime(2000), // Earliest year selectable
-      lastDate: DateTime(2100), // Latest year selectable
-      initialDate: DateTime.now(), // Default selected date
+      firstDate: DateTime(2000), // Earliest selectable
+      lastDate: DateTime(now.year, now.month), // Dynamically restrict to current month/year
+      initialDate: DateTime(now.year, now.month),
     ).then((date) {
       if (date != null) {
         setState(() {
           selectedMonthYear = formatMonthYear(date.month, date.year);
-          featureList[featureList.keys.elementAt(i)] =
-              selectedMonthYear; // Store selected value
+          featureList[featureList.keys.elementAt(i)] = selectedMonthYear;
         });
       }
     });
@@ -2266,35 +2365,34 @@ class _HomePageState extends State<HomePage>
     return years;
   }
 
- 
 
   //This method groups questions based on title, main screen title, question title etc
   getQuestionAndResponse() {
     List<dynamic> currentSurvey = [];
 
     String mainScreenTitle = surveys[0]["feedbackQuestion"][questionIndex]
-            ["mainScreentitle"]
+    ["mainScreentitle"]
         .toString();
     String titleLine =
-        surveys[0]["feedbackQuestion"][questionIndex]["titleLine"].toString();
+    surveys[0]["feedbackQuestion"][questionIndex]["titleLine"].toString();
 
     String questionTitle = surveys[0]["feedbackQuestion"][questionIndex]
-            ["questionTitle"]
+    ["questionTitle"]
         .toString();
 
     String answerType =
-        surveys[0]["feedbackQuestion"][questionIndex]["answerType"];
+    surveys[0]["feedbackQuestion"][questionIndex]["answerType"];
     endIndex = 0;
     for (int i = 0; i < surveys[0]["feedbackQuestion"].length; i++) {
       String mst =
-          surveys[0]["feedbackQuestion"][i]["mainScreentitle"].toString();
+      surveys[0]["feedbackQuestion"][i]["mainScreentitle"].toString();
       String ttl = surveys[0]["feedbackQuestion"][i]["titleLine"].toString();
 
       String qst =
-          surveys[0]["feedbackQuestion"][i]["questionTitle"].toString();
+      surveys[0]["feedbackQuestion"][i]["questionTitle"].toString();
 
       String ansType =
-          surveys[0]["feedbackQuestion"][i]["answerType"].toString();
+      surveys[0]["feedbackQuestion"][i]["answerType"].toString();
 
       if (mst == mainScreenTitle && ttl == titleLine && qst == questionTitle) {
         currentSurvey.add(surveys[0]["feedbackQuestion"][i]);
@@ -2318,7 +2416,7 @@ class _HomePageState extends State<HomePage>
               Expanded(
                 child: Text(
                   processQuestion(surveys[0]["feedbackQuestion"][questionIndex]
-                      ["mainScreentitle"]),
+                  ["mainScreentitle"]),
                   style: GoogleFonts.poppins(
                       fontSize: MediaQuery.textScalerOf(context).scale(26),
                       fontWeight: FontWeight.bold,
@@ -2350,7 +2448,7 @@ class _HomePageState extends State<HomePage>
               alignment: Alignment.center,
               child: Text(
                 processQuestion(surveys[0]["feedbackQuestion"][questionIndex]
-                    ["questionTitle"]),
+                ["questionTitle"]),
                 overflow: TextOverflow.clip,
                 style: GoogleFonts.poppins(
                   fontSize: MediaQuery.textScalerOf(context).scale(16),
@@ -2369,13 +2467,16 @@ class _HomePageState extends State<HomePage>
             child: Column(
               mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment:
-                  CrossAxisAlignment.start, // ✅ Ensures left alignment
+              CrossAxisAlignment.start, // ✅ Ensures left alignment
               children: [
                 Align(
                   alignment: Alignment.centerLeft, // ✅ Forces left alignment
                   child: ConstrainedBox(
                     constraints: BoxConstraints(
-                      maxWidth: MediaQuery.of(context).size.width -
+                      maxWidth: MediaQuery
+                          .of(context)
+                          .size
+                          .width -
                           20, // ✅ Prevents overflow
                     ),
                     child: Text(
@@ -2406,7 +2507,7 @@ class _HomePageState extends State<HomePage>
 
   getAnswerType(String answerType, int pos) {
     var responses = ['Yes', 'No'];
-    var index = startIndex - pos;
+    int index =  pos;
 
     if (answerType.contains("Yes")) {
       return Row(
@@ -2417,10 +2518,10 @@ class _HomePageState extends State<HomePage>
             minHeight: 40.0,
             fontSize: MediaQuery.textScalerOf(context).scale(15),
             initialLabelIndex:
-                surveys[0]["feedbackQuestion"][index]["answer"] == ""
-                    ? -1
-                    : responses.indexOf(
-                        surveys[0]["feedbackQuestion"][index]["answer"]),
+            surveys[0]["feedbackQuestion"][index]["answer"] == ""
+                ? -1
+                : responses.indexOf(
+                surveys[0]["feedbackQuestion"][index]["answer"]),
             activeFgColor: Colors.white,
             activeBgColor: [Colors.deepPurpleAccent],
             inactiveBgColor: Colors.grey,
@@ -2431,14 +2532,14 @@ class _HomePageState extends State<HomePage>
             onToggle: (index1) {
               setState(() {
                 var intResponse = responses[index1!];
-                surveys[0]["feedbackQuestion"][index]["answer"] = intResponse.toString();
-                print("Yes no response is ${surveys[0]["feedbackQuestion"][index]["answer"]}");
-
+                surveys[0]["feedbackQuestion"][index]["answer"] =
+                    intResponse.toString();
+                print(
+                    "Yes no response is ${surveys[0]["feedbackQuestion"][index]["answer"]}");
               });
 
               if (surveys[0]["feedbackQuestion"][questionIndex]["question"] ==
                   "I complained to the manufacturer/retailer") {
-
                 updateCurrentSurveyWithComplaintStatus(
                     surveys[0]["feedbackQuestion"][index]["answer"]);
               }
@@ -2474,13 +2575,13 @@ class _HomePageState extends State<HomePage>
                 enabled: true,
                 floatingLabelBehavior: FloatingLabelBehavior.always,
                 contentPadding:
-                    EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+                EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.all(Radius.circular(0.0)),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderSide:
-                      BorderSide(color: Colors.lightBlueAccent, width: 2.0),
+                  BorderSide(color: Colors.lightBlueAccent, width: 2.0),
                 ),
               ),
             ),
@@ -2491,7 +2592,8 @@ class _HomePageState extends State<HomePage>
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 Text(
-                  "${getWordCount(surveys[0]["feedbackQuestion"][index]["answer"])}/10",
+                  "${getWordCount(
+                      surveys[0]["feedbackQuestion"][index]["answer"])}/10",
                   style: TextStyle(color: Colors.red),
                 )
               ],
@@ -2499,13 +2601,16 @@ class _HomePageState extends State<HomePage>
           )
         ],
       );
-    } else if (answerType == "Multimedia/Descriptive") {
+    } else if (answerType == "Multimedia/Descriptive")
+    {
       setState(() {
         superIndex = index;
       });
-      if (surveys[0]["feedbackQuestion"][index]["answer"].toString().isEmpty) {
+      if (surveys[0]["feedbackQuestion"][index]["answer"]
+          .toString()
+          .isEmpty) {
         surveys[0]["feedbackQuestion"][index]
-            ["answer"] = {"text": "", "image": "", "audio": "", "video": ""};
+        ["answer"] = {"text": "", "image": "", "audio": "", "video": ""};
       }
       return Column(
         children: [
@@ -2513,7 +2618,7 @@ class _HomePageState extends State<HomePage>
             padding: const EdgeInsets.only(left: 8.0, right: 8.0, top: 8.0),
             child: TextFormField(
               initialValue: surveys[0]["feedbackQuestion"][index]["answer"]
-                      ["text"]
+              ["text"]
                   .toString(),
               maxLines: 3,
               onChanged: (String value) {
@@ -2538,14 +2643,15 @@ class _HomePageState extends State<HomePage>
                 ),
                 enabledBorder: const OutlineInputBorder(
                   borderSide:
-                      BorderSide(color: Colors.lightBlueAccent, width: 2.0),
+                  BorderSide(color: Colors.lightBlueAccent, width: 2.0),
                 ),
                 hintText:
-                    "Enter details of the issue...", // ✅ Converted label to hint text
+                "Enter details of the issue...",
+                // ✅ Converted label to hint text
                 hintStyle: GoogleFonts.poppins(
                   fontSize: MediaQuery.textScalerOf(context).scale(14),
                   color:
-                      const Color(0xff003060), // ✅ Same color as styled input
+                  const Color(0xff003060), // ✅ Same color as styled input
                 ),
               ),
             ),
@@ -2556,7 +2662,8 @@ class _HomePageState extends State<HomePage>
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 Text(
-                  "${getWordCount(surveys[0]["feedbackQuestion"][index]["answer"]["text"])}/100",
+                  "${getWordCount(
+                      surveys[0]["feedbackQuestion"][index]["answer"]["text"])}/100",
                   style: TextStyle(color: Colors.red),
                 )
               ],
@@ -2609,7 +2716,7 @@ class _HomePageState extends State<HomePage>
                       builder: (BuildContext context, _setState) {
                         return Column(
                           mainAxisSize:
-                              MainAxisSize.min, // ✅ Prevent unnecessary space
+                          MainAxisSize.min, // ✅ Prevent unnecessary space
                           children: [
                             RadioListTile(
                               title: Text(
@@ -2622,7 +2729,8 @@ class _HomePageState extends State<HomePage>
                               value: "image",
                               groupValue: fileType,
                               activeColor: Colors
-                                  .white, // ✅ White radio button when selected
+                                  .white,
+                              // ✅ White radio button when selected
                               onChanged: (value) {
                                 _setState(() {
                                   fileType = value.toString();
@@ -2641,7 +2749,8 @@ class _HomePageState extends State<HomePage>
                               value: "video",
                               groupValue: fileType,
                               activeColor: Colors
-                                  .white, // ✅ White radio button when selected
+                                  .white,
+                              // ✅ White radio button when selected
                               onChanged: (value) {
                                 _setState(() {
                                   fileType = value.toString();
@@ -2725,10 +2834,177 @@ class _HomePageState extends State<HomePage>
           checkForVideoFileStatus(index),
         ],
       );
-    } else if (answerType == "Audio/Descriptive") {
-      if (surveys[0]["feedbackQuestion"][index]["answer"].toString().isEmpty) {
+    } else if (answerType == "Only_Multimedia")
+    {
+      setState(() {
+        superIndex = index;
+      });
+      if (surveys[0]["feedbackQuestion"][index]["answer"]
+          .toString()
+          .isEmpty) {
         surveys[0]["feedbackQuestion"][index]
-            ["answer"] = {"text": "", "image": "", "audio": "", "video": ""};
+        ["answer"] = {"image": "", "video": ""};
+      }
+      return Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+             InkResponse(
+                onTap: (() {
+                  // Navigator.push(
+                  //     context,
+                  //     MaterialPageRoute(
+                  //         builder: (context) => const CameraPage()));
+                  setState(() {
+                    ApplicationData.showVideoPlayer = true;
+                    showFeedback = false;
+                  });
+                }),
+                child: Image.asset(
+                  'images/camera.png',
+                  height: 40.0,
+                ),
+              ),
+              InkResponse(
+                onTap: (() {
+                  AlertDialog alert = AlertDialog(
+                    backgroundColor: Colors.blue, // ✅ Background color
+                    title: Text(
+                      "Select Upload Type",
+                      style: GoogleFonts.poppins(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white, // ✅ Title text color
+                      ),
+                    ),
+                    content: StatefulBuilder(
+                      builder: (BuildContext context, _setState) {
+                        return Column(
+                          mainAxisSize:
+                          MainAxisSize.min, // ✅ Prevent unnecessary space
+                          children: [
+                            RadioListTile(
+                              title: Text(
+                                "Image File",
+                                style: GoogleFonts.poppins(
+                                  fontSize: 16,
+                                  color: Colors.white, // ✅ Text color
+                                ),
+                              ),
+                              value: "image",
+                              groupValue: fileType,
+                              activeColor: Colors
+                                  .white,
+                              // ✅ White radio button when selected
+                              onChanged: (value) {
+                                _setState(() {
+                                  fileType = value.toString();
+                                });
+                                print("Radio tile is $fileType");
+                              },
+                            ),
+                            RadioListTile(
+                              title: Text(
+                                "Video File",
+                                style: GoogleFonts.poppins(
+                                  fontSize: 16,
+                                  color: Colors.white, // ✅ Text color
+                                ),
+                              ),
+                              value: "video",
+                              groupValue: fileType,
+                              activeColor: Colors
+                                  .white,
+                              // ✅ White radio button when selected
+                              onChanged: (value) {
+                                _setState(() {
+                                  fileType = value.toString();
+                                });
+                              },
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                    actions: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment
+                            .spaceEvenly, // ✅ Evenly spaced buttons
+                        children: [
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.pop(context);
+                              _pickFiles(fileType);
+                            },
+                            child: Container(
+                              padding: EdgeInsets.symmetric(
+                                  vertical: 12, horizontal: 20),
+                              decoration: BoxDecoration(
+                                color: Color(0xff003060), // ✅ Button color
+                                borderRadius: BorderRadius.circular(
+                                    20), // ✅ Rounded corners
+                              ),
+                              child: Text(
+                                "Continue",
+                                style: GoogleFonts.poppins(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white, // ✅ Button text color
+                                ),
+                              ),
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.pop(context);
+                            },
+                            child: Container(
+                              padding: EdgeInsets.symmetric(
+                                  vertical: 12, horizontal: 20),
+                              decoration: BoxDecoration(
+                                color: Color(0xff003060), // ✅ Button color
+                                borderRadius: BorderRadius.circular(
+                                    20), // ✅ Rounded corners
+                              ),
+                              child: Text(
+                                "Cancel",
+                                style: GoogleFonts.poppins(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white, // ✅ Button text color
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  );
+
+                  showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return alert;
+                      });
+                }),
+                child: Image.asset(
+                  "images/upload.png",
+                  height: 30,
+                ),
+              )
+            ],
+          ),
+          checkForImageFileStatus(index),
+          checkForVideoFileStatus(index),
+        ],
+      );
+    }else if (answerType == "Audio/Descriptive") {
+      if (surveys[0]["feedbackQuestion"][index]["answer"]
+          .toString()
+          .isEmpty) {
+        surveys[0]["feedbackQuestion"][index]
+        ["answer"] = {"text": "", "image": "", "audio": "", "video": ""};
       }
       return Column(
         children: [
@@ -2736,7 +3012,7 @@ class _HomePageState extends State<HomePage>
             padding: const EdgeInsets.only(left: 8.0, right: 8.0, top: 8.0),
             child: TextFormField(
               initialValue: surveys[0]["feedbackQuestion"][index]["answer"]
-                      ["text"]
+              ["text"]
                   .toString(),
               maxLines: 3,
               onChanged: (String value) {
@@ -2755,20 +3031,21 @@ class _HomePageState extends State<HomePage>
                 enabled: true,
                 floatingLabelBehavior: FloatingLabelBehavior.always,
                 contentPadding:
-                    EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+                EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.all(Radius.circular(0.0)),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderSide:
-                      BorderSide(color: Colors.lightBlueAccent, width: 2.0),
+                  BorderSide(color: Colors.lightBlueAccent, width: 2.0),
                 ),
                 hintText:
-                    "Enter details of the issue...", // ✅ Converted label to hint text
+                "Enter details of the issue...",
+                // ✅ Converted label to hint text
                 hintStyle: GoogleFonts.poppins(
                   fontSize: MediaQuery.textScalerOf(context).scale(14),
                   color:
-                      const Color(0xff003060), // ✅ Same color as styled input
+                  const Color(0xff003060), // ✅ Same color as styled input
                 ),
               ),
             ),
@@ -2779,7 +3056,8 @@ class _HomePageState extends State<HomePage>
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 Text(
-                  "${getWordCount(surveys[0]["feedbackQuestion"][index]["answer"]["text"])}/100",
+                  "${getWordCount(
+                      surveys[0]["feedbackQuestion"][index]["answer"]["text"])}/100",
                   style: TextStyle(color: Colors.red),
                 )
               ],
@@ -2811,9 +3089,9 @@ class _HomePageState extends State<HomePage>
       var responses = responseArray;
 
       surveys[0]["feedbackQuestion"][index]["answer"] =
-          surveys[0]["feedbackQuestion"][index]["answer"] == ""
-              ? "1"
-              : surveys[0]["feedbackQuestion"][index]["answer"];
+      surveys[0]["feedbackQuestion"][index]["answer"] == ""
+          ? "1"
+          : surveys[0]["feedbackQuestion"][index]["answer"];
 
       return Column(
         children: [
@@ -2844,7 +3122,7 @@ class _HomePageState extends State<HomePage>
     } else if (answerType.contains("Checkbox")) {
       getRatingsArray(answerType, index);
       var responses = responseArray;
-      print("checkbox responses $responses");
+
 
       if (!selectedCheckboxes.containsKey(index)) {
         selectedCheckboxes[index] = <String>{};
@@ -2873,10 +3151,12 @@ class _HomePageState extends State<HomePage>
                   ..sort();
                 final answerString = sortedAnswers.join('-');
 
-                surveys[0]["feedbackQuestion"][index]["answer"] = answerString;
+
 
                 print("Selected checkboxes for index $index: $answerString");
-                setState(() {});
+                setState(() {
+                  surveys[0]["feedbackQuestion"][index]["answer"] = answerString;
+                });
               },
               controlAffinity: ListTileControlAffinity.leading,
               dense: true,
@@ -2886,7 +3166,6 @@ class _HomePageState extends State<HomePage>
         }).toList(),
       );
     } else if (answerType.contains("NumberBox")) {
-
       TextEditingController textController = TextEditingController();
       return Padding(
         padding: EdgeInsets.only(left: 50, right: 50, top: 10),
@@ -2899,7 +3178,7 @@ class _HomePageState extends State<HomePage>
                 surveys[0]["feedbackQuestion"][index]["answer"] =
                     value.toString();
                 print("after change - "
-                        "surveys[0]['feedbackQuestion'][index]['answer'] - ${surveys[0]["feedbackQuestion"][index]["answer"]}");
+                    "surveys[0]['feedbackQuestion'][index]['answer'] - ${surveys[0]["feedbackQuestion"][index]["answer"]}");
               });
             },
             style: GoogleFonts.poppins(
@@ -2908,7 +3187,8 @@ class _HomePageState extends State<HomePage>
             ),
             keyboardType: TextInputType.number,
             decoration: InputDecoration(
-              hintText: "Enter Number", // ✅ Converted label to hint text
+              hintText: "Enter Number",
+              // ✅ Converted label to hint text
               hintStyle: GoogleFonts.poppins(
                 fontSize: MediaQuery.textScalerOf(context).scale(14),
                 color: const Color(0xff003060), // ✅ Same color as styled input
@@ -2916,7 +3196,7 @@ class _HomePageState extends State<HomePage>
 
               // ✅ Styled Rectangle Box (No Rounded Corners)
               contentPadding:
-                  const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+              const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
               focusedBorder: const OutlineInputBorder(
                 borderSide: BorderSide(
                     color: Colors.blue,
@@ -2927,7 +3207,7 @@ class _HomePageState extends State<HomePage>
 
               border: const OutlineInputBorder(
                 borderRadius:
-                    BorderRadius.all(Radius.circular(5.0)), // ✅ Rectangular box
+                BorderRadius.all(Radius.circular(5.0)), // ✅ Rectangular box
               ),
 
               enabledBorder: const OutlineInputBorder(
@@ -2942,9 +3222,9 @@ class _HomePageState extends State<HomePage>
       );
     } else if (answerType.contains("Dropdown")) {
       String? dropdownResponse =
-          surveys[0]["feedbackQuestion"][index]["answer"] == ""
-              ? null
-              : surveys[0]["feedbackQuestion"][index]["answer"];
+      surveys[0]["feedbackQuestion"][index]["answer"] == ""
+          ? null
+          : surveys[0]["feedbackQuestion"][index]["answer"];
 
       var dropDowns = <String>[];
       var values = <String>[];
@@ -2971,19 +3251,21 @@ class _HomePageState extends State<HomePage>
                 width: 2.0,
               ), // ✅ Black thin border
               borderRadius:
-                  BorderRadius.circular(6), // ✅ Slightly rounded corners
+              BorderRadius.circular(6), // ✅ Slightly rounded corners
             ),
             padding: EdgeInsets.symmetric(
                 horizontal: 10, vertical: 1), // ✅ Inner padding
             child: DropdownButtonHideUnderline(
               // ✅ Removes default underline
               child: DropdownButton<String>(
-                isExpanded: true, // ✅ Ensures dropdown fills container width
+                isExpanded: true,
+                // ✅ Ensures dropdown fills container width
                 style: GoogleFonts.poppins(
                   fontSize: MediaQuery.textScalerOf(context).scale(15),
                   color: const Color(0xff003060),
                 ),
-                icon: const Icon(Icons.keyboard_arrow_down), // ✅ Dropdown icon
+                icon: const Icon(Icons.keyboard_arrow_down),
+                // ✅ Dropdown icon
                 iconSize: 24,
                 iconEnabledColor: const Color(0xff3AB7A6),
 
@@ -3047,11 +3329,10 @@ class _HomePageState extends State<HomePage>
                 ),
                 onTap: () {
                   FocusScope.of(context).unfocus();
-                    setState(() {
-                      questionIndex++;
-                      ratingsArrayLoaded = false;
-                    });
-
+                  setState(() {
+                    questionIndex++;
+                    ratingsArrayLoaded = false;
+                  });
                 }),
           ),
         ],
@@ -3069,7 +3350,7 @@ class _HomePageState extends State<HomePage>
               },
               child: ConstrainedBox(
                 constraints:
-                    BoxConstraints(maxWidth: leftWidth, maxHeight: leftHeight),
+                BoxConstraints(maxWidth: leftWidth, maxHeight: leftHeight),
                 child: Image.asset(
                   "images/left.png",
                   fit: BoxFit.contain,
@@ -3081,20 +3362,21 @@ class _HomePageState extends State<HomePage>
           BottomNavigationBarItem(
             icon: GestureDetector(
               onTap: () {
-                   FocusScope.of(context).unfocus();
+                FocusScope.of(context).unfocus();
                 try {
-                  if(surveys[0]["feedbackQuestion"][questionIndex]["answer"] == "No" &&
-                      surveys[0]["feedbackQuestion"][questionIndex]["titleLine"].contains("Please let us know about any unreported problems/issues with your"))
-                    {
-                      setState(() {
-                        showThankyouMessage = true;
-                        questionIndex = 0;
-                        superIndex = 0;
-                        setNextSurvey(true);
-                       
-                      });
-                    }
-                  else{
+                  if (surveys[0]["feedbackQuestion"][questionIndex]["answer"] ==
+                      "No" &&
+                      surveys[0]["feedbackQuestion"][questionIndex]["titleLine"]
+                          .contains(
+                          "Please let us know about any unreported problems/issues with your")) {
+                    setState(() {
+                      showThankyouMessage = true;
+                      questionIndex = 0;
+                      superIndex = 0;
+                      setNextSurvey(true);
+                    });
+                  }
+                  else {
                     setState(() {
                       questionIndex++;
                       ratingsArrayLoaded = false;
@@ -3106,7 +3388,6 @@ class _HomePageState extends State<HomePage>
                     showSpinnerMyFeedback = false;
                   });
                 }
-
               },
               child: ConstrainedBox(
                 constraints: BoxConstraints(
@@ -3123,7 +3404,8 @@ class _HomePageState extends State<HomePage>
         type: BottomNavigationBarType.fixed,
         showSelectedLabels: false,
         showUnselectedLabels: false,
-        elevation: 0, // Optional: reduces extra spacing
+        elevation: 0,
+        // Optional: reduces extra spacing
         backgroundColor: Colors.transparent, // Optional: for debugging layout
       );
     } else if (questionIndex == arraySize - 1) {
@@ -3146,50 +3428,51 @@ class _HomePageState extends State<HomePage>
           ),
           BottomNavigationBarItem(
               icon: Container(
-            height: 50.0,
-            margin: EdgeInsets.all(10),
-            child: ElevatedButton(
-              onPressed: () {
-               if ((surveys[0]["surveyId"] != "ReplacementSurvey")) {
-                  setState(() {
-                    showThankyouMessage = true;
-                    questionIndex = 0;
-                    superIndex = 0;
-                    setNextSurvey(true);
-                  });
-                }
-              },
-              style: ButtonStyle(
-                  shape: MaterialStateProperty.all<OutlinedBorder>(
-                      RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(80.0))),
-                  padding: MaterialStateProperty.all<EdgeInsetsGeometry>(
-                    EdgeInsets.all(0.0),
-                  )),
-              child: Ink(
-                decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [Color(0xff374ABE), Color(0xff64B6FF)],
-                      begin: Alignment.centerLeft,
-                      end: Alignment.centerRight,
-                    ),
-                    borderRadius: BorderRadius.circular(30.0)),
-                child: Container(
-                  constraints: BoxConstraints(maxWidth: 150.0, minHeight: 50.0),
-                  alignment: Alignment.center,
-                  child: Text(
-                    "Submit",
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.roboto(
-                      fontSize: MediaQuery.textScalerOf(context).scale(15),
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                height: 50.0,
+                margin: EdgeInsets.all(10),
+                child: ElevatedButton(
+                  onPressed: () {
+                    if ((surveys[0]["surveyId"] != "ReplacementSurvey")) {
+                      setState(() {
+                        showThankyouMessage = true;
+                        questionIndex = 0;
+                        superIndex = 0;
+                        setNextSurvey(true);
+                      });
+                    }
+                  },
+                  style: ButtonStyle(
+                      shape: MaterialStateProperty.all<OutlinedBorder>(
+                          RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(80.0))),
+                      padding: MaterialStateProperty.all<EdgeInsetsGeometry>(
+                        EdgeInsets.all(0.0),
+                      )),
+                  child: Ink(
+                    decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Color(0xff374ABE), Color(0xff64B6FF)],
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
+                        ),
+                        borderRadius: BorderRadius.circular(30.0)),
+                    child: Container(
+                      constraints: BoxConstraints(
+                          maxWidth: 150.0, minHeight: 50.0),
+                      alignment: Alignment.center,
+                      child: Text(
+                        "Submit",
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.roboto(
+                          fontSize: MediaQuery.textScalerOf(context).scale(15),
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ),
-          ))
+              ))
         ],
       );
     }
@@ -3207,7 +3490,6 @@ class _HomePageState extends State<HomePage>
   getBottomButtonSet(currentSurvey) {
     int ind = 0;
     for (var item in currentSurvey) {
-
       ind++;
     }
 
@@ -3228,10 +3510,11 @@ class _HomePageState extends State<HomePage>
               onTap: () {
                 FocusScope.of(context).unfocus();
                 if (!GetValidResponses(currentSurvey)) {
-                  print("Abhi goingForwardmessage is $goingForwardMessage");
+                  print("3331 Abhi goingForwardmessage is $goingForwardMessage");
                   if (goingForwardMessage.contains(
                       "A response is needed to continue, you can record audio/video, upload pic")) {
-                    print("line 2833 coming to goingForwardMessage.contains(A response is needed to continue, you can record audio/video, upload pic");
+                    print(
+                        "line 2833 coming to goingForwardMessage.contains(A response is needed to continue, you can record audio/video, upload pic");
                     AlertDialog alert = AlertDialog(
                       backgroundColor: Colors.blue, // ✅ Background color
                       title: Row(
@@ -3251,7 +3534,7 @@ class _HomePageState extends State<HomePage>
                       ),
                       content: Column(
                         mainAxisSize:
-                            MainAxisSize.min, // ✅ Prevents unnecessary spacing
+                        MainAxisSize.min, // ✅ Prevents unnecessary spacing
                         crossAxisAlignment: CrossAxisAlignment
                             .start, // ✅ Aligns content to the left
                         children: [
@@ -3291,7 +3574,7 @@ class _HomePageState extends State<HomePage>
                               ),
                               SizedBox(
                                   height:
-                                      5), // ✅ Spacing between checklist items
+                                  5), // ✅ Spacing between checklist items
                               Row(
                                 children: [
                                   Stack(
@@ -3376,7 +3659,7 @@ class _HomePageState extends State<HomePage>
                         builder: (BuildContext context) {
                           return alert;
                         });
-                  }else if (goingForwardMessage.contains(
+                  } else if (goingForwardMessage.contains(
                       "You have not used all given options to response, you can record audio and state detailed problem. Are you sure you want to continue?")) {
                     AlertDialog alert = AlertDialog(
                       backgroundColor: Colors.blue,
@@ -3386,7 +3669,8 @@ class _HomePageState extends State<HomePage>
                       title: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.star, color: Colors.yellow, size: 24),
+                          const Icon(
+                              Icons.star, color: Colors.yellow, size: 24),
                           const SizedBox(width: 8),
                           Flexible(
                             child: Text(
@@ -3403,12 +3687,16 @@ class _HomePageState extends State<HomePage>
                             ),
                           ),
                           const SizedBox(width: 8),
-                          const Icon(Icons.star, color: Colors.yellow, size: 24),
+                          const Icon(
+                              Icons.star, color: Colors.yellow, size: 24),
                         ],
                       ),
                       content: ConstrainedBox(
                         constraints: BoxConstraints(
-                          maxWidth: MediaQuery.of(context).size.width * 0.8,
+                          maxWidth: MediaQuery
+                              .of(context)
+                              .size
+                              .width * 0.8,
                           minWidth: 200,
                         ),
                         child: Column(
@@ -3449,7 +3737,8 @@ class _HomePageState extends State<HomePage>
                                   Navigator.pop(context);
                                 },
                                 child: Container(
-                                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 12, horizontal: 20),
                                   decoration: BoxDecoration(
                                     color: const Color(0xff003060),
                                     borderRadius: BorderRadius.circular(10),
@@ -3480,7 +3769,8 @@ class _HomePageState extends State<HomePage>
                                   Navigator.pop(context);
                                 },
                                 child: Container(
-                                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 12, horizontal: 20),
                                   decoration: BoxDecoration(
                                     color: const Color(0xff003060),
                                     borderRadius: BorderRadius.circular(10),
@@ -3508,9 +3798,8 @@ class _HomePageState extends State<HomePage>
                         builder: (BuildContext context) {
                           return alert;
                         });
-                  }else if (goingForwardMessage.contains(
+                  } else if (goingForwardMessage.contains(
                       "You have not used all given options to response, you can record audio/video, upload pic")) {
-
                     AlertDialog alert = AlertDialog(
                       backgroundColor: Colors.blue,
                       shape: RoundedRectangleBorder(
@@ -3519,7 +3808,8 @@ class _HomePageState extends State<HomePage>
                       title: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.star, color: Colors.yellow, size: 24),
+                          const Icon(
+                              Icons.star, color: Colors.yellow, size: 24),
                           const SizedBox(width: 8),
                           Flexible(
                             child: Text(
@@ -3536,12 +3826,16 @@ class _HomePageState extends State<HomePage>
                             ),
                           ),
                           const SizedBox(width: 8),
-                          const Icon(Icons.star, color: Colors.yellow, size: 24),
+                          const Icon(
+                              Icons.star, color: Colors.yellow, size: 24),
                         ],
                       ),
                       content: ConstrainedBox(
                         constraints: BoxConstraints(
-                          maxWidth: MediaQuery.of(context).size.width * 0.8,
+                          maxWidth: MediaQuery
+                              .of(context)
+                              .size
+                              .width * 0.8,
                           minWidth: 200,
                         ),
                         child: Column(
@@ -3575,8 +3869,10 @@ class _HomePageState extends State<HomePage>
                                     Stack(
                                       alignment: Alignment.center,
                                       children: const [
-                                        Icon(Icons.check_box, color: Colors.green, size: 18),
-                                        Icon(Icons.check, color: Colors.white, size: 14),
+                                        Icon(Icons.check_box,
+                                            color: Colors.green, size: 18),
+                                        Icon(Icons.check, color: Colors.white,
+                                            size: 14),
                                       ],
                                     ),
                                     const SizedBox(width: 8),
@@ -3599,8 +3895,10 @@ class _HomePageState extends State<HomePage>
                                     Stack(
                                       alignment: Alignment.center,
                                       children: const [
-                                        Icon(Icons.check_box, color: Colors.green, size: 18),
-                                        Icon(Icons.check, color: Colors.white, size: 14),
+                                        Icon(Icons.check_box,
+                                            color: Colors.green, size: 18),
+                                        Icon(Icons.check, color: Colors.white,
+                                            size: 14),
                                       ],
                                     ),
                                     const SizedBox(width: 8),
@@ -3623,8 +3921,10 @@ class _HomePageState extends State<HomePage>
                                     Stack(
                                       alignment: Alignment.center,
                                       children: const [
-                                        Icon(Icons.check_box, color: Colors.green, size: 18),
-                                        Icon(Icons.check, color: Colors.white, size: 14),
+                                        Icon(Icons.check_box,
+                                            color: Colors.green, size: 18),
+                                        Icon(Icons.check, color: Colors.white,
+                                            size: 14),
                                       ],
                                     ),
                                     const SizedBox(width: 8),
@@ -3666,7 +3966,8 @@ class _HomePageState extends State<HomePage>
                                   Navigator.pop(context);
                                 },
                                 child: Container(
-                                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 12, horizontal: 20),
                                   decoration: BoxDecoration(
                                     color: const Color(0xff003060),
                                     borderRadius: BorderRadius.circular(10),
@@ -3697,7 +3998,8 @@ class _HomePageState extends State<HomePage>
                                   Navigator.pop(context);
                                 },
                                 child: Container(
-                                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 12, horizontal: 20),
                                   decoration: BoxDecoration(
                                     color: const Color(0xff003060),
                                     borderRadius: BorderRadius.circular(10),
@@ -3722,24 +4024,25 @@ class _HomePageState extends State<HomePage>
 
                     // Show dialog with safe context
 
-                      showDialog(
+                    showDialog(
                         context: context,
                         builder: (BuildContext context) {
                           return alert;
                         });
-
-                  }else if(goingForwardMessage.contains("What made this experience special ?"))
-                  {
+                  } else if (goingForwardMessage.contains(
+                      "What made this experience special ?")) {
                     print("in positive exp");
                     AlertDialog alert = AlertDialog(
                       backgroundColor: Colors.blue,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15), // Consistent corners
+                        borderRadius: BorderRadius.circular(
+                            15), // Consistent corners
                       ),
                       title: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.star, color: Colors.yellow, size: 24),
+                          const Icon(Icons.star, color: Colors.yellow,
+                              size: 24),
                           const SizedBox(width: 8), // Add spacing
                           Flexible(
                             child: Text(
@@ -3756,12 +4059,16 @@ class _HomePageState extends State<HomePage>
                             ),
                           ),
                           const SizedBox(width: 8), // Add spacing
-                          const Icon(Icons.star, color: Colors.yellow, size: 24),
+                          const Icon(Icons.star, color: Colors.yellow,
+                              size: 24),
                         ],
                       ),
                       content: ConstrainedBox(
                         constraints: BoxConstraints(
-                          maxWidth: MediaQuery.of(context).size.width * 0.8, // 80% screen width
+                          maxWidth: MediaQuery
+                              .of(context)
+                              .size
+                              .width * 0.8, // 80% screen width
                           minWidth: 200, // Minimum for small screens
                         ),
                         child: Column(
@@ -3789,7 +4096,8 @@ class _HomePageState extends State<HomePage>
                                 Navigator.pop(context);
                               },
                               child: Container(
-                                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 12, horizontal: 20),
                                 decoration: BoxDecoration(
                                   color: const Color(0xff003060),
                                   borderRadius: BorderRadius.circular(20),
@@ -3807,16 +4115,16 @@ class _HomePageState extends State<HomePage>
                             const SizedBox(width: 10),
                             GestureDetector(
                               onTap: () {
-
-                                  setState(() {
-                                    questionIndex++;
-                                    ratingsArrayLoaded = false;
-                                  });
+                                setState(() {
+                                  questionIndex++;
+                                  ratingsArrayLoaded = false;
+                                });
 
                                 Navigator.pop(context);
                               },
                               child: Container(
-                                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 12, horizontal: 20),
                                 decoration: BoxDecoration(
                                   color: const Color(0xff003060),
                                   borderRadius: BorderRadius.circular(20),
@@ -3837,8 +4145,6 @@ class _HomePageState extends State<HomePage>
                     );
 
 
-
-
                     // Show dialog with safe context
                     if (context.mounted) {
                       showDialog(
@@ -3848,18 +4154,20 @@ class _HomePageState extends State<HomePage>
                         },
                       );
                     }
-                  }else if(goingForwardMessage.contains("What was missing?"))
-                  {
+                  } else
+                  if (goingForwardMessage.contains("What was missing?")) {
                     print("in missing exp");
                     AlertDialog alert = AlertDialog(
                       backgroundColor: Colors.blue,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15), // Consistent corners
+                        borderRadius: BorderRadius.circular(
+                            15), // Consistent corners
                       ),
                       title: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.star, color: Colors.yellow, size: 24),
+                          const Icon(Icons.star, color: Colors.yellow,
+                              size: 24),
                           const SizedBox(width: 8), // Add spacing
                           Flexible(
                             child: Text(
@@ -3876,12 +4184,16 @@ class _HomePageState extends State<HomePage>
                             ),
                           ),
                           const SizedBox(width: 8), // Add spacing
-                          const Icon(Icons.star, color: Colors.yellow, size: 24),
+                          const Icon(Icons.star, color: Colors.yellow,
+                              size: 24),
                         ],
                       ),
                       content: ConstrainedBox(
                         constraints: BoxConstraints(
-                          maxWidth: MediaQuery.of(context).size.width * 0.8, // 80% screen width
+                          maxWidth: MediaQuery
+                              .of(context)
+                              .size
+                              .width * 0.8, // 80% screen width
                           minWidth: 200, // Minimum for small screens
                         ),
                         child: Column(
@@ -3909,7 +4221,8 @@ class _HomePageState extends State<HomePage>
                                 Navigator.pop(context);
                               },
                               child: Container(
-                                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 12, horizontal: 20),
                                 decoration: BoxDecoration(
                                   color: const Color(0xff003060),
                                   borderRadius: BorderRadius.circular(20),
@@ -3927,7 +4240,6 @@ class _HomePageState extends State<HomePage>
                             const SizedBox(width: 10),
                             GestureDetector(
                               onTap: () {
-
                                 setState(() {
                                   questionIndex++;
                                   ratingsArrayLoaded = false;
@@ -3936,7 +4248,8 @@ class _HomePageState extends State<HomePage>
                                 Navigator.pop(context);
                               },
                               child: Container(
-                                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 12, horizontal: 20),
                                 decoration: BoxDecoration(
                                   color: const Color(0xff003060),
                                   borderRadius: BorderRadius.circular(20),
@@ -3956,13 +4269,12 @@ class _HomePageState extends State<HomePage>
                       ],
                     );
 
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return alert;
-                        },
-                      );
-
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return alert;
+                      },
+                    );
                   }
                   else {
                     print("oops in line 3292");
@@ -3985,7 +4297,7 @@ class _HomePageState extends State<HomePage>
                       ),
                       content: Column(
                         mainAxisSize:
-                            MainAxisSize.min, // ✅ Prevents unnecessary spacing
+                        MainAxisSize.min, // ✅ Prevents unnecessary spacing
                         crossAxisAlignment: CrossAxisAlignment
                             .start, // ✅ Aligns content to the left
                         children: [
@@ -4025,7 +4337,7 @@ class _HomePageState extends State<HomePage>
                               ),
                               SizedBox(
                                   height:
-                                      5), // ✅ Spacing between checklist items
+                                  5), // ✅ Spacing between checklist items
                               Row(
                                 children: [
                                   Stack(
@@ -4148,7 +4460,7 @@ class _HomePageState extends State<HomePage>
                   FocusScope.of(context).unfocus();
 
                   if (goingForwardMessage.contains(
-                          "A response is needed to continue, select any one for Yes or No") ||
+                      "A response is needed to continue, select any one for Yes or No") ||
                       goingForwardMessage.isEmpty) {
                     print("oops in line 3478");
                     AlertDialog alert = AlertDialog(
@@ -4170,7 +4482,7 @@ class _HomePageState extends State<HomePage>
                       ),
                       content: Column(
                         mainAxisSize:
-                            MainAxisSize.min, // ✅ Prevents unnecessary spacing
+                        MainAxisSize.min, // ✅ Prevents unnecessary spacing
                         crossAxisAlignment: CrossAxisAlignment
                             .start, // ✅ Aligns content to the left
                         children: [
@@ -4210,7 +4522,7 @@ class _HomePageState extends State<HomePage>
                               ),
                               SizedBox(
                                   height:
-                                      5), // ✅ Spacing between checklist items
+                                  5), // ✅ Spacing between checklist items
                               Row(
                                 children: [
                                   Stack(
@@ -4295,7 +4607,8 @@ class _HomePageState extends State<HomePage>
                         builder: (BuildContext context) {
                           return alert;
                         });
-                  } else if (goingForwardMessage.contains("You have not used all given options to response, you can record audio and state detailed problem. Are you sure you want to continue?")) {
+                  } else if (goingForwardMessage.contains(
+                      "You have not used all given options to response, you can record audio and state detailed problem. Are you sure you want to continue?")) {
                     AlertDialog alert = AlertDialog(
                       backgroundColor: Colors.blue,
                       shape: RoundedRectangleBorder(
@@ -4304,7 +4617,8 @@ class _HomePageState extends State<HomePage>
                       title: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.star, color: Colors.yellow, size: 24),
+                          const Icon(
+                              Icons.star, color: Colors.yellow, size: 24),
                           const SizedBox(width: 8),
                           Flexible(
                             child: Text(
@@ -4321,12 +4635,16 @@ class _HomePageState extends State<HomePage>
                             ),
                           ),
                           const SizedBox(width: 8),
-                          const Icon(Icons.star, color: Colors.yellow, size: 24),
+                          const Icon(
+                              Icons.star, color: Colors.yellow, size: 24),
                         ],
                       ),
                       content: ConstrainedBox(
                         constraints: BoxConstraints(
-                          maxWidth: MediaQuery.of(context).size.width * 0.8,
+                          maxWidth: MediaQuery
+                              .of(context)
+                              .size
+                              .width * 0.8,
                           minWidth: 200,
                         ),
                         child: Column(
@@ -4367,7 +4685,8 @@ class _HomePageState extends State<HomePage>
                                   Navigator.pop(context);
                                 },
                                 child: Container(
-                                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 12, horizontal: 20),
                                   decoration: BoxDecoration(
                                     color: const Color(0xff003060),
                                     borderRadius: BorderRadius.circular(10),
@@ -4398,7 +4717,8 @@ class _HomePageState extends State<HomePage>
                                   Navigator.pop(context);
                                 },
                                 child: Container(
-                                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 12, horizontal: 20),
                                   decoration: BoxDecoration(
                                     color: const Color(0xff003060),
                                     borderRadius: BorderRadius.circular(10),
@@ -4426,7 +4746,7 @@ class _HomePageState extends State<HomePage>
                         builder: (BuildContext context) {
                           return alert;
                         });
-                  }else if (goingForwardMessage.contains(
+                  } else if (goingForwardMessage.contains(
                       "You have not used all given options to response, you can record audio/video, upload pic")) {
                     AlertDialog alert = AlertDialog(
                       backgroundColor: Colors.blue,
@@ -4436,7 +4756,8 @@ class _HomePageState extends State<HomePage>
                       title: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.star, color: Colors.yellow, size: 24),
+                          const Icon(Icons.star, color: Colors.yellow,
+                              size: 24),
                           const SizedBox(width: 8),
                           Flexible(
                             child: Text(
@@ -4453,12 +4774,16 @@ class _HomePageState extends State<HomePage>
                             ),
                           ),
                           const SizedBox(width: 8),
-                          const Icon(Icons.star, color: Colors.yellow, size: 24),
+                          const Icon(Icons.star, color: Colors.yellow,
+                              size: 24),
                         ],
                       ),
                       content: ConstrainedBox(
                         constraints: BoxConstraints(
-                          maxWidth: MediaQuery.of(context).size.width * 0.8,
+                          maxWidth: MediaQuery
+                              .of(context)
+                              .size
+                              .width * 0.8,
                           minWidth: 200,
                         ),
                         child: Column(
@@ -4492,8 +4817,10 @@ class _HomePageState extends State<HomePage>
                                     Stack(
                                       alignment: Alignment.center,
                                       children: const [
-                                        Icon(Icons.check_box, color: Colors.green, size: 18),
-                                        Icon(Icons.check, color: Colors.white, size: 14),
+                                        Icon(Icons.check_box,
+                                            color: Colors.green, size: 18),
+                                        Icon(Icons.check, color: Colors.white,
+                                            size: 14),
                                       ],
                                     ),
                                     const SizedBox(width: 8),
@@ -4516,8 +4843,10 @@ class _HomePageState extends State<HomePage>
                                     Stack(
                                       alignment: Alignment.center,
                                       children: const [
-                                        Icon(Icons.check_box, color: Colors.green, size: 18),
-                                        Icon(Icons.check, color: Colors.white, size: 14),
+                                        Icon(Icons.check_box,
+                                            color: Colors.green, size: 18),
+                                        Icon(Icons.check, color: Colors.white,
+                                            size: 14),
                                       ],
                                     ),
                                     const SizedBox(width: 8),
@@ -4540,8 +4869,10 @@ class _HomePageState extends State<HomePage>
                                     Stack(
                                       alignment: Alignment.center,
                                       children: const [
-                                        Icon(Icons.check_box, color: Colors.green, size: 18),
-                                        Icon(Icons.check, color: Colors.white, size: 14),
+                                        Icon(Icons.check_box,
+                                            color: Colors.green, size: 18),
+                                        Icon(Icons.check, color: Colors.white,
+                                            size: 14),
                                       ],
                                     ),
                                     const SizedBox(width: 8),
@@ -4583,7 +4914,8 @@ class _HomePageState extends State<HomePage>
                                   Navigator.pop(context);
                                 },
                                 child: Container(
-                                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 12, horizontal: 20),
                                   decoration: BoxDecoration(
                                     color: const Color(0xff003060),
                                     borderRadius: BorderRadius.circular(10),
@@ -4614,7 +4946,8 @@ class _HomePageState extends State<HomePage>
                                   Navigator.pop(context);
                                 },
                                 child: Container(
-                                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 12, horizontal: 20),
                                   decoration: BoxDecoration(
                                     color: const Color(0xff003060),
                                     borderRadius: BorderRadius.circular(10),
@@ -4652,7 +4985,8 @@ class _HomePageState extends State<HomePage>
                       title: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.star, color: Colors.yellow, size: 24),
+                          const Icon(Icons.star, color: Colors.yellow,
+                              size: 24),
                           const SizedBox(width: 8),
                           Flexible(
                             child: Text(
@@ -4669,12 +5003,16 @@ class _HomePageState extends State<HomePage>
                             ),
                           ),
                           const SizedBox(width: 8),
-                          const Icon(Icons.star, color: Colors.yellow, size: 24),
+                          const Icon(Icons.star, color: Colors.yellow,
+                              size: 24),
                         ],
                       ),
                       content: ConstrainedBox(
                         constraints: BoxConstraints(
-                          maxWidth: MediaQuery.of(context).size.width * 0.8,
+                          maxWidth: MediaQuery
+                              .of(context)
+                              .size
+                              .width * 0.8,
                           minWidth: 200,
                         ),
                         child: Column(
@@ -4708,8 +5046,10 @@ class _HomePageState extends State<HomePage>
                                     Stack(
                                       alignment: Alignment.center,
                                       children: const [
-                                        Icon(Icons.check_box, color: Colors.green, size: 18),
-                                        Icon(Icons.check, color: Colors.white, size: 14),
+                                        Icon(Icons.check_box,
+                                            color: Colors.green, size: 18),
+                                        Icon(Icons.check, color: Colors.white,
+                                            size: 14),
                                       ],
                                     ),
                                     const SizedBox(width: 8),
@@ -4732,8 +5072,10 @@ class _HomePageState extends State<HomePage>
                                     Stack(
                                       alignment: Alignment.center,
                                       children: const [
-                                        Icon(Icons.check_box, color: Colors.green, size: 18),
-                                        Icon(Icons.check, color: Colors.white, size: 14),
+                                        Icon(Icons.check_box,
+                                            color: Colors.green, size: 18),
+                                        Icon(Icons.check, color: Colors.white,
+                                            size: 14),
                                       ],
                                     ),
                                     const SizedBox(width: 8),
@@ -4756,8 +5098,10 @@ class _HomePageState extends State<HomePage>
                                     Stack(
                                       alignment: Alignment.center,
                                       children: const [
-                                        Icon(Icons.check_box, color: Colors.green, size: 18),
-                                        Icon(Icons.check, color: Colors.white, size: 14),
+                                        Icon(Icons.check_box,
+                                            color: Colors.green, size: 18),
+                                        Icon(Icons.check, color: Colors.white,
+                                            size: 14),
                                       ],
                                     ),
                                     const SizedBox(width: 8),
@@ -4799,7 +5143,8 @@ class _HomePageState extends State<HomePage>
                                   Navigator.pop(context);
                                 },
                                 child: Container(
-                                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 12, horizontal: 20),
                                   decoration: BoxDecoration(
                                     color: const Color(0xff003060),
                                     borderRadius: BorderRadius.circular(10),
@@ -4830,7 +5175,8 @@ class _HomePageState extends State<HomePage>
                                   Navigator.pop(context);
                                 },
                                 child: Container(
-                                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 12, horizontal: 20),
                                   decoration: BoxDecoration(
                                     color: const Color(0xff003060),
                                     borderRadius: BorderRadius.circular(10),
@@ -5005,18 +5351,20 @@ class _HomePageState extends State<HomePage>
                         builder: (BuildContext context) {
                           return alert;
                         });
-                  }else if(goingForwardMessage.contains("What made this experience special ?"))
-                  {
+                  } else if (goingForwardMessage.contains(
+                      "What made this experience special ?")) {
                     print("in positive exp");
                     AlertDialog alert = AlertDialog(
                       backgroundColor: Colors.blue,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15), // Consistent corners
+                        borderRadius: BorderRadius.circular(
+                            15), // Consistent corners
                       ),
                       title: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.star, color: Colors.yellow, size: 24),
+                          const Icon(
+                              Icons.star, color: Colors.yellow, size: 24),
                           const SizedBox(width: 8), // Add spacing
                           Flexible(
                             child: Text(
@@ -5033,12 +5381,16 @@ class _HomePageState extends State<HomePage>
                             ),
                           ),
                           const SizedBox(width: 8), // Add spacing
-                          const Icon(Icons.star, color: Colors.yellow, size: 24),
+                          const Icon(
+                              Icons.star, color: Colors.yellow, size: 24),
                         ],
                       ),
                       content: ConstrainedBox(
                         constraints: BoxConstraints(
-                          maxWidth: MediaQuery.of(context).size.width * 0.8, // 80% screen width
+                          maxWidth: MediaQuery
+                              .of(context)
+                              .size
+                              .width * 0.8, // 80% screen width
                           minWidth: 200, // Minimum for small screens
                         ),
                         child: Column(
@@ -5066,7 +5418,8 @@ class _HomePageState extends State<HomePage>
                                 Navigator.pop(context);
                               },
                               child: Container(
-                                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 12, horizontal: 20),
                                 decoration: BoxDecoration(
                                   color: const Color(0xff003060),
                                   borderRadius: BorderRadius.circular(20),
@@ -5084,16 +5437,16 @@ class _HomePageState extends State<HomePage>
                             const SizedBox(width: 10),
                             GestureDetector(
                               onTap: () {
-
-                                  setState(() {
-                                    questionIndex++;
-                                    ratingsArrayLoaded = false;
-                                  });
+                                setState(() {
+                                  questionIndex++;
+                                  ratingsArrayLoaded = false;
+                                });
 
                                 Navigator.pop(context);
                               },
                               child: Container(
-                                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 12, horizontal: 20),
                                 decoration: BoxDecoration(
                                   color: const Color(0xff003060),
                                   borderRadius: BorderRadius.circular(20),
@@ -5115,28 +5468,26 @@ class _HomePageState extends State<HomePage>
 
                     // Show dialog with safe context
 
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return alert;
-                        },
-                      );
-
-
-
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return alert;
+                      },
+                    );
                   }
-                  else if(goingForwardMessage.contains("What was missing?"))
-                  {
+                  else if (goingForwardMessage.contains("What was missing?")) {
                     print("in missing exp");
                     AlertDialog alert = AlertDialog(
                       backgroundColor: Colors.blue,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15), // Consistent corners
+                        borderRadius: BorderRadius.circular(
+                            15), // Consistent corners
                       ),
                       title: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.star, color: Colors.yellow, size: 24),
+                          const Icon(
+                              Icons.star, color: Colors.yellow, size: 24),
                           const SizedBox(width: 8), // Add spacing
                           Flexible(
                             child: Text(
@@ -5153,12 +5504,16 @@ class _HomePageState extends State<HomePage>
                             ),
                           ),
                           const SizedBox(width: 8), // Add spacing
-                          const Icon(Icons.star, color: Colors.yellow, size: 24),
+                          const Icon(
+                              Icons.star, color: Colors.yellow, size: 24),
                         ],
                       ),
                       content: ConstrainedBox(
                         constraints: BoxConstraints(
-                          maxWidth: MediaQuery.of(context).size.width * 0.8, // 80% screen width
+                          maxWidth: MediaQuery
+                              .of(context)
+                              .size
+                              .width * 0.8, // 80% screen width
                           minWidth: 200, // Minimum for small screens
                         ),
                         child: Column(
@@ -5186,7 +5541,8 @@ class _HomePageState extends State<HomePage>
                                 Navigator.pop(context);
                               },
                               child: Container(
-                                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 12, horizontal: 20),
                                 decoration: BoxDecoration(
                                   color: const Color(0xff003060),
                                   borderRadius: BorderRadius.circular(20),
@@ -5204,7 +5560,6 @@ class _HomePageState extends State<HomePage>
                             const SizedBox(width: 10),
                             GestureDetector(
                               onTap: () {
-
                                 setState(() {
                                   questionIndex++;
                                   ratingsArrayLoaded = false;
@@ -5213,7 +5568,8 @@ class _HomePageState extends State<HomePage>
                                 Navigator.pop(context);
                               },
                               child: Container(
-                                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 12, horizontal: 20),
                                 decoration: BoxDecoration(
                                   color: const Color(0xff003060),
                                   borderRadius: BorderRadius.circular(20),
@@ -5239,7 +5595,6 @@ class _HomePageState extends State<HomePage>
                         return alert;
                       },
                     );
-
                   }
                   else {
                     AlertDialog alert = AlertDialog(
@@ -5265,12 +5620,12 @@ class _HomePageState extends State<HomePage>
                               .spaceEvenly, // ✅ Evenly spaced buttons
                           children: [
                             if (currentSurvey[0]["answerType"]
-                                    .contains("Rating") ||
+                                .contains("Rating") ||
                                 (currentSurvey[0]["answerType"]
-                                        .contains("Multimedia/Descriptive") &&
+                                    .contains("Multimedia/Descriptive") &&
                                     goingForwardMessage.contains("options")) ||
                                 (currentSurvey[0]["answerType"]
-                                        .contains("Audio/Descriptive") &&
+                                    .contains("Audio/Descriptive") &&
                                     goingForwardMessage.contains("options")))
                               GestureDetector(
                                 onTap: () {
@@ -5294,7 +5649,7 @@ class _HomePageState extends State<HomePage>
                                       fontSize: 14,
                                       fontWeight: FontWeight.bold,
                                       color:
-                                          Colors.white, // ✅ Button text color
+                                      Colors.white, // ✅ Button text color
                                     ),
                                   ),
                                 ),
@@ -5333,10 +5688,11 @@ class _HomePageState extends State<HomePage>
                         });
                   }
                 } else {
-
-                  if(surveys[0]["feedbackQuestion"][questionIndex]["answer"] == "No" &&
-                      surveys[0]["feedbackQuestion"][questionIndex]["titleLine"].contains("Please let us know about any unreported problems/issues with your"))
-                  {
+                  if (surveys[0]["feedbackQuestion"][questionIndex]["answer"] ==
+                      "No" &&
+                      surveys[0]["feedbackQuestion"][questionIndex]["titleLine"]
+                          .contains(
+                          "Please let us know about any unreported problems/issues with your")) {
                     setState(() {
                       showThankyouMessage = true;
                       questionIndex = 0;
@@ -5344,10 +5700,9 @@ class _HomePageState extends State<HomePage>
                       setNextSurvey(true);
                       showSpinner = false;
                       showSpinnerMyFeedback = false;
-
                     });
                   }
-                  else{
+                  else {
                     setState(() {
                       questionIndex++;
                       ratingsArrayLoaded = false;
@@ -5384,74 +5739,129 @@ class _HomePageState extends State<HomePage>
                 margin: EdgeInsets.all(10),
                 child: ElevatedButton(
                   onPressed: () {
-                   if ((surveys[0]["surveyId"] !=
+                    if ((surveys[0]["surveyId"] !=
                         "ReplacementSurvey")) {
                       if (!GetValidResponses(currentSurvey)) {
-                        AlertDialog alert = AlertDialog(
-                          backgroundColor:
-                              Colors.blue, // ✅ Dialog background color
-                          title: Text(
-                            "Alert",
-                            style: GoogleFonts.poppins(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white, // ✅ Title text color
-                            ),
-                          ),
-                          content: Text(
-                            goingForwardMessage,
-                            style: GoogleFonts.poppins(
-                              fontSize: 16,
-                              color: Colors.white, // ✅ Content text color
-                            ),
-                          ),
-                          actions: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment
-                                  .spaceEvenly, // ✅ Even spacing for buttons
-                              children: [
-                                if (currentSurvey[0]["answerType"]
-                                        .contains("Rating") ||
-                                    (currentSurvey[0]["answerType"].contains(
-                                            "Multimedia/Descriptive") &&
-                                        goingForwardMessage
-                                            .contains("options")) ||
-                                    (currentSurvey[0]["answerType"]
-                                            .contains("Audio/Descriptive") &&
-                                        goingForwardMessage
-                                            .contains("options")))
-                                  GestureDetector(
-                                    onTap: () {
-                                      setState(() {
-                                        showThankyouMessage = true;
-                                        questionIndex = 0;
-                                        superIndex = 0;
-                                        setNextSurvey(true);
+                        FocusScope.of(context).unfocus();
 
-                                      });
-                                      Navigator.pop(context);
-                                    },
-                                    child: Container(
-                                      padding: EdgeInsets.symmetric(
-                                          vertical: 12, horizontal: 20),
-                                      decoration: BoxDecoration(
-                                        color:
-                                            Color(0xff003060), // ✅ Button color
-                                        borderRadius: BorderRadius.circular(
-                                            20), // ✅ Rounded corners
-                                      ),
-                                      child: Text(
-                                        "Continue",
-                                        style: GoogleFonts.poppins(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors
-                                              .white, // ✅ Button text color
-                                        ),
-                                      ),
-                                    ),
+                        if (goingForwardMessage.contains(
+                            "A response is needed to continue, select any one for Yes or No") ||
+                            goingForwardMessage.isEmpty) {
+                          print("oops in line 3478");
+                          AlertDialog alert = AlertDialog(
+                            backgroundColor: Colors.blue, // ✅ Background color
+                            title: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  "Oops! Missing Info",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white, // ✅ Title text color
                                   ),
-                                GestureDetector(
+                                ),
+                                SizedBox(width: 8), // ✅ Spacing
+                                Icon(Icons.warning, color: Colors.yellow, size: 30),
+                              ],
+                            ),
+                            content: Column(
+                              mainAxisSize:
+                              MainAxisSize.min, // ✅ Prevents unnecessary spacing
+                              crossAxisAlignment: CrossAxisAlignment
+                                  .start, // ✅ Aligns content to the left
+                              children: [
+                                Text(
+                                  "We need all fields filled out to continue.",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 16,
+                                    color: Colors.white, // ✅ Content text color
+                                  ),
+                                ),
+                                SizedBox(
+                                    height: 20), // ✅ Space between text and checklist
+                                Column(
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Stack(
+                                          alignment: Alignment.center,
+                                          children: [
+                                            Icon(Icons.check_box,
+                                                color: Colors.green,
+                                                size: 18), // Green box
+                                            Icon(Icons.check,
+                                                color: Colors.white,
+                                                size: 14), // White tick on top
+                                          ],
+                                        ), // ✅ Check Icon
+                                        SizedBox(width: 8), // ✅ Spacing
+                                        Text(
+                                          "Check your info",
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 14,
+                                            color: Colors.white, // ✅ Text color
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    SizedBox(
+                                        height:
+                                        5), // ✅ Spacing between checklist items
+                                    Row(
+                                      children: [
+                                        Stack(
+                                          alignment: Alignment.center,
+                                          children: [
+                                            Icon(Icons.check_box,
+                                                color: Colors.green,
+                                                size: 18), // Green box
+                                            Icon(Icons.check,
+                                                color: Colors.white,
+                                                size: 14), // White tick on top
+                                          ],
+                                        ),
+                                        SizedBox(width: 8),
+                                        Text(
+                                          "Fill in the missing parts",
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 14,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    SizedBox(height: 5),
+                                    Row(
+                                      children: [
+                                        Stack(
+                                          alignment: Alignment.center,
+                                          children: [
+                                            Icon(Icons.check_box,
+                                                color: Colors.green,
+                                                size: 18), // Green box
+                                            Icon(Icons.check,
+                                                color: Colors.white,
+                                                size: 14), // White tick on top
+                                          ],
+                                        ),
+                                        SizedBox(width: 8),
+                                        Text(
+                                          "Try again!",
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 14,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                            actions: [
+                              Center(
+                                child: GestureDetector(
                                   onTap: () {
                                     Navigator.pop(context);
                                   },
@@ -5459,32 +5869,1109 @@ class _HomePageState extends State<HomePage>
                                     padding: EdgeInsets.symmetric(
                                         vertical: 12, horizontal: 20),
                                     decoration: BoxDecoration(
-                                      color:
-                                          Color(0xff003060), // ✅ Button color
+                                      color: Color(0xff003060), // ✅ Button color
                                       borderRadius: BorderRadius.circular(
                                           20), // ✅ Rounded corners
                                     ),
                                     child: Text(
-                                      "Cancel",
+                                      "Go Back",
                                       style: GoogleFonts.poppins(
                                         fontSize: 14,
                                         fontWeight: FontWeight.bold,
-                                        color:
-                                            Colors.white, // ✅ Button text color
+                                        color: Colors.white, // ✅ Button text color
                                       ),
                                     ),
                                   ),
                                 ),
+                              ),
+                            ],
+                          );
+
+                          showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return alert;
+                              });
+                        } else if (goingForwardMessage.contains(
+                            "You have not used all given options to response, you can record audio and state detailed problem. Are you sure you want to continue?")) {
+                          AlertDialog alert = AlertDialog(
+                            backgroundColor: Colors.blue,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                            title: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(
+                                    Icons.star, color: Colors.yellow, size: 24),
+                                const SizedBox(width: 8),
+                                Flexible(
+                                  child: Text(
+                                    "Enhance Your Feedback!",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                    softWrap: true,
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 2,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                const Icon(
+                                    Icons.star, color: Colors.yellow, size: 24),
                               ],
                             ),
-                          ],
-                        );
+                            content: ConstrainedBox(
+                              constraints: BoxConstraints(
+                                maxWidth: MediaQuery
+                                    .of(context)
+                                    .size
+                                    .width * 0.8,
+                                minWidth: 200,
+                              ),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    goingForwardMessage?.isNotEmpty == true
+                                        ? goingForwardMessage!
+                                        : "Please provide your feedback to help us improve.",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 14,
+                                      color: Colors.white,
+                                    ),
+                                    softWrap: true,
+                                    overflow: TextOverflow.visible,
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Text(
+                                    "Your input helps us improve—thank you! 🚀",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 14,
+                                      color: Colors.white,
+                                    ),
+                                    softWrap: true,
+                                    overflow: TextOverflow.visible,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            actions: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  Flexible(
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        Navigator.pop(context);
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            vertical: 12, horizontal: 20),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xff003060),
+                                          borderRadius: BorderRadius.circular(10),
+                                        ),
+                                        child: Text(
+                                          "Improve Feedback",
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Flexible(
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        if (mounted) {
+                                          setState(() {
+                                            questionIndex++;
+                                            ratingsArrayLoaded = false;
+                                          });
+                                        }
+                                        Navigator.pop(context);
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            vertical: 12, horizontal: 20),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xff003060),
+                                          borderRadius: BorderRadius.circular(10),
+                                        ),
+                                        child: Text(
+                                          "Continue as is",
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          );
 
-                        showDialog(
+                          showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return alert;
+                              });
+                        } else if (goingForwardMessage.contains(
+                            "You have not used all given options to response, you can record audio/video, upload pic")) {
+                          AlertDialog alert = AlertDialog(
+                            backgroundColor: Colors.blue,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                            title: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.star, color: Colors.yellow,
+                                    size: 24),
+                                const SizedBox(width: 8),
+                                Flexible(
+                                  child: Text(
+                                    "Enhance Your Feedback!",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                    softWrap: true,
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 2,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                const Icon(Icons.star, color: Colors.yellow,
+                                    size: 24),
+                              ],
+                            ),
+                            content: ConstrainedBox(
+                              constraints: BoxConstraints(
+                                maxWidth: MediaQuery
+                                    .of(context)
+                                    .size
+                                    .width * 0.8,
+                                minWidth: 200,
+                              ),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "Add more impact with:",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 14,
+                                      color: Colors.white,
+                                    ),
+                                    softWrap: true,
+                                    overflow: TextOverflow.visible,
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Text(
+                                    "📷 Photo | 🎥 Video | 🎙️ Audio",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 14,
+                                      color: Colors.white,
+                                    ),
+                                    softWrap: true,
+                                    overflow: TextOverflow.visible,
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Column(
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Stack(
+                                            alignment: Alignment.center,
+                                            children: const [
+                                              Icon(Icons.check_box,
+                                                  color: Colors.green, size: 18),
+                                              Icon(Icons.check, color: Colors.white,
+                                                  size: 14),
+                                            ],
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Flexible(
+                                            child: Text(
+                                              "Choose an option",
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 14,
+                                                color: Colors.white,
+                                              ),
+                                              softWrap: true,
+                                              overflow: TextOverflow.visible,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 5),
+                                      Row(
+                                        children: [
+                                          Stack(
+                                            alignment: Alignment.center,
+                                            children: const [
+                                              Icon(Icons.check_box,
+                                                  color: Colors.green, size: 18),
+                                              Icon(Icons.check, color: Colors.white,
+                                                  size: 14),
+                                            ],
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Flexible(
+                                            child: Text(
+                                              "Upload or add details",
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 14,
+                                                color: Colors.white,
+                                              ),
+                                              softWrap: true,
+                                              overflow: TextOverflow.visible,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 5),
+                                      Row(
+                                        children: [
+                                          Stack(
+                                            alignment: Alignment.center,
+                                            children: const [
+                                              Icon(Icons.check_box,
+                                                  color: Colors.green, size: 18),
+                                              Icon(Icons.check, color: Colors.white,
+                                                  size: 14),
+                                            ],
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Flexible(
+                                            child: Text(
+                                              "Submit again!",
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 14,
+                                                color: Colors.white,
+                                              ),
+                                              softWrap: true,
+                                              overflow: TextOverflow.visible,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Text(
+                                    "Your input helps us improve—thank you! 🚀",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 14,
+                                      color: Colors.white,
+                                    ),
+                                    softWrap: true,
+                                    overflow: TextOverflow.visible,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            actions: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  Flexible(
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        Navigator.pop(context);
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            vertical: 12, horizontal: 20),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xff003060),
+                                          borderRadius: BorderRadius.circular(10),
+                                        ),
+                                        child: Text(
+                                          "Improve Feedback",
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Flexible(
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        if (mounted) {
+                                          setState(() {
+                                            questionIndex++;
+                                            ratingsArrayLoaded = false;
+                                          });
+                                        }
+                                        Navigator.pop(context);
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            vertical: 12, horizontal: 20),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xff003060),
+                                          borderRadius: BorderRadius.circular(10),
+                                        ),
+                                        child: Text(
+                                          "Continue as is",
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          );
+
+                          showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return alert;
+                              });
+                        } else if (goingForwardMessage.contains(
+                            "you can record audio and state detailed problem")) {
+                          AlertDialog alert = AlertDialog(
+                            backgroundColor: Colors.blue,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                            title: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.star, color: Colors.yellow,
+                                    size: 24),
+                                const SizedBox(width: 8),
+                                Flexible(
+                                  child: Text(
+                                    "Enhance Your Feedback!",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                    softWrap: true,
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 2,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                const Icon(Icons.star, color: Colors.yellow,
+                                    size: 24),
+                              ],
+                            ),
+                            content: ConstrainedBox(
+                              constraints: BoxConstraints(
+                                maxWidth: MediaQuery
+                                    .of(context)
+                                    .size
+                                    .width * 0.8,
+                                minWidth: 200,
+                              ),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "Add more impact with:",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 14,
+                                      color: Colors.white,
+                                    ),
+                                    softWrap: true,
+                                    overflow: TextOverflow.visible,
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Text(
+                                    "Give Description and 🎙️ Audio",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 14,
+                                      color: Colors.white,
+                                    ),
+                                    softWrap: true,
+                                    overflow: TextOverflow.visible,
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Column(
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Stack(
+                                            alignment: Alignment.center,
+                                            children: const [
+                                              Icon(Icons.check_box,
+                                                  color: Colors.green, size: 18),
+                                              Icon(Icons.check, color: Colors.white,
+                                                  size: 14),
+                                            ],
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Flexible(
+                                            child: Text(
+                                              "Choose an option",
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 14,
+                                                color: Colors.white,
+                                              ),
+                                              softWrap: true,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 5),
+                                      Row(
+                                        children: [
+                                          Stack(
+                                            alignment: Alignment.center,
+                                            children: const [
+                                              Icon(Icons.check_box,
+                                                  color: Colors.green, size: 18),
+                                              Icon(Icons.check, color: Colors.white,
+                                                  size: 14),
+                                            ],
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Flexible(
+                                            child: Text(
+                                              "Upload or add details",
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 14,
+                                                color: Colors.white,
+                                              ),
+                                              softWrap: true,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 5),
+                                      Row(
+                                        children: [
+                                          Stack(
+                                            alignment: Alignment.center,
+                                            children: const [
+                                              Icon(Icons.check_box,
+                                                  color: Colors.green, size: 18),
+                                              Icon(Icons.check, color: Colors.white,
+                                                  size: 14),
+                                            ],
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Flexible(
+                                            child: Text(
+                                              "Submit again!",
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 14,
+                                                color: Colors.white,
+                                              ),
+                                              softWrap: true,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Text(
+                                    "Your input helps us improve—thank you! 🚀",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 14,
+                                      color: Colors.white,
+                                    ),
+                                    softWrap: true,
+                                    overflow: TextOverflow.visible,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            actions: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  Flexible(
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        Navigator.pop(context);
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            vertical: 12, horizontal: 20),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xff003060),
+                                          borderRadius: BorderRadius.circular(10),
+                                        ),
+                                        child: Text(
+                                          "Improve Feedback",
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Flexible(
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        if (mounted) {
+                                          setState(() {
+                                            questionIndex++;
+                                            ratingsArrayLoaded = false;
+                                          });
+                                        }
+                                        Navigator.pop(context);
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            vertical: 12, horizontal: 20),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xff003060),
+                                          borderRadius: BorderRadius.circular(10),
+                                        ),
+                                        child: Text(
+                                          "Continue as is",
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          );
+
+                          showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return alert;
+                              });
+                        } else if (goingForwardMessage.contains(
+                            "A response is needed to continue, you can record audio or state detailed problem.")) {
+                          print("oops in line 4136");
+                          AlertDialog alert = AlertDialog(
+                            backgroundColor: Colors.blue, // ✅ Background color
+                            title: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  "Oops! Missing Info",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white, // ✅ Title text color
+                                  ),
+                                ),
+                                SizedBox(width: 8), // ✅ Spacing
+                                Icon(Icons.warning, color: Colors.yellow, size: 30),
+                              ],
+                            ),
+                            content: Column(
+                              mainAxisSize:
+                              MainAxisSize.min, // ✅ Prevents unnecessary spacing
+                              crossAxisAlignment: CrossAxisAlignment
+                                  .start, // ✅ Aligns content to the left
+                              children: [
+                                Text(
+                                  "We need all fields filled out to continue.",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 16,
+                                    color: Colors.white, // ✅ Content text color
+                                  ),
+                                ),
+                                SizedBox(
+                                    height: 20), // ✅ Space between text and checklist
+                                Column(
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Stack(
+                                          alignment: Alignment.center,
+                                          children: [
+                                            Icon(Icons.check_box,
+                                                color: Colors.green,
+                                                size: 18), // Green box
+                                            Icon(Icons.check,
+                                                color: Colors.white,
+                                                size: 14), // White tick on top
+                                          ],
+                                        ), // ✅ Check Icon
+                                        SizedBox(width: 8), // ✅ Spacing
+                                        Text(
+                                          "Check your info",
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 14,
+                                            color: Colors.white, // ✅ Text color
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    SizedBox(
+                                        height:
+                                        5), // ✅ Spacing between checklist items
+                                    Row(
+                                      children: [
+                                        Stack(
+                                          alignment: Alignment.center,
+                                          children: [
+                                            Icon(Icons.check_box,
+                                                color: Colors.green,
+                                                size: 18), // Green box
+                                            Icon(Icons.check,
+                                                color: Colors.white,
+                                                size: 14), // White tick on top
+                                          ],
+                                        ),
+                                        SizedBox(width: 8),
+                                        Text(
+                                          "Fill in the missing parts",
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 14,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    SizedBox(height: 5),
+                                    Row(
+                                      children: [
+                                        Stack(
+                                          alignment: Alignment.center,
+                                          children: [
+                                            Icon(Icons.check_box,
+                                                color: Colors.green,
+                                                size: 18), // Green box
+                                            Icon(Icons.check,
+                                                color: Colors.white,
+                                                size: 14), // White tick on top
+                                          ],
+                                        ),
+                                        SizedBox(width: 8),
+                                        Text(
+                                          "Try again!",
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 14,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                            actions: [
+                              Center(
+                                child: GestureDetector(
+                                  onTap: () {
+                                    Navigator.pop(context);
+                                  },
+                                  child: Container(
+                                    padding: EdgeInsets.symmetric(
+                                        vertical: 12, horizontal: 20),
+                                    decoration: BoxDecoration(
+                                      color: Color(0xff003060), // ✅ Button color
+                                      borderRadius: BorderRadius.circular(
+                                          20), // ✅ Rounded corners
+                                    ),
+                                    child: Text(
+                                      "Go Back",
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white, // ✅ Button text color
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+
+                          showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return alert;
+                              });
+                        } else if (goingForwardMessage.contains(
+                            "What made this experience special ?")) {
+                          print("in positive exp");
+                          AlertDialog alert = AlertDialog(
+                            backgroundColor: Colors.blue,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(
+                                  15), // Consistent corners
+                            ),
+                            title: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(
+                                    Icons.star, color: Colors.yellow, size: 24),
+                                const SizedBox(width: 8), // Add spacing
+                                Flexible(
+                                  child: Text(
+                                    "Confirm positive experience!",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                    softWrap: true,
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 2, // Allow wrapping
+                                  ),
+                                ),
+                                const SizedBox(width: 8), // Add spacing
+                                const Icon(
+                                    Icons.star, color: Colors.yellow, size: 24),
+                              ],
+                            ),
+                            content: ConstrainedBox(
+                              constraints: BoxConstraints(
+                                maxWidth: MediaQuery
+                                    .of(context)
+                                    .size
+                                    .width * 0.8, // 80% screen width
+                                minWidth: 200, // Minimum for small screens
+                              ),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "What made this experience special? Please describe in detail through typing or recording. Otherwise please select none and move to the next section.",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 14,
+                                      color: Colors.white,
+                                    ),
+                                    softWrap: true,
+                                    overflow: TextOverflow.visible, // Allow wrapping
+                                  ),
+                                ],
+                              ),
+                            ),
+                            actions: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  GestureDetector(
+                                    onTap: () {
+                                      Navigator.pop(context);
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 12, horizontal: 20),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xff003060),
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      child: Text(
+                                        "Share experience",
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  GestureDetector(
+                                    onTap: () {
+                                      setState(() {
+                                        questionIndex++;
+                                        ratingsArrayLoaded = false;
+                                      });
+
+                                      Navigator.pop(context);
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 12, horizontal: 20),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xff003060),
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      child: Text(
+                                        "None",
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          );
+
+                          // Show dialog with safe context
+
+                          showDialog(
                             context: context,
                             builder: (BuildContext context) {
                               return alert;
-                            });
+                            },
+                          );
+                        }
+                        else if (goingForwardMessage.contains("What was missing?")) {
+                          print("in missing exp");
+                          AlertDialog alert = AlertDialog(
+                            backgroundColor: Colors.blue,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(
+                                  15), // Consistent corners
+                            ),
+                            title: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(
+                                    Icons.star, color: Colors.yellow, size: 24),
+                                const SizedBox(width: 8), // Add spacing
+                                Flexible(
+                                  child: Text(
+                                    "Anything missing ?",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                    softWrap: true,
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 2, // Allow wrapping
+                                  ),
+                                ),
+                                const SizedBox(width: 8), // Add spacing
+                                const Icon(
+                                    Icons.star, color: Colors.yellow, size: 24),
+                              ],
+                            ),
+                            content: ConstrainedBox(
+                              constraints: BoxConstraints(
+                                maxWidth: MediaQuery
+                                    .of(context)
+                                    .size
+                                    .width * 0.8, // 80% screen width
+                                minWidth: 200, // Minimum for small screens
+                              ),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "What was missing? Please describe in detail through typing or recording. Otherwise please select none and move to the next section.",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 14,
+                                      color: Colors.white,
+                                    ),
+                                    softWrap: true,
+                                    overflow: TextOverflow.visible, // Allow wrapping
+                                  ),
+                                ],
+                              ),
+                            ),
+                            actions: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  GestureDetector(
+                                    onTap: () {
+                                      Navigator.pop(context);
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 12, horizontal: 20),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xff003060),
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      child: Text(
+                                        "Share experience",
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  GestureDetector(
+                                    onTap: () {
+                                      setState(() {
+                                        questionIndex++;
+                                        ratingsArrayLoaded = false;
+                                      });
+
+                                      Navigator.pop(context);
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 12, horizontal: 20),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xff003060),
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      child: Text(
+                                        "None",
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          );
+
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return alert;
+                            },
+                          );
+                        }
+                        else {
+                          AlertDialog alert = AlertDialog(
+                            backgroundColor: Colors.blue, // ✅ Dialog background color
+                            title: Text(
+                              "Alert",
+                              style: GoogleFonts.poppins(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white, // ✅ Title text color
+                              ),
+                            ),
+                            content: Text(
+                              goingForwardMessage,
+                              style: GoogleFonts.poppins(
+                                fontSize: 16,
+                                color: Colors.white, // ✅ Content text color
+                              ),
+                            ),
+                            actions: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment
+                                    .spaceEvenly, // ✅ Evenly spaced buttons
+                                children: [
+                                  if (currentSurvey[0]["answerType"]
+                                      .contains("Rating") ||
+                                      (currentSurvey[0]["answerType"]
+                                          .contains("Multimedia/Descriptive") &&
+                                          goingForwardMessage.contains("options")) ||
+                                      (currentSurvey[0]["answerType"]
+                                          .contains("Audio/Descriptive") &&
+                                          goingForwardMessage.contains("options")))
+                                    GestureDetector(
+                                      onTap: () {
+                                        setState(() {
+                                          questionIndex++;
+                                          ratingsArrayLoaded = false;
+                                        });
+                                        Navigator.pop(context);
+                                      },
+                                      child: Container(
+                                        padding: EdgeInsets.symmetric(
+                                            vertical: 12, horizontal: 20),
+                                        decoration: BoxDecoration(
+                                          color: Color(0xff003060), // ✅ Button color
+                                          borderRadius: BorderRadius.circular(
+                                              20), // ✅ Rounded corners
+                                        ),
+                                        child: Text(
+                                          "Continue",
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.bold,
+                                            color:
+                                            Colors.white, // ✅ Button text color
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  GestureDetector(
+                                    onTap: () {
+                                      Navigator.pop(context);
+                                    },
+                                    child: Container(
+                                      padding: EdgeInsets.symmetric(
+                                          vertical: 12, horizontal: 20),
+                                      decoration: BoxDecoration(
+                                        color: Color(0xff003060), // ✅ Button color
+                                        borderRadius: BorderRadius.circular(
+                                            20), // ✅ Rounded corners
+                                      ),
+                                      child: Text(
+                                        "Cancel",
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white, // ✅ Button text color
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          );
+
+                          showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return alert;
+                              });
+                        }
                       } else {
                         setState(() {
                           showThankyouMessage = true;
@@ -5514,7 +7001,7 @@ class _HomePageState extends State<HomePage>
                         borderRadius: BorderRadius.circular(30.0)),
                     child: Container(
                       constraints:
-                          BoxConstraints(maxWidth: 150.0, minHeight: 50.0),
+                      BoxConstraints(maxWidth: 150.0, minHeight: 50.0),
                       alignment: Alignment.center,
                       child: Text(
                         "Submit",
@@ -5570,14 +7057,14 @@ class _HomePageState extends State<HomePage>
                 ),
               ),
               onPressed: () {
-                setState(()  {
-                  showThankyouMessage = true;
-                  questionIndex = 0;
-                  superIndex = 0;
-                  setNextSurvey(true);
-                  showSpinner = false;
-                  showSpinnerMyFeedback = false;
-
+                setState(() {
+                  // showThankyouMessage = true;
+                  // questionIndex = 0;
+                  // superIndex = 0;
+                  // setNextSurvey(true);
+                  // showSpinner = false;
+                  // showSpinnerMyFeedback = false;
+                 questionIndex =  (surveys[0]["feedbackQuestion"].length) - 1;
                 });
               },
             ),
@@ -5606,14 +7093,12 @@ class _HomePageState extends State<HomePage>
       question = question.replaceAll("product", productSelected.toString());
       question = question.replaceAll("\"", "");
       question = question.replaceAll("\\n", "\n");
-
     }
 
     return question;
   }
 
   getRatingsArray(answerType, int index) {
-
     responseArray = [];
 
     bool hasRatings = ratings[answerType] != null;
@@ -5642,32 +7127,27 @@ class _HomePageState extends State<HomePage>
       var url = Uri.parse(Apis.ratingsArray());
       var response = await http.get(url);
 
-      if (response.statusCode == 200)
-        {
-          List<dynamic> responseList = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        List<dynamic> responseList = jsonDecode(response.body);
 
-          for (int i = 0; i < responseList.length; i++) {
-            ratings[responseList[i]["answerType"].toString()] =
-            responseList[i]["ratingValues"];
-            checkBoxes[responseList[i]["answerType"].toString()] =
-            responseList[i]["checkBoxValues"];
-          }
-
-          ratingsArrayLoaded = true;
+        for (int i = 0; i < responseList.length; i++) {
+          ratings[responseList[i]["answerType"].toString()] =
+          responseList[i]["ratingValues"];
+          checkBoxes[responseList[i]["answerType"].toString()] =
+          responseList[i]["checkBoxValues"];
         }
-      else{
+
+        ratingsArrayLoaded = true;
+      }
+      else {
         print("Rating array could not be loaded");
       }
-
-
-
     }
   }
 
   startFeedback() {
-
     String titleLine =
-        surveys[0]["feedbackQuestion"][questionIndex]["titleLine"].toString();
+    surveys[0]["feedbackQuestion"][questionIndex]["titleLine"].toString();
     if (lastTitle.isNotEmpty &&
         titleLine.isNotEmpty &&
         (lastTitle == "LoadLastLine" || lastTitle != titleLine)) {
@@ -5746,7 +7226,7 @@ class _HomePageState extends State<HomePage>
                             ),
                             content: Text(
                               "You are leaving the survey while it's not complete. If you proceed, it may reset and not "
-                              "get recorded.\n\nDo you wish to abort feedback?",
+                                  "get recorded.\n\nDo you wish to abort feedback?",
                               style: GoogleFonts.poppins(
                                 fontSize: 16,
                                 color: Colors.white, // ✅ Content text color
@@ -5766,14 +7246,12 @@ class _HomePageState extends State<HomePage>
                                         goToHome = true;
                                         questionIndex = 0;
                                         if (isDefectSurvey) {
-
-                                            myProductSelected[
-                                            "currentDefectSurvey"] =
-                                            surveys[0];
+                                          myProductSelected[
+                                          "currentDefectSurvey"] =
+                                          surveys[0];
                                         } else {
-                                            myProductSelected[
-                                            "currentMainSurvey"] = surveys[0];
-
+                                          myProductSelected[
+                                          "currentMainSurvey"] = surveys[0];
                                         }
                                       });
 
@@ -5781,16 +7259,13 @@ class _HomePageState extends State<HomePage>
 
 
                                       Navigator.pop(context);
-
-
-
                                     },
                                     child: Container(
                                       padding: EdgeInsets.symmetric(
                                           vertical: 12, horizontal: 20),
                                       decoration: BoxDecoration(
                                         color:
-                                            Color(0xff003060), // ✅ Button color
+                                        Color(0xff003060), // ✅ Button color
                                         borderRadius: BorderRadius.circular(
                                             20), // ✅ Rounded corners
                                       ),
@@ -5814,7 +7289,7 @@ class _HomePageState extends State<HomePage>
                                           vertical: 12, horizontal: 20),
                                       decoration: BoxDecoration(
                                         color:
-                                            Color(0xff003060), // ✅ Button color
+                                        Color(0xff003060), // ✅ Button color
                                         borderRadius: BorderRadius.circular(
                                             20), // ✅ Rounded corners
                                       ),
@@ -5895,7 +7370,7 @@ class _HomePageState extends State<HomePage>
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Text(
                   "In this section, you can view your saved products or add new ones."
-                  "Tap the info icon for more details or the bin icon to remove a product.",
+                      "Tap the info icon for more details or the bin icon to remove a product.",
                   style: GoogleFonts.poppins(
                     color: Color(0xff003060),
                     fontSize: MediaQuery.textScalerOf(context).scale(14),
@@ -5965,7 +7440,8 @@ class _HomePageState extends State<HomePage>
                                       Padding(
                                         padding: const EdgeInsets.all(8.0),
                                         child: Text(
-                                          "Purchase Date", // ⬅️ Header 2: Purchase Date
+                                          "Purchase Date",
+                                          // ⬅️ Header 2: Purchase Date
                                           style: GoogleFonts.poppins(
                                             fontSize: 14,
                                             fontWeight: FontWeight.bold,
@@ -6015,14 +7491,15 @@ class _HomePageState extends State<HomePage>
                                                 ),
                                                 content: SingleChildScrollView(
                                                   physics:
-                                                      BouncingScrollPhysics(), // ✅ Smooth scrolling
+                                                  BouncingScrollPhysics(),
+                                                  // ✅ Smooth scrolling
                                                   child: Column(
                                                     crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .start,
+                                                    CrossAxisAlignment
+                                                        .start,
                                                     children:
-                                                        getFeaturesAsRowWidget(
-                                                            product), // ✅ Keeps existing functionality
+                                                    getFeaturesAsRowWidget(
+                                                        product), // ✅ Keeps existing functionality
                                                   ),
                                                 ),
                                                 actions: [
@@ -6035,15 +7512,16 @@ class _HomePageState extends State<HomePage>
                                                       child: Container(
                                                         padding: EdgeInsets
                                                             .symmetric(
-                                                                vertical: 12,
-                                                                horizontal: 20),
+                                                            vertical: 12,
+                                                            horizontal: 20),
                                                         decoration:
-                                                            BoxDecoration(
+                                                        BoxDecoration(
                                                           color: Color(
-                                                              0xff003060), // ✅ Button color
+                                                              0xff003060),
+                                                          // ✅ Button color
                                                           borderRadius:
-                                                              BorderRadius.circular(
-                                                                  20), // ✅ Rounded corners
+                                                          BorderRadius.circular(
+                                                              20), // ✅ Rounded corners
                                                         ),
                                                         child: Text(
                                                           "Back",
@@ -6051,7 +7529,7 @@ class _HomePageState extends State<HomePage>
                                                               .poppins(
                                                             fontSize: 14,
                                                             fontWeight:
-                                                                FontWeight.bold,
+                                                            FontWeight.bold,
                                                             color: Colors
                                                                 .white, // ✅ Button text color
                                                           ),
@@ -6083,7 +7561,7 @@ class _HomePageState extends State<HomePage>
                                           Expanded(
                                             child: Text(
                                               product["features"]
-                                                      ["Purchase Date"]
+                                              ["Purchase Date"]
                                                   .toString(),
                                               style: GoogleFonts.poppins(
                                                 fontSize: 12,
@@ -6110,8 +7588,9 @@ class _HomePageState extends State<HomePage>
                                                   ),
                                                 ),
                                                 content: Text(
-                                                  "Do you wish to remove ${product["productName"].toString()} "
-                                                  "from your list of products?",
+                                                  "Do you wish to remove ${product["productName"]
+                                                      .toString()} "
+                                                      "from your list of products?",
                                                   style: GoogleFonts.poppins(
                                                     fontSize: 16,
                                                     color: Colors
@@ -6121,8 +7600,9 @@ class _HomePageState extends State<HomePage>
                                                 actions: [
                                                   Row(
                                                     mainAxisAlignment:
-                                                        MainAxisAlignment
-                                                            .spaceEvenly, // ✅ Evenly spaced buttons
+                                                    MainAxisAlignment
+                                                        .spaceEvenly,
+                                                    // ✅ Evenly spaced buttons
                                                     children: [
                                                       GestureDetector(
                                                         onTap: () {
@@ -6138,17 +7618,18 @@ class _HomePageState extends State<HomePage>
                                                         child: Container(
                                                           padding: EdgeInsets
                                                               .symmetric(
-                                                                  vertical: 12,
-                                                                  horizontal:
-                                                                      20),
+                                                              vertical: 12,
+                                                              horizontal:
+                                                              20),
                                                           decoration:
-                                                              BoxDecoration(
+                                                          BoxDecoration(
                                                             color: Color(
-                                                                0xff003060), // ✅ Button color
+                                                                0xff003060),
+                                                            // ✅ Button color
                                                             borderRadius:
-                                                                BorderRadius
-                                                                    .circular(
-                                                                        20), // ✅ Rounded corners
+                                                            BorderRadius
+                                                                .circular(
+                                                                20), // ✅ Rounded corners
                                                           ),
                                                           child: Text(
                                                             "Continue",
@@ -6156,8 +7637,8 @@ class _HomePageState extends State<HomePage>
                                                                 .poppins(
                                                               fontSize: 14,
                                                               fontWeight:
-                                                                  FontWeight
-                                                                      .bold,
+                                                              FontWeight
+                                                                  .bold,
                                                               color: Colors
                                                                   .white, // ✅ Button text color
                                                             ),
@@ -6172,17 +7653,18 @@ class _HomePageState extends State<HomePage>
                                                         child: Container(
                                                           padding: EdgeInsets
                                                               .symmetric(
-                                                                  vertical: 12,
-                                                                  horizontal:
-                                                                      20),
+                                                              vertical: 12,
+                                                              horizontal:
+                                                              20),
                                                           decoration:
-                                                              BoxDecoration(
+                                                          BoxDecoration(
                                                             color: Color(
-                                                                0xff003060), // ✅ Button color
+                                                                0xff003060),
+                                                            // ✅ Button color
                                                             borderRadius:
-                                                                BorderRadius
-                                                                    .circular(
-                                                                        20), // ✅ Rounded corners
+                                                            BorderRadius
+                                                                .circular(
+                                                                20), // ✅ Rounded corners
                                                           ),
                                                           child: Text(
                                                             "Cancel",
@@ -6190,8 +7672,8 @@ class _HomePageState extends State<HomePage>
                                                                 .poppins(
                                                               fontSize: 14,
                                                               fontWeight:
-                                                                  FontWeight
-                                                                      .bold,
+                                                              FontWeight
+                                                                  .bold,
                                                               color: Colors
                                                                   .white, // ✅ Button text color
                                                             ),
@@ -6211,7 +7693,8 @@ class _HomePageState extends State<HomePage>
                                                 },
                                               );
                                             },
-                                          ), // ⬅️ Delete Button for Each Product
+                                          ),
+                                          // ⬅️ Delete Button for Each Product
                                         ],
                                       ),
                                     ), // ⬅️ Column 2: Purchase Date
@@ -6241,7 +7724,8 @@ class _HomePageState extends State<HomePage>
                   },
                   child: Container(
                     height: 60.0,
-                    width: 250.0, // Adjust width as needed
+                    width: 250.0,
+                    // Adjust width as needed
                     padding: EdgeInsets.symmetric(horizontal: 16.0),
                     decoration: BoxDecoration(color: Color(0xff003060)),
                     child: Row(
@@ -6261,7 +7745,7 @@ class _HomePageState extends State<HomePage>
                           textAlign: TextAlign.center,
                           style: GoogleFonts.poppins(
                             fontSize:
-                                MediaQuery.textScalerOf(context).scale(12),
+                            MediaQuery.textScalerOf(context).scale(12),
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
                           ),
@@ -6307,14 +7791,16 @@ class _HomePageState extends State<HomePage>
           setBrand(myProductSelected);
           startSurveyProcess(myProductSelected["currentDefectSurvey"]);
           isDefectSurvey = true;
-          ApplicationData.audioMessage = "Voice record your issue in detail. Note that the limit 02 minutes";
+          ApplicationData.audioMessage =
+          "Voice record your issue in detail. Note that the limit 02 minutes";
         });
       },
       child: Text(
         "Report a problem",
         style: GoogleFonts.poppins(
           color: Colors.black,
-          fontSize: MediaQuery.textScalerOf(context).scale(baseFontSize * 0.9), // Slightly smaller
+          fontSize: MediaQuery.textScalerOf(context).scale(baseFontSize * 0.9),
+          // Slightly smaller
           height: 1.2, // Improve readability
         ),
         textAlign: TextAlign.center,
@@ -6322,7 +7808,8 @@ class _HomePageState extends State<HomePage>
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
       ),
-      minWidth: 0, // Allow button to shrink
+      minWidth: 0,
+      // Allow button to shrink
       padding: EdgeInsets.symmetric(
         horizontal: 8.0,
         vertical: 6.0,
@@ -6341,7 +7828,8 @@ class _HomePageState extends State<HomePage>
     if (activationDateString != null) {
       activationDate = DateTime.tryParse(activationDateString);
       if (activationDate != null) {
-        activationDate = DateTime(activationDate.year, activationDate.month, activationDate.day);
+        activationDate = DateTime(
+            activationDate.year, activationDate.month, activationDate.day);
       }
     }
 
@@ -6352,9 +7840,8 @@ class _HomePageState extends State<HomePage>
     // Check if activationDate is today or in the past
     final canShowFeedback = hasNext &&
         activationDate != null &&
-        (activationDate.isBefore(todayDate) || activationDate.isAtSameMomentAs(todayDate));
-
-
+        (activationDate.isBefore(todayDate) ||
+            activationDate.isAtSameMomentAs(todayDate));
 
 
     if (canShowFeedback) {
@@ -6382,7 +7869,9 @@ class _HomePageState extends State<HomePage>
                 ),
               ),
               content: Text(
-                "Did you replace your ${getProductName(myProductSelected).toString().toLowerCase()} with new one since last survey? If So, please proceed with new registration. Else press 'cancel' to continue with this survey.",
+                "Did you replace your ${getProductName(myProductSelected)
+                    .toString()
+                    .toLowerCase()} with new one since last survey? If So, please proceed with new registration. Else press 'cancel' to continue with this survey.",
                 style: GoogleFonts.poppins(
                   fontSize: baseFontSize * 1.2,
                   color: Colors.white,
@@ -6408,7 +7897,7 @@ class _HomePageState extends State<HomePage>
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
-                      "Register New one",
+                      "Register New ${myProductSelected["shortName"]}",
                       style: GoogleFonts.poppins(
                         fontSize: baseFontSize,
                         fontWeight: FontWeight.bold,
@@ -6420,7 +7909,8 @@ class _HomePageState extends State<HomePage>
                 GestureDetector(
                   onTap: () async {
                     setState(() {
-                      startSurveyProcess(myProductSelected["currentMainSurvey"]);
+                      startSurveyProcess(
+                          myProductSelected["currentMainSurvey"]);
                       isDefectSurvey = false;
                     });
                     Navigator.pop(context);
@@ -6464,7 +7954,8 @@ class _HomePageState extends State<HomePage>
           "Regular Feedback",
           style: GoogleFonts.poppins(
             color: Colors.black,
-            fontSize: MediaQuery.textScalerOf(context).scale(baseFontSize * 0.9),
+            fontSize: MediaQuery.textScalerOf(context).scale(
+                baseFontSize * 0.9),
             height: 1.2,
           ),
           textAlign: TextAlign.center,
@@ -6507,7 +7998,6 @@ class _HomePageState extends State<HomePage>
   }
 
   void setIsSelected(int index) {
-
     List<bool> selectedList = [];
     for (int i = 0; i < index; i++) {
       selectedList.add(false);
@@ -6557,11 +8047,13 @@ class _HomePageState extends State<HomePage>
     }
 
     final Size size = (TextPainter(
-            text: TextSpan(text: result, style: textStyle),
-            maxLines: 1,
-            textScaleFactor: MediaQuery.of(context).textScaleFactor,
-            textDirection: TextDirection.ltr)
-          ..layout())
+        text: TextSpan(text: result, style: textStyle),
+        maxLines: 1,
+        textScaleFactor: MediaQuery
+            .of(context)
+            .textScaleFactor,
+        textDirection: TextDirection.ltr)
+      ..layout())
         .size;
 
     return size.width + 5; //Extra  5 for padding
@@ -6612,7 +8104,7 @@ class _HomePageState extends State<HomePage>
           onTap: (() {
             AudioPlayer(
               source: ApplicationData.multimediaUrls[surveys[0]
-                  ["feedbackQuestion"][superIndex]["answer"]["audio"]]!,
+              ["feedbackQuestion"][superIndex]["answer"]["audio"]]!,
               onDelete: () {},
             );
           }),
@@ -6696,20 +8188,17 @@ class _HomePageState extends State<HomePage>
           },
           body: jsonEncode(currentSurvey));
       print("Response to setNextSurvey = ${response.body}");
-        await loadMyProducts();
+      await loadMyProducts();
     } on Exception catch (e) {
       // TODO
-    }finally{
-
+    } finally {
       print("reached finally of setnext survey");
       setState(() {
         showSpinner = false;
         showSpinnerMyFeedback = false;
         showSpinnerMyProducts = false;
       });
-
     }
-
   }
 
   Future<void> loadAllSurveys() async {
@@ -6758,7 +8247,6 @@ class _HomePageState extends State<HomePage>
     url = url.replaceAll(" ", '%20');
     return url;
   }
-
 
 
   String? getProductName(var myProductSelected) {
@@ -6883,7 +8371,7 @@ class _HomePageState extends State<HomePage>
                         .center, // ✅ Ensures centered alignment inside the row
                     softWrap: true, // ✅ Enables text wrapping
                     overflow:
-                        TextOverflow.visible, // ✅ Ensures text is not clipped
+                    TextOverflow.visible, // ✅ Ensures text is not clipped
                   ),
                 ),
               ],
@@ -6899,7 +8387,7 @@ class _HomePageState extends State<HomePage>
                 showDialog(
                   context: context,
                   barrierDismissible:
-                      false, // Prevent dismissing while uploading
+                  false, // Prevent dismissing while uploading
                   builder: (BuildContext context) {
                     return Dialog(
                       backgroundColor: Colors.transparent,
@@ -6939,10 +8427,10 @@ class _HomePageState extends State<HomePage>
 
                   setState(() {
                     surveys[0]["feedbackQuestion"][superIndex]["answer"]
-                        ["audio"] = "https://drive.google.com/uc?id=$link";
+                    ["audio"] = "https://drive.google.com/uc?id=$link";
                     ApplicationData.multimediaUrls[surveys[0]
-                            ["feedbackQuestion"][superIndex]["answer"]
-                        ["audio"]] = path;
+                    ["feedbackQuestion"][superIndex]["answer"]
+                    ["audio"]] = path;
                   });
                   if (kDebugMode) print('Uploaded file link: $link');
 
@@ -6966,7 +8454,7 @@ class _HomePageState extends State<HomePage>
                             ),
                             softWrap: true, // ✅ Ensures wrapping
                             overflow:
-                                TextOverflow.visible, // ✅ Prevents clipping
+                            TextOverflow.visible, // ✅ Prevents clipping
                           ),
                         ),
                       ],
@@ -6974,7 +8462,7 @@ class _HomePageState extends State<HomePage>
 
                     content: Column(
                       mainAxisSize:
-                          MainAxisSize.min, // ✅ Prevents unnecessary spacing
+                      MainAxisSize.min, // ✅ Prevents unnecessary spacing
                       crossAxisAlignment: CrossAxisAlignment
                           .start, // ✅ Aligns content to the left
                       children: [
@@ -6987,7 +8475,7 @@ class _HomePageState extends State<HomePage>
                               color: Colors.white, // ✅ Content text color
                             ),
                             softWrap:
-                                true, // ✅ Allows text to break into multiple lines
+                            true, // ✅ Allows text to break into multiple lines
                             overflow: TextOverflow
                                 .visible, // ✅ Ensures text is not clipped
                           ),
@@ -7061,7 +8549,7 @@ class _HomePageState extends State<HomePage>
                         actions: [
                           GestureDetector(
                             onTap: () =>
-                                {Navigator.pop(context), showFeedback = true},
+                            {Navigator.pop(context), showFeedback = true},
                             child: Container(
                               padding: const EdgeInsets.symmetric(
                                   vertical: 12, horizontal: 20),
@@ -7151,11 +8639,11 @@ class _HomePageState extends State<HomePage>
               padding: const EdgeInsets.symmetric(horizontal: 25),
               child: AudioPlayer(
                 source: ApplicationData.multimediaUrls[surveys[0]
-                    ["feedbackQuestion"][superIndex]["answer"]["audio"]]!,
+                ["feedbackQuestion"][superIndex]["answer"]["audio"]]!,
                 onDelete: () {
                   setState(() {
                     surveys[0]["feedbackQuestion"][superIndex]["answer"]
-                        ["audio"] = "";
+                    ["audio"] = "";
                     showAudioPlayer = false;
                     showFeedback = true;
                   });
@@ -7273,14 +8761,14 @@ class _HomePageState extends State<HomePage>
                   builder: (context) {
                     return AlertDialog(
                         content: Image.file(File(ApplicationData.multimediaUrls[
-                                surveys[0]["feedbackQuestion"][index]["answer"]
-                                    ["image"]]
+                        surveys[0]["feedbackQuestion"][index]["answer"]
+                        ["image"]]
                             .toString())),
                         actions: [
                           Material(
                             color: Colors.blue,
                             borderRadius:
-                                const BorderRadius.all(Radius.circular(30.0)),
+                            const BorderRadius.all(Radius.circular(30.0)),
                             elevation: 2.0,
                             child: MaterialButton(
                               onPressed: () async {
@@ -7359,7 +8847,7 @@ class _HomePageState extends State<HomePage>
                   context: context,
                   builder: (context) {
                     return VideoApp(ApplicationData.multimediaUrls[surveys[0]
-                        ["feedbackQuestion"][index]["answer"]["video"]]!);
+                    ["feedbackQuestion"][index]["answer"]["video"]]!);
                   });
             });
           },
@@ -7448,11 +8936,11 @@ class _HomePageState extends State<HomePage>
               print("Path is $path");
               setState(() {
                 surveys[0]["feedbackQuestion"][superIndex]["answer"]["image"] =
-                    "https://drive.google.com/uc?id=$link";
+                "https://drive.google.com/uc?id=$link";
                 ApplicationData.multimediaUrls[
-                    "https://drive.google.com/uc?id=$link"] = path;
+                "https://drive.google.com/uc?id=$link"] = path;
               });
-             } else {}
+            } else {}
             AlertDialog alert = AlertDialog(
               backgroundColor: Colors.blue, // ✅ Background color
               title: Row(
@@ -7477,9 +8965,9 @@ class _HomePageState extends State<HomePage>
 
               content: Column(
                 mainAxisSize:
-                    MainAxisSize.min, // ✅ Prevents unnecessary spacing
+                MainAxisSize.min, // ✅ Prevents unnecessary spacing
                 crossAxisAlignment:
-                    CrossAxisAlignment.start, // ✅ Aligns content to the left
+                CrossAxisAlignment.start, // ✅ Aligns content to the left
                 children: [
                   Flexible(
                     // ✅ Ensures text wraps within its available space
@@ -7490,9 +8978,9 @@ class _HomePageState extends State<HomePage>
                         color: Colors.white, // ✅ Content text color
                       ),
                       softWrap:
-                          true, // ✅ Allows text to break into multiple lines
+                      true, // ✅ Allows text to break into multiple lines
                       overflow:
-                          TextOverflow.visible, // ✅ Ensures text is not clipped
+                      TextOverflow.visible, // ✅ Ensures text is not clipped
                     ),
                   ),
                   SizedBox(height: 20), // ✅ Space between text and checklist
@@ -7515,11 +9003,11 @@ class _HomePageState extends State<HomePage>
                       },
                       child: Container(
                         padding:
-                            EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                        EdgeInsets.symmetric(vertical: 12, horizontal: 20),
                         decoration: BoxDecoration(
                           color: Color(0xff003060), // ✅ Button color
                           borderRadius:
-                              BorderRadius.circular(20), // ✅ Rounded corners
+                          BorderRadius.circular(20), // ✅ Rounded corners
                         ),
                         child: Text(
                           "Ok",
@@ -7563,7 +9051,7 @@ class _HomePageState extends State<HomePage>
                   actions: [
                     GestureDetector(
                       onTap: () =>
-                          {Navigator.pop(context), showFeedback = true},
+                      {Navigator.pop(context), showFeedback = true},
                       child: Container(
                         padding: const EdgeInsets.symmetric(
                             vertical: 12, horizontal: 20),
@@ -7601,7 +9089,8 @@ class _HomePageState extends State<HomePage>
             barrierDismissible: false, // Prevent dismissing while uploading
             builder: (BuildContext context) {
               return Dialog(
-                backgroundColor: Colors.transparent, // Make dialog background transparent
+                backgroundColor: Colors.transparent,
+                // Make dialog background transparent
                 child: Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
@@ -7609,7 +9098,8 @@ class _HomePageState extends State<HomePage>
                     borderRadius: BorderRadius.circular(16), // Rounded corners
                   ),
                   child: Column(
-                    mainAxisSize: MainAxisSize.min, // Wrap content, not full screen
+                    mainAxisSize: MainAxisSize.min,
+                    // Wrap content, not full screen
                     children: [
                       Text(
                         "Please wait as video files are known to take time to upload 😎✨",
@@ -7640,9 +9130,9 @@ class _HomePageState extends State<HomePage>
 
             setState(() {
               surveys[0]["feedbackQuestion"][superIndex]["answer"]["video"] =
-                  "https://drive.google.com/uc?id=$link";
+              "https://drive.google.com/uc?id=$link";
               ApplicationData
-                      .multimediaUrls["https://drive.google.com/uc?id=$link"] =
+                  .multimediaUrls["https://drive.google.com/uc?id=$link"] =
                   path;
             });
 
@@ -7671,9 +9161,9 @@ class _HomePageState extends State<HomePage>
 
               content: Column(
                 mainAxisSize:
-                    MainAxisSize.min, // ✅ Prevents unnecessary spacing
+                MainAxisSize.min, // ✅ Prevents unnecessary spacing
                 crossAxisAlignment:
-                    CrossAxisAlignment.start, // ✅ Aligns content to the left
+                CrossAxisAlignment.start, // ✅ Aligns content to the left
                 children: [
                   Flexible(
                     // ✅ Ensures text wraps within its available space
@@ -7684,9 +9174,9 @@ class _HomePageState extends State<HomePage>
                         color: Colors.white, // ✅ Content text color
                       ),
                       softWrap:
-                          true, // ✅ Allows text to break into multiple lines
+                      true, // ✅ Allows text to break into multiple lines
                       overflow:
-                          TextOverflow.visible, // ✅ Ensures text is not clipped
+                      TextOverflow.visible, // ✅ Ensures text is not clipped
                     ),
                   ),
                   SizedBox(height: 20), // ✅ Space between text and checklist
@@ -7709,11 +9199,11 @@ class _HomePageState extends State<HomePage>
                       },
                       child: Container(
                         padding:
-                            EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                        EdgeInsets.symmetric(vertical: 12, horizontal: 20),
                         decoration: BoxDecoration(
                           color: Color(0xff003060), // ✅ Button color
                           borderRadius:
-                              BorderRadius.circular(20), // ✅ Rounded corners
+                          BorderRadius.circular(20), // ✅ Rounded corners
                         ),
                         child: Text(
                           "Ok",
@@ -7757,7 +9247,7 @@ class _HomePageState extends State<HomePage>
                   actions: [
                     GestureDetector(
                       onTap: () =>
-                          {Navigator.pop(context), showFeedback = true},
+                      {Navigator.pop(context), showFeedback = true},
                       child: Container(
                         padding: const EdgeInsets.symmetric(
                             vertical: 12, horizontal: 20),
@@ -7893,7 +9383,6 @@ class _HomePageState extends State<HomePage>
                   _paths![0].path.toString();
             });
           }
-
         }
       });
 
@@ -8027,12 +9516,7 @@ class _HomePageState extends State<HomePage>
         },
       );
     }
-
-
-
-
   }
-
 
 
   void setAnswerAsValue(String ansType, String value) {
@@ -8103,13 +9587,11 @@ class _HomePageState extends State<HomePage>
   }
 
   bool GetValidResponses(currentSurvey) {
-
     print("in get vaalid response");
     goingForwardMessage = "";
 
     for (var i = 0; i < currentSurvey.length; i++) {
-      print(currentSurvey[i]["answerType"]);
-      if (currentSurvey[i]["answerType"].contains("Rating")) {
+       if (currentSurvey[i]["answerType"].contains("Rating")) {
         if (currentSurvey[i]["answer"] == "1") {
           setState(() {
             goingForwardMessage = "For one or more rating, your response is "
@@ -8123,7 +9605,7 @@ class _HomePageState extends State<HomePage>
         if (currentSurvey[i]["answer"] == "") {
           setState(() {
             goingForwardMessage =
-                "A response is needed to continue, select any one for Yes or No";
+            "A response is needed to continue, select any one for Yes or No";
           });
 
           return false;
@@ -8136,7 +9618,7 @@ class _HomePageState extends State<HomePage>
             currentSurvey[i]["answer"]["video"] == "") {
           setState(() {
             goingForwardMessage =
-                "A response is needed to continue, you can record audio/video, upload pic "
+            "A response is needed to continue, you can record audio/video, upload pic "
                 " and give detailed problem.";
           });
 
@@ -8148,7 +9630,7 @@ class _HomePageState extends State<HomePage>
             currentSurvey[i]["answer"]["video"] == "") {
           setState(() {
             goingForwardMessage =
-                "You have not used all given options to response, you can record audio/video, upload pic "
+            "You have not used all given options to response, you can record audio/video, upload pic "
                 " and give detailed problem. Are you sure you want to continue? ";
           });
 
@@ -8162,33 +9644,27 @@ class _HomePageState extends State<HomePage>
         print(currentSurvey[i]["answer"]["audio"] == "");
         if (currentSurvey[i]["answer"]["text"] == "" &&
             currentSurvey[i]["answer"]["audio"] == "") {
+          if (currentSurvey[i]["mainScreentitle"] == "Positive Experiences") {
+            setState(() {
+              goingForwardMessage =
+              "What made this experience special ? Please describe in detail through typing or recording. Otherwise please select none and move to the next section.";
+            });
+            return false;
+          }
 
-          if(currentSurvey[i]["mainScreentitle"] == "Positive Experiences")
-            {
-              setState(() {
-                goingForwardMessage =
-                "What made this experience special ? Please describe in detail through typing or recording. Otherwise please select none and move to the next section.";
-              });
-              return false;
-
-            }
-
-          if(currentSurvey[i]["mainScreentitle"] == "Missing Features and Functionalities")
-          {
+          if (currentSurvey[i]["mainScreentitle"] ==
+              "Missing Features and Functionalities") {
             setState(() {
               goingForwardMessage =
               "What was missing? Please describe in detail through typing or recording!";
             });
             return false;
-
           }
-
-
 
 
           setState(() {
             goingForwardMessage =
-                "A response is needed to continue, you can record audio or state detailed problem.";
+            "A response is needed to continue, you can record audio or state detailed problem.";
           });
 
           return false;
@@ -8197,9 +9673,46 @@ class _HomePageState extends State<HomePage>
             currentSurvey[i]["answer"]["audio"] == "") {
           setState(() {
             goingForwardMessage =
-                "You have not used all given options to response, you can record audio and state detailed problem. Are you sure you want to continue?";
+            "You have not used all given options to response, you can record audio and state detailed problem. Are you sure you want to continue?";
           });
           print(goingForwardMessage);
+          return false;
+        }
+      }
+
+
+       if (currentSurvey[i]["question"].contains("How many of these cars are")) {
+
+         debugPrint("reached how many cars logic");
+
+        int? noOfVehicles = int.tryParse(currentSurvey[i-1]["answer"]);
+
+        debugPrint("currentSurvey[i-1] - ${currentSurvey[i-1]}");
+        debugPrint("noOfVehicles: $noOfVehicles");
+
+        if(noOfVehicles != null)
+          {
+            int? howManyVehicles = int.tryParse(currentSurvey[i]["answer"]);
+
+            debugPrint("howManyVehicles: $howManyVehicles");
+
+            if(howManyVehicles != null && howManyVehicles > noOfVehicles)
+            {
+              setState(() {
+                goingForwardMessage = "You mentioned you have $noOfVehicles vehicles, "
+                    "but you selected $howManyVehicles as electric in the next question. "
+                    "Please select a number less than or equal to $noOfVehicles.";
+              });
+              return false;
+            }
+          }
+
+        if (currentSurvey[i-1]["answer"] == "") {
+          setState(() {
+            goingForwardMessage =
+            "A response is needed to continue, please type your response.";
+          });
+
           return false;
         }
       }
@@ -8215,7 +9728,7 @@ class _HomePageState extends State<HomePage>
     final accountCredentials = ServiceAccountCredentials.fromJson({
       "private_key_id": "fb11ed5a9d0b9dd255657950da6c7e631551d745",
       "private_key":
-          "-----BEGIN PRIVATE KEY-----\nMIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQDlY9wkERKvIfVJ\ne2Rz3mC0FmIkzsYb/HGcYXKBOM57s3aezgCjmYyDtQEpPn25Dy0cmGYsDUZu0YDB\n52aSBbEH3zISSVKAk2iWPdHgb+JGwfFfLIxYT5Gg03M6JrB+3N8v7Rb6Yu47h6gJ\n1Ttw8/KCWxkBW4eNDXPgAEwIDcFJaXkPlraQ9Wy6vGll/KIWnnwt79epAPzWJys8\nqevH5IqkGUy3bi0Cu5pgq8abdceSaUfgMJ7OkyDQhu0n9sbdpBc6BMP44U+w3sn0\nRwCXSCF13M/sG/oWNcZUxaPWguviJ1O0ILUdnWwNwcwW+bi1pItufpJIIzDFAOBT\ns6Wnz5YfAgMBAAECggEAIvCVR8/AlyPGrHz6ra9x7rGjcf8mK9Ma1vqnf0lQzNoR\nYlpMZ0mXHo9Dxa16vDpfNlt8Nzovv+dyA5b53O9i/1Oe2Swz6y5eICxQZdgvkMmF\nDhMcrsLdPVrtJ9lcHtFeaXq6ekRMDI3lftdCKOVEy1g8NHm66YrisHw7GIBH2voc\n3RQtYUZ3zE3mjpQ30neUFvbNN1x0tgJJKL7S99sfXg0ttNDJ/pNhd6ylTvRTTxey\nsG/vIUv5TqrTu2qK0n2keu9YjiOOfgXdTf2M6OBOZbFCyejCY0wJTz2ksu9IX0zt\neAwxg07TxoMQWQNS89wEphgbi2QD6DKCCLu4UB6e+QKBgQD+zWLia9jKzA1duYBx\nBmMNl0MCX3kZjr8gGjpXLZKn6VqCaZZeDE06TmzLJiZisonkv8fxGPWCT0IBkQib\nY0vi7h/km7bsV6IuO9W5dqW7Yhu7r/seXwOenUJsk5oKgtC1Y9y96NlUvDdkU3u1\nHnmLa20H4KV+KIUdC3iu7AqV2wKBgQDmd+Tl1CC74fivdUJraiAzEaoM35/FMZC0\nP1arTG7IPfDzO/A8d59h4dMk6UvQZQF5tUXAj7WSz7TKvYCdkrIXgfNDmVf8gSyo\nNHVXReiXazR2R/QxkOwX/TnsUcsBFtk10W615nqu/BYH0GRGi7JcK3dT3GtT+YFj\n6wzV03wODQKBgQCA2HMMc+SoiA6qOkeM3+Hu2XJ1HLosBlb3cMvXkZ/7cLDoCWSU\nIjxbI5U4FQ6MEiRQm/oLHMfpIRMLn79udAPHuQo/m84gLSBBqNgmdKzR2IaVniOp\n8/nslzEjnm/iqMvJLbpN/hUIGDUacmy35bUonyX/OcX1yZ+mVEquiYXAyQKBgQDV\nG1gVDKmYEcOauprIKEHN9y9+5+kctlBP26GQlAR8NIpw36OsxhAiumY7Y14vPLa4\ni94LyNblAhryvXgIPHVhN1Bx2YF6gxeAEcHPCV2hZggEt1Qd4RvussC0vI0yXKZN\nFXOBz7TxyTe10gRnFxW+FJMqgE7eP4BdnCMqNXwooQKBgQD3mpWfOwiJvP9tjvRf\nvk467QBypAS1szi0gJJCw7ZhFhGvfwcQLD/OG1253F+obzW0bajjR/cYb7FRY+tv\nBXSc4RaExXRPyzAGFMjSXDJ4SpVQHg1YrCP9lpt7PXcIx8ZHRdJIgH0lnoEPqD7G\nrBUoo5DmU4hSjmtT/VjEVib0dQ==\n-----END PRIVATE KEY-----\n",
+      "-----BEGIN PRIVATE KEY-----\nMIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQDlY9wkERKvIfVJ\ne2Rz3mC0FmIkzsYb/HGcYXKBOM57s3aezgCjmYyDtQEpPn25Dy0cmGYsDUZu0YDB\n52aSBbEH3zISSVKAk2iWPdHgb+JGwfFfLIxYT5Gg03M6JrB+3N8v7Rb6Yu47h6gJ\n1Ttw8/KCWxkBW4eNDXPgAEwIDcFJaXkPlraQ9Wy6vGll/KIWnnwt79epAPzWJys8\nqevH5IqkGUy3bi0Cu5pgq8abdceSaUfgMJ7OkyDQhu0n9sbdpBc6BMP44U+w3sn0\nRwCXSCF13M/sG/oWNcZUxaPWguviJ1O0ILUdnWwNwcwW+bi1pItufpJIIzDFAOBT\ns6Wnz5YfAgMBAAECggEAIvCVR8/AlyPGrHz6ra9x7rGjcf8mK9Ma1vqnf0lQzNoR\nYlpMZ0mXHo9Dxa16vDpfNlt8Nzovv+dyA5b53O9i/1Oe2Swz6y5eICxQZdgvkMmF\nDhMcrsLdPVrtJ9lcHtFeaXq6ekRMDI3lftdCKOVEy1g8NHm66YrisHw7GIBH2voc\n3RQtYUZ3zE3mjpQ30neUFvbNN1x0tgJJKL7S99sfXg0ttNDJ/pNhd6ylTvRTTxey\nsG/vIUv5TqrTu2qK0n2keu9YjiOOfgXdTf2M6OBOZbFCyejCY0wJTz2ksu9IX0zt\neAwxg07TxoMQWQNS89wEphgbi2QD6DKCCLu4UB6e+QKBgQD+zWLia9jKzA1duYBx\nBmMNl0MCX3kZjr8gGjpXLZKn6VqCaZZeDE06TmzLJiZisonkv8fxGPWCT0IBkQib\nY0vi7h/km7bsV6IuO9W5dqW7Yhu7r/seXwOenUJsk5oKgtC1Y9y96NlUvDdkU3u1\nHnmLa20H4KV+KIUdC3iu7AqV2wKBgQDmd+Tl1CC74fivdUJraiAzEaoM35/FMZC0\nP1arTG7IPfDzO/A8d59h4dMk6UvQZQF5tUXAj7WSz7TKvYCdkrIXgfNDmVf8gSyo\nNHVXReiXazR2R/QxkOwX/TnsUcsBFtk10W615nqu/BYH0GRGi7JcK3dT3GtT+YFj\n6wzV03wODQKBgQCA2HMMc+SoiA6qOkeM3+Hu2XJ1HLosBlb3cMvXkZ/7cLDoCWSU\nIjxbI5U4FQ6MEiRQm/oLHMfpIRMLn79udAPHuQo/m84gLSBBqNgmdKzR2IaVniOp\n8/nslzEjnm/iqMvJLbpN/hUIGDUacmy35bUonyX/OcX1yZ+mVEquiYXAyQKBgQDV\nG1gVDKmYEcOauprIKEHN9y9+5+kctlBP26GQlAR8NIpw36OsxhAiumY7Y14vPLa4\ni94LyNblAhryvXgIPHVhN1Bx2YF6gxeAEcHPCV2hZggEt1Qd4RvussC0vI0yXKZN\nFXOBz7TxyTe10gRnFxW+FJMqgE7eP4BdnCMqNXwooQKBgQD3mpWfOwiJvP9tjvRf\nvk467QBypAS1szi0gJJCw7ZhFhGvfwcQLD/OG1253F+obzW0bajjR/cYb7FRY+tv\nBXSc4RaExXRPyzAGFMjSXDJ4SpVQHg1YrCP9lpt7PXcIx8ZHRdJIgH0lnoEPqD7G\nrBUoo5DmU4hSjmtT/VjEVib0dQ==\n-----END PRIVATE KEY-----\n",
       "client_email": "unige-369@subtle-signal-357112.iam.gserviceaccount.com",
       "client_id": "110071210451244334789",
       "type": "service_account"
@@ -8223,7 +9736,7 @@ class _HomePageState extends State<HomePage>
     var scopes = [drive.DriveApi.driveFileScope];
 
     AuthClient client =
-        await clientViaServiceAccount(accountCredentials, scopes);
+    await clientViaServiceAccount(accountCredentials, scopes);
 
     print("client is $client");
     return client; // Remember to close the client when you are finished with it.
@@ -8274,8 +9787,8 @@ class _HomePageState extends State<HomePage>
       // Check if the file is accessible to anyone with the link
       if (file.permissions != null) {
         final linkPermission = file.permissions!.firstWhere(
-          (permission) =>
-              permission.role == 'reader' && permission.type == 'anyone',
+              (permission) =>
+          permission.role == 'reader' && permission.type == 'anyone',
           orElse: () => drive.Permission(),
         );
 
@@ -8316,9 +9829,12 @@ class _HomePageState extends State<HomePage>
   }
 
   Widget getRowOfEndPoints() {
-    final double screenWidth = MediaQuery.of(context).size.width;
+    final double screenWidth = MediaQuery
+        .of(context)
+        .size
+        .width;
     final double padding =
-        40.0; // Total horizontal padding (20 left + 20 right)
+    40.0; // Total horizontal padding (20 left + 20 right)
 
     // Calculate the widths of the two texts
     final TextPainter leftTextPainter = TextPainter(
@@ -8331,7 +9847,8 @@ class _HomePageState extends State<HomePage>
         ),
       ),
       textDirection: TextDirection.ltr,
-    )..layout();
+    )
+      ..layout();
     final double leftTextWidth = leftTextPainter.size.width;
 
     final TextPainter rightTextPainter = TextPainter(
@@ -8344,10 +9861,9 @@ class _HomePageState extends State<HomePage>
         ),
       ),
       textDirection: TextDirection.ltr,
-    )..layout();
+    )
+      ..layout();
     final double rightTextWidth = rightTextPainter.size.width;
-
-
 
 
     // Check if the combined width exceeds the available width
@@ -8355,12 +9871,11 @@ class _HomePageState extends State<HomePage>
         (leftTextWidth + rightTextWidth + padding) >= screenWidth * .8;
 
 
-
     if (isOverflowing) {
       // Return two rows if text overflows
       return Padding(
         padding:
-            const EdgeInsets.only(left: 20.0, top: 10, right: 20, bottom: 0),
+        const EdgeInsets.only(left: 20.0, top: 10, right: 20, bottom: 0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -8393,7 +9908,7 @@ class _HomePageState extends State<HomePage>
       // Return a single row if no overflow
       return Padding(
         padding:
-            const EdgeInsets.only(left: 20.0, top: 10, right: 20, bottom: 0),
+        const EdgeInsets.only(left: 20.0, top: 10, right: 20, bottom: 0),
         child: Row(
           children: [
             Text(
@@ -8425,7 +9940,7 @@ class _HomePageState extends State<HomePage>
 
   bool checkIfItsFirstQuestion(currentSurvey) {
     if (surveys[0]["feedbackQuestion"][0]["mainScreentitle"] ==
-            currentSurvey[0]["mainScreentitle"] &&
+        currentSurvey[0]["mainScreentitle"] &&
         surveys[0]["feedbackQuestion"][0]["titleLine"] ==
             currentSurvey[0]["titleLine"] &&
         surveys[0]["feedbackQuestion"][0]["questionTitle"] ==
@@ -8477,4 +9992,98 @@ class _HomePageState extends State<HomePage>
       return '';
     }
   }
+
+  Future<void> requestNotificationPermissions() async {
+    FirebaseMessaging firebaseMessaging = FirebaseMessaging.instance;
+    if (Platform.isIOS) {
+      NotificationSettings settings = await firebaseMessaging.requestPermission(
+        alert: true,
+        announcement: false,
+        badge: true,
+        carPlay: false,
+        criticalAlert: false,
+        provisional: false,
+        sound: true,
+      );
+      String? apnsToken = await FirebaseMessaging.instance.getAPNSToken();
+      print("Simple code APNS token is $apnsToken");
+
+      Future<String?> waitForAPNSToken() async {
+        String? apnsToken;
+        int retries = 0;
+        do {
+          apnsToken = await firebaseMessaging.getAPNSToken();
+          if (apnsToken == null) {
+            await Future.delayed(Duration(seconds: 1));
+            retries++;
+          }
+        } while (apnsToken == null && retries < 10);
+        print('APNs Token: $apnsToken');
+        return apnsToken;
+      }
+
+      apnsToken = await waitForAPNSToken();
+      if (apnsToken != null) {
+        String? token = await firebaseMessaging.getToken();
+        print('FCM Token: $token');
+        await FirebaseMessaging.instance.subscribeToTopic(widget.mobileNum);
+        print("Subscribed to topic: ${widget.mobileNum}");
+      } else {
+        print('APNs Token not available after waiting.');
+      }
+      print('Authorization status: ${settings.authorizationStatus}');
+
+    }else{
+      if (Platform.isAndroid) {
+        // For Android, just get FCM token and subscribe
+        String? token = await firebaseMessaging.getToken();
+        print('FCM Token: $token');
+        await firebaseMessaging.subscribeToTopic(widget.mobileNum);
+        print("Subscribed to topic: ${widget.mobileNum}");
+      }
+    }
+
+  }
+
+  Future<void> setUpFlutterNotifications() async {
+    const AndroidInitializationSettings initializationSettingsAndroid =
+    AndroidInitializationSettings('@mipmap/ic_launcher');
+
+    const DarwinInitializationSettings initializationSettingsDarwin =
+    DarwinInitializationSettings();
+
+    final InitializationSettings initializationSettings =
+    InitializationSettings(
+        android: initializationSettingsAndroid,
+        iOS: initializationSettingsDarwin);
+
+    await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+
+    await FirebaseMessaging.instance
+        .setForegroundNotificationPresentationOptions(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
+
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      RemoteNotification? notification = message.notification;
+      print("Notification received: ${message.data}");
+      if (notification != null) {
+        flutterLocalNotificationsPlugin.show(
+          notification.hashCode,
+          notification.title,
+          notification.body,
+          const NotificationDetails(
+            android: AndroidNotificationDetails('default_channel', 'Default',
+                importance: Importance.max, priority: Priority.high),
+            iOS: DarwinNotificationDetails(),
+          ),
+        );
+      }
+    });
+  }
 }
+
+
+

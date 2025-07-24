@@ -28,6 +28,11 @@
 	<true/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
 	<key>NSCameraUsageDescription</key>
 	<string>QualTrack uses the camera to capture photos or videos for survey responses, allowing you to share your experience with the product, such as demonstrating its features.</string>
 	<key>NSMicrophoneUsageDescription</key>
@@ -42,6 +47,11 @@
 	<array>
 		<string>fetch</string>
 		<string>remote-notification</string>
+		<string>processing</string>
+	</array>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>com.yourcompany.qualtrack.refresh</string>
 	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
