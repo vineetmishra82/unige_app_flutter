@@ -6,8 +6,8 @@ plugins {
 }
 
 android {
-    namespace = "com.kpts.unige_app"
-    compileSdk = flutter.compileSdkVersion
+    namespace = "com.kpts.unige_app_flutter"
+    compileSdk = 35
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -21,11 +21,11 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.kpts.unige_app"
+        applicationId = "com.kpts.unige_app_flutter"
         minSdkVersion 24
-        targetSdk = flutter.targetSdkVersion
-        versionCode = 16
-        versionName = "Release16"
+        targetSdk = 35
+        versionCode = 17
+        versionName = "Release17"
         ndkVersion = "27.0.12077973"
     }
 

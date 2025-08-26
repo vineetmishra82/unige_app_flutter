@@ -1,4 +1,4 @@
-package com.kpts.unige_app;
+package com.kpts.unige_app_flutter;
 
 import io.flutter.embedding.android.FlutterActivity;
 

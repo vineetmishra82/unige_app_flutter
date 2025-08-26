@@ -4,11 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:googleapis/dfareporting/v4.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:unige_app/screens/ApplicationData.dart';
-import 'package:unige_app/screens/HomePage.dart';
-import 'package:unige_app/screens/LandingPage.dart';
-import 'package:unige_app/screens/LoginScreen.dart';
-import 'package:unige_app/screens/RegisterUser.dart';
+import 'package:unige_app_flutter/screens/ApplicationData.dart';
+import 'package:unige_app_flutter/screens/HomePage.dart';
+import 'package:unige_app_flutter/screens/LandingPage.dart';
+import 'package:unige_app_flutter/screens/LoginScreen.dart';
+import 'package:unige_app_flutter/screens/RegisterUser.dart';
 
 
 import 'package:flutter/material.dart';

@@ -1,8 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:unige_app/main.dart';
-import 'package:unige_app/screens/HomePage.dart';
+import 'package:unige_app_flutter/main.dart';
+import 'package:unige_app_flutter/screens/HomePage.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class LandingPageDetail extends StatefulWidget {

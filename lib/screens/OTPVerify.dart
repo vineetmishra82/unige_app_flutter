@@ -3,10 +3,10 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:modal_progress_hud_nsn/modal_progress_hud_nsn.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:unige_app/screens/ApplicationData.dart';
-import 'package:unige_app/screens/HomePage.dart';
-import 'package:unige_app/screens/LandingPage.dart';
-import 'package:unige_app/screens/LoginScreen.dart';
+import 'package:unige_app_flutter/screens/ApplicationData.dart';
+import 'package:unige_app_flutter/screens/HomePage.dart';
+import 'package:unige_app_flutter/screens/LandingPage.dart';
+import 'package:unige_app_flutter/screens/LoginScreen.dart';
 import 'dart:ui';
 
 

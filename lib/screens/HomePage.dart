@@ -17,9 +17,9 @@ import 'package:month_picker_dialog/month_picker_dialog.dart';
 import 'package:record/record.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:toggle_switch/toggle_switch.dart';
-import 'package:unige_app/screens/ApplicationData.dart';
-import 'package:unige_app/screens/HelpUsImprovePage.dart';
-import 'package:unige_app/screens/LoginScreen.dart';
+import 'package:unige_app_flutter/screens/ApplicationData.dart';
+import 'package:unige_app_flutter/screens/HelpUsImprovePage.dart';
+import 'package:unige_app_flutter/screens/LoginScreen.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../Other_data/Apis.dart';
@@ -2368,7 +2368,7 @@ class _HomePageState extends State<HomePage>
 
   //This method groups questions based on title, main screen title, question title etc
   getQuestionAndResponse() {
-    List<dynamic> currentSurvey = [];
+    List<Map<String, dynamic>> currentSurvey = [];
 
     String mainScreenTitle = surveys[0]["feedbackQuestion"][questionIndex]
     ["mainScreentitle"]
@@ -2383,6 +2383,8 @@ class _HomePageState extends State<HomePage>
     String answerType =
     surveys[0]["feedbackQuestion"][questionIndex]["answerType"];
     endIndex = 0;
+
+
     for (int i = 0; i < surveys[0]["feedbackQuestion"].length; i++) {
       String mst =
       surveys[0]["feedbackQuestion"][i]["mainScreentitle"].toString();
@@ -2395,7 +2397,9 @@ class _HomePageState extends State<HomePage>
       surveys[0]["feedbackQuestion"][i]["answerType"].toString();
 
       if (mst == mainScreenTitle && ttl == titleLine && qst == questionTitle) {
-        currentSurvey.add(surveys[0]["feedbackQuestion"][i]);
+        var question = Map<String, dynamic>.from(surveys[0]["feedbackQuestion"][i]);
+        question["originalIndex"] = i;
+        currentSurvey.add(question);
         endIndex++;
         startIndex = i;
       }
@@ -2494,7 +2498,7 @@ class _HomePageState extends State<HomePage>
               ],
             ),
           ),
-          getAnswerType(currentSurvey[i]["answerType"], i),
+          getAnswerType(currentSurvey[i]["answerType"], currentSurvey[i]["originalIndex"]),
           const SizedBox(
             height: 20,
           ),
@@ -2505,9 +2509,11 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-  getAnswerType(String answerType, int pos) {
+  getAnswerType(String answerType, int index) {
+    debugPrint("getAnswerType called with $answerType at position $index");
+    debugPrint("startIndex is $startIndex");
     var responses = ['Yes', 'No'];
-    int index =  pos;
+   // var index = startIndex - pos;
 
     if (answerType.contains("Yes")) {
       return Row(
