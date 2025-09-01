@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "751987554712",
-    "project_id": "unige-c5714",
-    "storage_bucket": "unige-c5714.firebasestorage.app"
+    "project_number": "688815766660",
+    "project_id": "unige-app",
+    "storage_bucket": "unige-app.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:751987554712:android:d2cfdc6018a88b71c353ed",
+        "mobilesdk_app_id": "1:688815766660:android:c5a498d36a030caa8496d1",
         "android_client_info": {
           "package_name": "com.kpts.unige_app_flutter"
         }
@@ -15,35 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyCGV-AqCq-FaH38hndkYcxBSBbC3qBWyHM"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": []
-        }
-      }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:751987554712:android:805d52596fcb2b92c353ed",
-        "android_client_info": {
-          "package_name": "com.pts.unige_app"
-        }
-      },
-      "oauth_client": [
-        {
-          "client_id": "751987554712-n90ekmmbsd1dmast276m46q5bklnvgib.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.pts.unige_app",
-            "certificate_hash": "c6873bbff30f4506add38f5304291139aec2b33e"
-          }
-        }
-      ],
-      "api_key": [
-        {
-          "current_key": "AIzaSyCGV-AqCq-FaH38hndkYcxBSBbC3qBWyHM"
+          "current_key": "AIzaSyDCYHsnxvcbhfvChuHH9bHaFIPjIxT0yTI"
         }
       ],
       "services": {

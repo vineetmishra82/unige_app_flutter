@@ -29,6 +29,7 @@ import '../Other_data/Camera.dart';
 import '../Other_data/VideoPlayer.dart';
 import '../main.dart';
 import 'EVLandingPage.dart';
+import 'package:camera/camera.dart';
 import 'LandingPage.dart';
 
 final GlobalKey<_HomePageState> homePageKey = GlobalKey<_HomePageState>();
@@ -162,7 +163,6 @@ class _HomePageState extends State<HomePage>
 //    getMonths();
     tabController = TabController(length: 3, vsync: this);
     obtainAuthenticatedClient();
-
   }
 
   @override
@@ -547,7 +547,7 @@ class _HomePageState extends State<HomePage>
                   ),
                 ),
               ),
-              if (Platform.isIOS)...[
+              if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS)...[
                 const SizedBox(
                   height: 20.0,
                 ),
@@ -1003,7 +1003,7 @@ class _HomePageState extends State<HomePage>
       goToHome = false;
       return (MyFeedback(context));
     } else if (ApplicationData.showVideoPlayer) {
-      return getVideoPlayerApparatus();
+        return getVideoPlayerApparatus();
     } else {
       return ModalProgressHUD(
         inAsyncCall: showSpinnerMyFeedback,
@@ -1048,191 +1048,197 @@ class _HomePageState extends State<HomePage>
                 // Product Rows
                 if(myProducts.isEmpty && !showSpinnerMyProducts)
                   Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  child: Text(
-                   "No products registered yet. Please register a product to start providing feedback.",
-                    style: GoogleFonts.poppins(
-                      color: const Color(0xff003060),
-                      fontSize: MediaQuery.textScalerOf(context).scale(14),
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    child: Text(
+                      "No products registered yet. Please register a product to start providing feedback.",
+                      style: GoogleFonts.poppins(
+                        color: const Color(0xff003060),
+                        fontSize: MediaQuery.textScalerOf(context).scale(14),
+                      ),
+                      textAlign: TextAlign.center,
                     ),
-                    textAlign: TextAlign.center,
-                  ),
-                )
+                  )
                 else
-                for (var product in myProducts)
-                  if (product["active"] == true)
-                    product["currentMainSurvey"]["surveyId"] == "Done"
-                        ? Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 20,
-                      ),
-                      child: Text(
-                        processResponse(ApplicationData
-                            .thankYouMessages[product["shortName"]]) ??
-                            "",
-                        style: GoogleFonts.poppins(
-                          color: Colors.blue,
-                          fontSize:
-                          MediaQuery.textScalerOf(context).scale(20),
+                  for (var product in myProducts)
+                    if (product["active"] == true)
+                      product["currentMainSurvey"]["surveyId"] == "Done"
+                          ? Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 20,
                         ),
-                        textAlign: TextAlign.center,
-                      ),
-                    )
-                        : Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 10),
-                          child: Container(
-                            color: const Color(0xff003060),
-                            padding: const EdgeInsets.symmetric(vertical: 8),
-                            child: LayoutBuilder(
-                              builder: (context, constraints) {
-                                final isSmallScreen =
-                                    constraints.maxWidth < 400;
-                                final baseFontSize =
-                                isSmallScreen ? 10.0 : 12.0;
-                                final buttonWidth =
-                                    constraints.maxWidth * 0.25;
-                                final nameWidth = constraints.maxWidth * 0.45;
+                        child: Text(
+                          processResponse(ApplicationData
+                              .thankYouMessages[product["shortName"]]) ??
+                              "",
+                          style: GoogleFonts.poppins(
+                            color: Colors.blue,
+                            fontSize:
+                            MediaQuery.textScalerOf(context).scale(20),
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      )
+                          : Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 10),
+                            child: Container(
+                              color: const Color(0xff003060),
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              child: LayoutBuilder(
+                                builder: (context, constraints) {
+                                  final isSmallScreen =
+                                      constraints.maxWidth < 400;
+                                  final baseFontSize =
+                                  isSmallScreen ? 10.0 : 12.0;
+                                  final buttonWidth =
+                                      constraints.maxWidth * 0.25;
+                                  final nameWidth = constraints.maxWidth * 0.45;
 
-                                return Row(
-                                  crossAxisAlignment:
-                                  CrossAxisAlignment.center,
-                                  mainAxisAlignment:
-                                  MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Flexible(
-                                      flex: 2,
-                                      child: ConstrainedBox(
-                                        constraints: BoxConstraints(
-                                          maxWidth: nameWidth,
-                                        ),
-                                        child: Padding(
-                                          padding: const EdgeInsets.all(8),
-                                          child: Text(
-                                            product["shortName"],
-                                            style: GoogleFonts.poppins(
-                                              fontSize: MediaQuery
-                                                  .textScalerOf(context)
-                                                  .scale(baseFontSize),
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.white,
+                                  return Row(
+                                    crossAxisAlignment:
+                                    CrossAxisAlignment.center,
+                                    mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Flexible(
+                                        flex: 2,
+                                        child: ConstrainedBox(
+                                          constraints: BoxConstraints(
+                                            maxWidth: nameWidth,
+                                          ),
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(8),
+                                            child: Text(
+                                              product["shortName"],
+                                              style: GoogleFonts.poppins(
+                                                fontSize: MediaQuery
+                                                    .textScalerOf(context)
+                                                    .scale(baseFontSize),
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.white,
+                                              ),
+                                              softWrap: true,
+                                              overflow: TextOverflow.ellipsis,
+                                              maxLines: 2,
                                             ),
-                                            softWrap: true,
-                                            overflow: TextOverflow.ellipsis,
-                                            maxLines: 2,
                                           ),
                                         ),
                                       ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    if (product["active"] == true)
-                                      Flexible(
-                                        flex: 1,
-                                        child: ConstrainedBox(
-                                          constraints: BoxConstraints(
-                                            maxWidth: buttonWidth,
+                                      const SizedBox(width: 8),
+                                      if (product["active"] == true)
+                                        Flexible(
+                                          flex: 1,
+                                          child: ConstrainedBox(
+                                            constraints: BoxConstraints(
+                                              maxWidth: buttonWidth,
+                                            ),
+                                            child: SetDefectReportAndGetWidget(
+                                                product, baseFontSize),
                                           ),
-                                          child: SetDefectReportAndGetWidget(
-                                              product, baseFontSize),
                                         ),
-                                      ),
-                                    if (product["active"] == true)
-                                      const SizedBox(width: 4),
-                                    if (product["active"] == true)
-                                      Flexible(
-                                        flex: 1,
-                                        child: ConstrainedBox(
-                                          constraints: BoxConstraints(
-                                            maxWidth: buttonWidth,
+                                      if (product["active"] == true)
+                                        const SizedBox(width: 4),
+                                      if (product["active"] == true)
+                                        Flexible(
+                                          flex: 1,
+                                          child: ConstrainedBox(
+                                            constraints: BoxConstraints(
+                                              maxWidth: buttonWidth,
+                                            ),
+                                            child:
+                                            checkForActiveFeedbackAndGetWidget(
+                                                product, baseFontSize),
                                           ),
-                                          child:
-                                          checkForActiveFeedbackAndGetWidget(
-                                              product, baseFontSize),
                                         ),
-                                      ),
-                                  ],
-                                );
-                              },
+                                    ],
+                                  );
+                                },
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 10),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            ElevatedButton(
-                              onPressed: () async {
-                                setState(() {
-                                  showSpinnerMyProducts = true;
-                                });
-
-                                try {
-                                  final response = await http.get(Uri.parse(
-                                      Apis.testNotification(widget.mobileNum,
-                                          myProductSelected["productName"])));
-                                    print("Test notification returns - ${response.body}");
-                                    print("response.body == widget.mobileNum - ${response.body == widget.mobileNum}");
-                                  if (response.body == widget.mobileNum) {
-                                    await loadMyProducts();
-                                  }
-                                  else {
-                                    throw Exception(
-                                        "Notification response was not true");
-                                  }
-                                } catch (e) {
+                          const SizedBox(height: 10),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              ElevatedButton(
+                                onPressed: () async {
                                   setState(() {
-                                    showSpinnerMyProducts = false;
+                                    showSpinnerMyProducts = true;
                                   });
-                                  print(
-                                      "Could not get notification response: $e");
-                                }
-                              },
-                              style: ButtonStyle(
-                                  shape: MaterialStateProperty.all<
-                                      OutlinedBorder>(
-                                      RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                              80.0))),
-                                  padding: MaterialStateProperty.all<
-                                      EdgeInsetsGeometry>(
-                                    EdgeInsets.all(0.0),
-                                  )),
-                              child: Ink(
-                                decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      colors: [
-                                        Color(0xff374ABE),
-                                        Color(0xff64B6FF)
-                                      ],
-                                      begin: Alignment.centerLeft,
-                                      end: Alignment.centerRight,
-                                    ),
-                                    borderRadius: BorderRadius.circular(30.0)),
-                                child: Container(
-                                  constraints: BoxConstraints(
-                                      maxWidth: 150.0, minHeight: 40.0),
-                                  alignment: Alignment.center,
-                                  child: Text(
-                                    "Reset date and notify ",
-                                    textAlign: TextAlign.center,
-                                    style: GoogleFonts.roboto(
-                                      fontSize: MediaQuery.textScalerOf(context)
-                                          .scale(14),
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
+
+                                  try {
+                                    final response = await http.get(Uri.parse(
+                                        Apis.testNotification(widget.mobileNum,
+                                            myProductSelected["productName"])));
+                                    print(
+                                        "Test notification returns - ${response
+                                            .body}");
+                                    print(
+                                        "response.body == widget.mobileNum - ${response
+                                            .body == widget.mobileNum}");
+                                    if (response.body == widget.mobileNum) {
+                                      await loadMyProducts();
+                                    }
+                                    else {
+                                      throw Exception(
+                                          "Notification response was not true");
+                                    }
+                                  } catch (e) {
+                                    setState(() {
+                                      showSpinnerMyProducts = false;
+                                    });
+                                    print(
+                                        "Could not get notification response: $e");
+                                  }
+                                },
+                                style: ButtonStyle(
+                                    shape: MaterialStateProperty.all<
+                                        OutlinedBorder>(
+                                        RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                                80.0))),
+                                    padding: MaterialStateProperty.all<
+                                        EdgeInsetsGeometry>(
+                                      EdgeInsets.all(0.0),
+                                    )),
+                                child: Ink(
+                                  decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        colors: [
+                                          Color(0xff374ABE),
+                                          Color(0xff64B6FF)
+                                        ],
+                                        begin: Alignment.centerLeft,
+                                        end: Alignment.centerRight,
+                                      ),
+                                      borderRadius: BorderRadius.circular(
+                                          30.0)),
+                                  child: Container(
+                                    constraints: BoxConstraints(
+                                        maxWidth: 150.0, minHeight: 40.0),
+                                    alignment: Alignment.center,
+                                    child: Text(
+                                      "Reset date and notify ",
+                                      textAlign: TextAlign.center,
+                                      style: GoogleFonts.roboto(
+                                        fontSize: MediaQuery.textScalerOf(
+                                            context)
+                                            .scale(14),
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
                                     ),
                                   ),
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
+                            ],
+                          ),
 
-                      ],
-                    ),
+                        ],
+                      ),
                 SizedBox(
                     height: 20
                 ),
@@ -2293,8 +2299,10 @@ class _HomePageState extends State<HomePage>
     // lastDate is set to the current month and year
     showMonthPicker(
       context: context,
-      firstDate: DateTime(2000), // Earliest selectable
-      lastDate: DateTime(now.year, now.month), // Dynamically restrict to current month/year
+      firstDate: DateTime(2000),
+      // Earliest selectable
+      lastDate: DateTime(now.year, now.month),
+      // Dynamically restrict to current month/year
       initialDate: DateTime(now.year, now.month),
     ).then((date) {
       if (date != null) {
@@ -2397,7 +2405,8 @@ class _HomePageState extends State<HomePage>
       surveys[0]["feedbackQuestion"][i]["answerType"].toString();
 
       if (mst == mainScreenTitle && ttl == titleLine && qst == questionTitle) {
-        var question = Map<String, dynamic>.from(surveys[0]["feedbackQuestion"][i]);
+        var question = Map<String, dynamic>.from(
+            surveys[0]["feedbackQuestion"][i]);
         question["originalIndex"] = i;
         currentSurvey.add(question);
         endIndex++;
@@ -2498,7 +2507,8 @@ class _HomePageState extends State<HomePage>
               ],
             ),
           ),
-          getAnswerType(currentSurvey[i]["answerType"], currentSurvey[i]["originalIndex"]),
+          getAnswerType(currentSurvey[i]["answerType"],
+              currentSurvey[i]["originalIndex"]),
           const SizedBox(
             height: 20,
           ),
@@ -2510,10 +2520,10 @@ class _HomePageState extends State<HomePage>
   }
 
   getAnswerType(String answerType, int index) {
-    debugPrint("getAnswerType called with $answerType at position $index");
-    debugPrint("startIndex is $startIndex");
+    // debugPrint("getAnswerType called with $answerType at position $index");
+    // debugPrint("startIndex is $startIndex");
     var responses = ['Yes', 'No'];
-   // var index = startIndex - pos;
+    // var index = startIndex - pos;
 
     if (answerType.contains("Yes")) {
       return Row(
@@ -2607,8 +2617,7 @@ class _HomePageState extends State<HomePage>
           )
         ],
       );
-    } else if (answerType == "Multimedia/Descriptive")
-    {
+    } else if (answerType == "Multimedia/Descriptive") {
       setState(() {
         superIndex = index;
       });
@@ -2691,15 +2700,22 @@ class _HomePageState extends State<HomePage>
                 ),
               ),
               InkResponse(
-                onTap: (() {
+                onTap: (() async {
                   // Navigator.push(
                   //     context,
                   //     MaterialPageRoute(
                   //         builder: (context) => const CameraPage()));
-                  setState(() {
-                    ApplicationData.showVideoPlayer = true;
-                    showFeedback = false;
-                  });
+                  if(await isCameraAvailable())
+                    {
+                      setState(() {
+                        ApplicationData.showVideoPlayer = true;
+                        showFeedback = false;
+                      });
+                    }
+                  else{
+                    showNoCameraAlert();
+                  }
+
                 }),
                 child: Image.asset(
                   'images/camera.png',
@@ -2840,8 +2856,7 @@ class _HomePageState extends State<HomePage>
           checkForVideoFileStatus(index),
         ],
       );
-    } else if (answerType == "Only_Multimedia")
-    {
+    } else if (answerType == "Only_Multimedia") {
       setState(() {
         superIndex = index;
       });
@@ -2856,7 +2871,7 @@ class _HomePageState extends State<HomePage>
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-             InkResponse(
+              InkResponse(
                 onTap: (() {
                   // Navigator.push(
                   //     context,
@@ -3005,7 +3020,7 @@ class _HomePageState extends State<HomePage>
           checkForVideoFileStatus(index),
         ],
       );
-    }else if (answerType == "Audio/Descriptive") {
+    } else if (answerType == "Audio/Descriptive") {
       if (surveys[0]["feedbackQuestion"][index]["answer"]
           .toString()
           .isEmpty) {
@@ -3158,10 +3173,10 @@ class _HomePageState extends State<HomePage>
                 final answerString = sortedAnswers.join('-');
 
 
-
                 print("Selected checkboxes for index $index: $answerString");
                 setState(() {
-                  surveys[0]["feedbackQuestion"][index]["answer"] = answerString;
+                  surveys[0]["feedbackQuestion"][index]["answer"] =
+                      answerString;
                 });
               },
               controlAffinity: ListTileControlAffinity.leading,
@@ -3516,7 +3531,8 @@ class _HomePageState extends State<HomePage>
               onTap: () {
                 FocusScope.of(context).unfocus();
                 if (!GetValidResponses(currentSurvey)) {
-                  print("3331 Abhi goingForwardmessage is $goingForwardMessage");
+                  print(
+                      "3331 Abhi goingForwardmessage is $goingForwardMessage");
                   if (goingForwardMessage.contains(
                       "A response is needed to continue, you can record audio/video, upload pic")) {
                     print(
@@ -4438,7 +4454,8 @@ class _HomePageState extends State<HomePage>
               }),
         ],
       );
-    } else if (questionIndex > 0 && questionIndex < arraySize - 1) {
+    }
+    else if (questionIndex > 0 && questionIndex < arraySize - 1) {
       return Row(
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
@@ -5718,7 +5735,8 @@ class _HomePageState extends State<HomePage>
               })
         ],
       );
-    } else if (questionIndex == arraySize - 1) {
+    }
+    else if (questionIndex == arraySize - 1) {
       return Column(
         children: [
           Row(
@@ -5768,14 +5786,17 @@ class _HomePageState extends State<HomePage>
                                   ),
                                 ),
                                 SizedBox(width: 8), // ✅ Spacing
-                                Icon(Icons.warning, color: Colors.yellow, size: 30),
+                                Icon(Icons.warning, color: Colors.yellow,
+                                    size: 30),
                               ],
                             ),
                             content: Column(
                               mainAxisSize:
-                              MainAxisSize.min, // ✅ Prevents unnecessary spacing
+                              MainAxisSize.min,
+                              // ✅ Prevents unnecessary spacing
                               crossAxisAlignment: CrossAxisAlignment
-                                  .start, // ✅ Aligns content to the left
+                                  .start,
+                              // ✅ Aligns content to the left
                               children: [
                                 Text(
                                   "We need all fields filled out to continue.",
@@ -5785,7 +5806,8 @@ class _HomePageState extends State<HomePage>
                                   ),
                                 ),
                                 SizedBox(
-                                    height: 20), // ✅ Space between text and checklist
+                                    height: 20),
+                                // ✅ Space between text and checklist
                                 Column(
                                   children: [
                                     Row(
@@ -5875,7 +5897,8 @@ class _HomePageState extends State<HomePage>
                                     padding: EdgeInsets.symmetric(
                                         vertical: 12, horizontal: 20),
                                     decoration: BoxDecoration(
-                                      color: Color(0xff003060), // ✅ Button color
+                                      color: Color(0xff003060),
+                                      // ✅ Button color
                                       borderRadius: BorderRadius.circular(
                                           20), // ✅ Rounded corners
                                     ),
@@ -5884,7 +5907,8 @@ class _HomePageState extends State<HomePage>
                                       style: GoogleFonts.poppins(
                                         fontSize: 14,
                                         fontWeight: FontWeight.bold,
-                                        color: Colors.white, // ✅ Button text color
+                                        color: Colors
+                                            .white, // ✅ Button text color
                                       ),
                                     ),
                                   ),
@@ -5968,7 +5992,8 @@ class _HomePageState extends State<HomePage>
                             ),
                             actions: [
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                mainAxisAlignment: MainAxisAlignment
+                                    .spaceEvenly,
                                 children: [
                                   Flexible(
                                     child: GestureDetector(
@@ -5980,7 +6005,8 @@ class _HomePageState extends State<HomePage>
                                             vertical: 12, horizontal: 20),
                                         decoration: BoxDecoration(
                                           color: const Color(0xff003060),
-                                          borderRadius: BorderRadius.circular(10),
+                                          borderRadius: BorderRadius.circular(
+                                              10),
                                         ),
                                         child: Text(
                                           "Improve Feedback",
@@ -6001,8 +6027,12 @@ class _HomePageState extends State<HomePage>
                                       onTap: () {
                                         if (mounted) {
                                           setState(() {
-                                            questionIndex++;
-                                            ratingsArrayLoaded = false;
+                                            showThankyouMessage = true;
+                                            questionIndex = 0;
+                                            superIndex = 0;
+                                            setNextSurvey(true);
+                                            showSpinner = false;
+                                            showSpinnerMyFeedback = false;
                                           });
                                         }
                                         Navigator.pop(context);
@@ -6012,7 +6042,8 @@ class _HomePageState extends State<HomePage>
                                             vertical: 12, horizontal: 20),
                                         decoration: BoxDecoration(
                                           color: const Color(0xff003060),
-                                          borderRadius: BorderRadius.circular(10),
+                                          borderRadius: BorderRadius.circular(
+                                              10),
                                         ),
                                         child: Text(
                                           "Continue as is",
@@ -6109,8 +6140,10 @@ class _HomePageState extends State<HomePage>
                                             alignment: Alignment.center,
                                             children: const [
                                               Icon(Icons.check_box,
-                                                  color: Colors.green, size: 18),
-                                              Icon(Icons.check, color: Colors.white,
+                                                  color: Colors.green,
+                                                  size: 18),
+                                              Icon(Icons.check,
+                                                  color: Colors.white,
                                                   size: 14),
                                             ],
                                           ),
@@ -6135,8 +6168,10 @@ class _HomePageState extends State<HomePage>
                                             alignment: Alignment.center,
                                             children: const [
                                               Icon(Icons.check_box,
-                                                  color: Colors.green, size: 18),
-                                              Icon(Icons.check, color: Colors.white,
+                                                  color: Colors.green,
+                                                  size: 18),
+                                              Icon(Icons.check,
+                                                  color: Colors.white,
                                                   size: 14),
                                             ],
                                           ),
@@ -6161,8 +6196,10 @@ class _HomePageState extends State<HomePage>
                                             alignment: Alignment.center,
                                             children: const [
                                               Icon(Icons.check_box,
-                                                  color: Colors.green, size: 18),
-                                              Icon(Icons.check, color: Colors.white,
+                                                  color: Colors.green,
+                                                  size: 18),
+                                              Icon(Icons.check,
+                                                  color: Colors.white,
                                                   size: 14),
                                             ],
                                           ),
@@ -6197,7 +6234,8 @@ class _HomePageState extends State<HomePage>
                             ),
                             actions: [
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                mainAxisAlignment: MainAxisAlignment
+                                    .spaceEvenly,
                                 children: [
                                   Flexible(
                                     child: GestureDetector(
@@ -6209,7 +6247,8 @@ class _HomePageState extends State<HomePage>
                                             vertical: 12, horizontal: 20),
                                         decoration: BoxDecoration(
                                           color: const Color(0xff003060),
-                                          borderRadius: BorderRadius.circular(10),
+                                          borderRadius: BorderRadius.circular(
+                                              10),
                                         ),
                                         child: Text(
                                           "Improve Feedback",
@@ -6230,8 +6269,12 @@ class _HomePageState extends State<HomePage>
                                       onTap: () {
                                         if (mounted) {
                                           setState(() {
-                                            questionIndex++;
-                                            ratingsArrayLoaded = false;
+                                            showThankyouMessage = true;
+                                            questionIndex = 0;
+                                            superIndex = 0;
+                                            setNextSurvey(true);
+                                            showSpinner = false;
+                                            showSpinnerMyFeedback = false;
                                           });
                                         }
                                         Navigator.pop(context);
@@ -6241,7 +6284,8 @@ class _HomePageState extends State<HomePage>
                                             vertical: 12, horizontal: 20),
                                         decoration: BoxDecoration(
                                           color: const Color(0xff003060),
-                                          borderRadius: BorderRadius.circular(10),
+                                          borderRadius: BorderRadius.circular(
+                                              10),
                                         ),
                                         child: Text(
                                           "Continue as is",
@@ -6338,8 +6382,10 @@ class _HomePageState extends State<HomePage>
                                             alignment: Alignment.center,
                                             children: const [
                                               Icon(Icons.check_box,
-                                                  color: Colors.green, size: 18),
-                                              Icon(Icons.check, color: Colors.white,
+                                                  color: Colors.green,
+                                                  size: 18),
+                                              Icon(Icons.check,
+                                                  color: Colors.white,
                                                   size: 14),
                                             ],
                                           ),
@@ -6364,8 +6410,10 @@ class _HomePageState extends State<HomePage>
                                             alignment: Alignment.center,
                                             children: const [
                                               Icon(Icons.check_box,
-                                                  color: Colors.green, size: 18),
-                                              Icon(Icons.check, color: Colors.white,
+                                                  color: Colors.green,
+                                                  size: 18),
+                                              Icon(Icons.check,
+                                                  color: Colors.white,
                                                   size: 14),
                                             ],
                                           ),
@@ -6390,8 +6438,10 @@ class _HomePageState extends State<HomePage>
                                             alignment: Alignment.center,
                                             children: const [
                                               Icon(Icons.check_box,
-                                                  color: Colors.green, size: 18),
-                                              Icon(Icons.check, color: Colors.white,
+                                                  color: Colors.green,
+                                                  size: 18),
+                                              Icon(Icons.check,
+                                                  color: Colors.white,
                                                   size: 14),
                                             ],
                                           ),
@@ -6426,7 +6476,8 @@ class _HomePageState extends State<HomePage>
                             ),
                             actions: [
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                mainAxisAlignment: MainAxisAlignment
+                                    .spaceEvenly,
                                 children: [
                                   Flexible(
                                     child: GestureDetector(
@@ -6438,7 +6489,8 @@ class _HomePageState extends State<HomePage>
                                             vertical: 12, horizontal: 20),
                                         decoration: BoxDecoration(
                                           color: const Color(0xff003060),
-                                          borderRadius: BorderRadius.circular(10),
+                                          borderRadius: BorderRadius.circular(
+                                              10),
                                         ),
                                         child: Text(
                                           "Improve Feedback",
@@ -6459,8 +6511,12 @@ class _HomePageState extends State<HomePage>
                                       onTap: () {
                                         if (mounted) {
                                           setState(() {
-                                            questionIndex++;
-                                            ratingsArrayLoaded = false;
+                                            showThankyouMessage = true;
+                                            questionIndex = 0;
+                                            superIndex = 0;
+                                            setNextSurvey(true);
+                                            showSpinner = false;
+                                            showSpinnerMyFeedback = false;
                                           });
                                         }
                                         Navigator.pop(context);
@@ -6470,7 +6526,8 @@ class _HomePageState extends State<HomePage>
                                             vertical: 12, horizontal: 20),
                                         decoration: BoxDecoration(
                                           color: const Color(0xff003060),
-                                          borderRadius: BorderRadius.circular(10),
+                                          borderRadius: BorderRadius.circular(
+                                              10),
                                         ),
                                         child: Text(
                                           "Continue as is",
@@ -6512,14 +6569,17 @@ class _HomePageState extends State<HomePage>
                                   ),
                                 ),
                                 SizedBox(width: 8), // ✅ Spacing
-                                Icon(Icons.warning, color: Colors.yellow, size: 30),
+                                Icon(Icons.warning, color: Colors.yellow,
+                                    size: 30),
                               ],
                             ),
                             content: Column(
                               mainAxisSize:
-                              MainAxisSize.min, // ✅ Prevents unnecessary spacing
+                              MainAxisSize.min,
+                              // ✅ Prevents unnecessary spacing
                               crossAxisAlignment: CrossAxisAlignment
-                                  .start, // ✅ Aligns content to the left
+                                  .start,
+                              // ✅ Aligns content to the left
                               children: [
                                 Text(
                                   "We need all fields filled out to continue.",
@@ -6529,7 +6589,8 @@ class _HomePageState extends State<HomePage>
                                   ),
                                 ),
                                 SizedBox(
-                                    height: 20), // ✅ Space between text and checklist
+                                    height: 20),
+                                // ✅ Space between text and checklist
                                 Column(
                                   children: [
                                     Row(
@@ -6619,7 +6680,8 @@ class _HomePageState extends State<HomePage>
                                     padding: EdgeInsets.symmetric(
                                         vertical: 12, horizontal: 20),
                                     decoration: BoxDecoration(
-                                      color: Color(0xff003060), // ✅ Button color
+                                      color: Color(0xff003060),
+                                      // ✅ Button color
                                       borderRadius: BorderRadius.circular(
                                           20), // ✅ Rounded corners
                                     ),
@@ -6628,7 +6690,8 @@ class _HomePageState extends State<HomePage>
                                       style: GoogleFonts.poppins(
                                         fontSize: 14,
                                         fontWeight: FontWeight.bold,
-                                        color: Colors.white, // ✅ Button text color
+                                        color: Colors
+                                            .white, // ✅ Button text color
                                       ),
                                     ),
                                   ),
@@ -6695,14 +6758,16 @@ class _HomePageState extends State<HomePage>
                                       color: Colors.white,
                                     ),
                                     softWrap: true,
-                                    overflow: TextOverflow.visible, // Allow wrapping
+                                    overflow: TextOverflow
+                                        .visible, // Allow wrapping
                                   ),
                                 ],
                               ),
                             ),
                             actions: [
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                mainAxisAlignment: MainAxisAlignment
+                                    .spaceEvenly,
                                 children: [
                                   GestureDetector(
                                     onTap: () {
@@ -6729,8 +6794,12 @@ class _HomePageState extends State<HomePage>
                                   GestureDetector(
                                     onTap: () {
                                       setState(() {
-                                        questionIndex++;
-                                        ratingsArrayLoaded = false;
+                                        showThankyouMessage = true;
+                                        questionIndex = 0;
+                                        superIndex = 0;
+                                        setNextSurvey(true);
+                                        showSpinner = false;
+                                        showSpinnerMyFeedback = false;
                                       });
 
                                       Navigator.pop(context);
@@ -6766,7 +6835,8 @@ class _HomePageState extends State<HomePage>
                             },
                           );
                         }
-                        else if (goingForwardMessage.contains("What was missing?")) {
+                        else if (goingForwardMessage.contains(
+                            "What was missing?")) {
                           print("in missing exp");
                           AlertDialog alert = AlertDialog(
                             backgroundColor: Colors.blue,
@@ -6818,14 +6888,16 @@ class _HomePageState extends State<HomePage>
                                       color: Colors.white,
                                     ),
                                     softWrap: true,
-                                    overflow: TextOverflow.visible, // Allow wrapping
+                                    overflow: TextOverflow
+                                        .visible, // Allow wrapping
                                   ),
                                 ],
                               ),
                             ),
                             actions: [
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                mainAxisAlignment: MainAxisAlignment
+                                    .spaceEvenly,
                                 children: [
                                   GestureDetector(
                                     onTap: () {
@@ -6852,8 +6924,12 @@ class _HomePageState extends State<HomePage>
                                   GestureDetector(
                                     onTap: () {
                                       setState(() {
-                                        questionIndex++;
-                                        ratingsArrayLoaded = false;
+                                        showThankyouMessage = true;
+                                        questionIndex = 0;
+                                        superIndex = 0;
+                                        setNextSurvey(true);
+                                        showSpinner = false;
+                                        showSpinnerMyFeedback = false;
                                       });
 
                                       Navigator.pop(context);
@@ -6889,7 +6965,8 @@ class _HomePageState extends State<HomePage>
                         }
                         else {
                           AlertDialog alert = AlertDialog(
-                            backgroundColor: Colors.blue, // ✅ Dialog background color
+                            backgroundColor: Colors.blue,
+                            // ✅ Dialog background color
                             title: Text(
                               "Alert",
                               style: GoogleFonts.poppins(
@@ -6914,15 +6991,21 @@ class _HomePageState extends State<HomePage>
                                       .contains("Rating") ||
                                       (currentSurvey[0]["answerType"]
                                           .contains("Multimedia/Descriptive") &&
-                                          goingForwardMessage.contains("options")) ||
+                                          goingForwardMessage.contains(
+                                              "options")) ||
                                       (currentSurvey[0]["answerType"]
                                           .contains("Audio/Descriptive") &&
-                                          goingForwardMessage.contains("options")))
+                                          goingForwardMessage.contains(
+                                              "options")))
                                     GestureDetector(
                                       onTap: () {
                                         setState(() {
-                                          questionIndex++;
-                                          ratingsArrayLoaded = false;
+                                          showThankyouMessage = true;
+                                          questionIndex = 0;
+                                          superIndex = 0;
+                                          setNextSurvey(true);
+                                          showSpinner = false;
+                                          showSpinnerMyFeedback = false;
                                         });
                                         Navigator.pop(context);
                                       },
@@ -6930,7 +7013,8 @@ class _HomePageState extends State<HomePage>
                                         padding: EdgeInsets.symmetric(
                                             vertical: 12, horizontal: 20),
                                         decoration: BoxDecoration(
-                                          color: Color(0xff003060), // ✅ Button color
+                                          color: Color(0xff003060),
+                                          // ✅ Button color
                                           borderRadius: BorderRadius.circular(
                                               20), // ✅ Rounded corners
                                         ),
@@ -6953,7 +7037,8 @@ class _HomePageState extends State<HomePage>
                                       padding: EdgeInsets.symmetric(
                                           vertical: 12, horizontal: 20),
                                       decoration: BoxDecoration(
-                                        color: Color(0xff003060), // ✅ Button color
+                                        color: Color(0xff003060),
+                                        // ✅ Button color
                                         borderRadius: BorderRadius.circular(
                                             20), // ✅ Rounded corners
                                       ),
@@ -6962,7 +7047,8 @@ class _HomePageState extends State<HomePage>
                                         style: GoogleFonts.poppins(
                                           fontSize: 14,
                                           fontWeight: FontWeight.bold,
-                                          color: Colors.white, // ✅ Button text color
+                                          color: Colors
+                                              .white, // ✅ Button text color
                                         ),
                                       ),
                                     ),
@@ -7064,13 +7150,13 @@ class _HomePageState extends State<HomePage>
               ),
               onPressed: () {
                 setState(() {
-                  // showThankyouMessage = true;
-                  // questionIndex = 0;
-                  // superIndex = 0;
-                  // setNextSurvey(true);
-                  // showSpinner = false;
-                  // showSpinnerMyFeedback = false;
-                 questionIndex =  (surveys[0]["feedbackQuestion"].length) - 1;
+                  showThankyouMessage = true;
+                  questionIndex = 0;
+                  superIndex = 0;
+                  setNextSurvey(true);
+                  showSpinner = false;
+                  showSpinnerMyFeedback = false;
+                //  questionIndex = (surveys[0]["feedbackQuestion"].length) - 1;
                 });
               },
             ),
@@ -8739,65 +8825,65 @@ class _HomePageState extends State<HomePage>
   }
 
   Widget checkForImageFileStatus(int index) {
-    if (surveys[0]["feedbackQuestion"][index]["answer"]["image"]
-        .toString()
-        .isEmpty) {
+    final imageUrl = surveys[0]["feedbackQuestion"][index]["answer"]["image"].toString();
+    if (imageUrl.isEmpty) {
       return Row();
     }
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const SizedBox(
-          height: 50,
-        ),
+        const SizedBox(height: 50),
         Text(
           "Image File uploaded.",
           style: TextStyle(
-              color: Colors.deepPurple,
-              fontSize: MediaQuery.textScalerOf(context).scale(16)),
+            color: Colors.deepPurple,
+            fontSize: MediaQuery.textScalerOf(context).scale(16),
+          ),
         ),
-        const SizedBox(
-          width: 20,
-        ),
+        const SizedBox(width: 20),
         InkWell(
           onTap: () {
-            setState(() {
-              showDialog(
-                  context: context,
-                  builder: (context) {
-                    return AlertDialog(
-                        content: Image.file(File(ApplicationData.multimediaUrls[
-                        surveys[0]["feedbackQuestion"][index]["answer"]
-                        ["image"]]
-                            .toString())),
-                        actions: [
-                          Material(
-                            color: Colors.blue,
-                            borderRadius:
-                            const BorderRadius.all(Radius.circular(30.0)),
-                            elevation: 2.0,
-                            child: MaterialButton(
-                              onPressed: () async {
-                                setState(() {
-                                  setState(() {
-                                    Navigator.pop(context);
-                                  });
-                                  //   loadMyProducts();
-                                });
-                              },
-                              minWidth: 50.0,
-                              height: 32.0,
-                              child: Text(
-                                'Back',
-                                style: TextStyle(
-                                    fontSize: MediaQuery.textScalerOf(context)
-                                        .scale(14)),
-                              ),
-                            ),
+            showDialog(
+              context: context,
+              builder: (context) {
+                Widget imageWidget;
+                if (kIsWeb) {
+                  // Web: use the Google Drive link directly
+                  imageWidget = Image.network(imageUrl);
+                } else {
+                  // Mobile/desktop: use the local file if available, otherwise fallback to network
+                  final localPath = ApplicationData.multimediaUrls[imageUrl];
+                  if (localPath != null && localPath.toString().isNotEmpty) {
+                    imageWidget = Image.file(File(localPath.toString()));
+                  } else {
+                    imageWidget = Image.network(imageUrl);
+                  }
+                }
+                return AlertDialog(
+                  content: imageWidget,
+                  actions: [
+                    Material(
+                      color: Colors.blue,
+                      borderRadius: const BorderRadius.all(Radius.circular(30.0)),
+                      elevation: 2.0,
+                      child: MaterialButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                        minWidth: 50.0,
+                        height: 32.0,
+                        child: Text(
+                          'Back',
+                          style: TextStyle(
+                            fontSize: MediaQuery.textScalerOf(context).scale(14),
                           ),
-                        ]);
-                  });
-            });
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            );
           },
           child: const Icon(
             Icons.image,
@@ -8805,9 +8891,7 @@ class _HomePageState extends State<HomePage>
             color: Colors.red,
           ),
         ),
-        const SizedBox(
-          width: 20,
-        ),
+        const SizedBox(width: 20),
         InkWell(
           onTap: () {
             setState(() {
@@ -8819,7 +8903,7 @@ class _HomePageState extends State<HomePage>
             size: 30,
             color: Colors.red,
           ),
-        )
+        ),
       ],
     );
   }
@@ -8848,14 +8932,19 @@ class _HomePageState extends State<HomePage>
         ),
         InkWell(
           onTap: () {
-            setState(() {
-              showDialog(
-                  context: context,
-                  builder: (context) {
-                    return VideoApp(ApplicationData.multimediaUrls[surveys[0]
-                    ["feedbackQuestion"][index]["answer"]["video"]]!);
-                  });
-            });
+            showDialog(
+              context: context,
+              builder: (context) {
+                if (kIsWeb) {
+                  // On web, play the video from the Google Drive link (network)
+                  return VideoApp(surveys[0]["feedbackQuestion"][index]["answer"]["video"]);
+                } else {
+                  // On mobile, play from local file path
+                  return VideoApp(ApplicationData.multimediaUrls[
+                  surveys[0]["feedbackQuestion"][index]["answer"]["video"]]!);
+                }
+              },
+            );
           },
           child: const Icon(
             Icons.video_camera_back,
@@ -8888,7 +8977,11 @@ class _HomePageState extends State<HomePage>
       home: Camera(
         color: Colors.blueAccent,
         onImageCaptured: (value) async {
-          final String path = value.path;
+          // On web, use bytes and name; on mobile, use path
+          final String? path = value.path;
+          final Uint8List? bytes = kIsWeb ? await value.readAsBytes() : null;
+          final String? name = kIsWeb ? value.name : null;
+
           setState(() {
             ApplicationData.showVideoPlayer = false;
             showSpinner = true;
@@ -8897,14 +8990,14 @@ class _HomePageState extends State<HomePage>
 
           showDialog(
             context: context,
-            barrierDismissible: false, // Prevent dismissing while uploading
+            barrierDismissible: false,
             builder: (BuildContext context) {
               return Dialog(
                 backgroundColor: Colors.transparent,
                 child: Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: Colors.blue.shade600, // Blue background
+                    color: Colors.blue.shade600,
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Column(
@@ -8934,65 +9027,65 @@ class _HomePageState extends State<HomePage>
             },
           );
           try {
-            var link = await uploadMediaToDrive(path);
+            String? link;
+            if (kIsWeb) {
+              if (bytes == null || name == null) throw Exception("Camera did not provide bytes or name on web.");
+              link = await uploadMediaToDriveWeb(bytes, name);
+            } else {
+              if (path == null) throw Exception("Camera did not provide path on mobile.");
+              link = await uploadMediaToDrive(path);
+            }
 
             Navigator.pop(context);
 
-            if (path.contains('jpg')) {
-              print("Path is $path");
+            if ((path ?? name ?? '').contains('jpg')) {
+              print("Path/Name is ${path ?? name}");
               setState(() {
                 surveys[0]["feedbackQuestion"][superIndex]["answer"]["image"] =
                 "https://drive.google.com/uc?id=$link";
-                ApplicationData.multimediaUrls[
-                "https://drive.google.com/uc?id=$link"] = path;
+                ApplicationData.multimediaUrls["https://drive.google.com/uc?id=$link"] =
+                (kIsWeb ? name : path)!;
               });
-            } else {}
+            }
+            // ... rest of your dialog code unchanged ...
             AlertDialog alert = AlertDialog(
-              backgroundColor: Colors.blue, // ✅ Background color
+              backgroundColor: Colors.blue,
               title: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Expanded(
-                    // ✅ Ensures text wraps properly inside Row
                     child: Text(
                       "Your Image has been uploaded! 🎉",
-                      textAlign: TextAlign.center, // ✅ Keeps it centered
+                      textAlign: TextAlign.center,
                       style: GoogleFonts.poppins(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white, // ✅ Title text color
+                        color: Colors.white,
                       ),
-                      softWrap: true, // ✅ Ensures wrapping
-                      overflow: TextOverflow.visible, // ✅ Prevents clipping
+                      softWrap: true,
+                      overflow: TextOverflow.visible,
                     ),
                   ),
                 ],
               ),
-
               content: Column(
-                mainAxisSize:
-                MainAxisSize.min, // ✅ Prevents unnecessary spacing
-                crossAxisAlignment:
-                CrossAxisAlignment.start, // ✅ Aligns content to the left
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Flexible(
-                    // ✅ Ensures text wraps within its available space
                     child: Text(
                       "Your Image file has been successfully uploaded. 🙌\nThank you for sharing!",
                       style: GoogleFonts.poppins(
                         fontSize: 16,
-                        color: Colors.white, // ✅ Content text color
+                        color: Colors.white,
                       ),
-                      softWrap:
-                      true, // ✅ Allows text to break into multiple lines
-                      overflow:
-                      TextOverflow.visible, // ✅ Ensures text is not clipped
+                      softWrap: true,
+                      overflow: TextOverflow.visible,
                     ),
                   ),
-                  SizedBox(height: 20), // ✅ Space between text and checklist
+                  SizedBox(height: 20),
                 ],
               ),
-
               actions: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
@@ -9008,19 +9101,17 @@ class _HomePageState extends State<HomePage>
                         });
                       },
                       child: Container(
-                        padding:
-                        EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                        padding: EdgeInsets.symmetric(vertical: 12, horizontal: 20),
                         decoration: BoxDecoration(
-                          color: Color(0xff003060), // ✅ Button color
-                          borderRadius:
-                          BorderRadius.circular(20), // ✅ Rounded corners
+                          color: Color(0xff003060),
+                          borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
                           "Ok",
                           style: GoogleFonts.poppins(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
-                            color: Colors.white, // ✅ Button text color
+                            color: Colors.white,
                           ),
                         ),
                       ),
@@ -9038,7 +9129,6 @@ class _HomePageState extends State<HomePage>
           } catch (e) {
             Navigator.pop(context);
 
-            // Show error dialog
             showDialog(
               context: context,
               builder: (BuildContext context) {
@@ -9056,8 +9146,12 @@ class _HomePageState extends State<HomePage>
                   ),
                   actions: [
                     GestureDetector(
-                      onTap: () =>
-                      {Navigator.pop(context), showFeedback = true},
+                      onTap: () {
+                        Navigator.pop(context);
+                        setState(() {
+                          showFeedback = true;
+                        });
+                      },
                       child: Container(
                         padding: const EdgeInsets.symmetric(
                             vertical: 12, horizontal: 20),
@@ -9082,7 +9176,10 @@ class _HomePageState extends State<HomePage>
           }
         },
         onVideoRecorded: (value) async {
-          final path = value.path;
+          final String? path = value.path;
+          final Uint8List? bytes =  kIsWeb ? await value.readAsBytes() : null;
+          final String? name = kIsWeb ? value.name : null;
+
           setState(() {
             ApplicationData.showVideoPlayer = false;
             showSpinner = true;
@@ -9092,20 +9189,18 @@ class _HomePageState extends State<HomePage>
 
           showDialog(
             context: context,
-            barrierDismissible: false, // Prevent dismissing while uploading
+            barrierDismissible: false,
             builder: (BuildContext context) {
               return Dialog(
                 backgroundColor: Colors.transparent,
-                // Make dialog background transparent
                 child: Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: Colors.blue.shade700, // Blue background
-                    borderRadius: BorderRadius.circular(16), // Rounded corners
+                    color: Colors.blue.shade700,
+                    borderRadius: BorderRadius.circular(16),
                   ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
-                    // Wrap content, not full screen
                     children: [
                       Text(
                         "Please wait as video files are known to take time to upload 😎✨",
@@ -9131,64 +9226,61 @@ class _HomePageState extends State<HomePage>
             },
           );
           try {
-            var link = await uploadMediaToDrive(path);
+            String? link;
+            if (kIsWeb) {
+              if (bytes == null || name == null) throw Exception("Camera did not provide bytes or name on web.");
+              link = await uploadMediaToDriveWeb(bytes, name);
+            } else {
+              if (path == null) throw Exception("Camera did not provide path on mobile.");
+              link = await uploadMediaToDrive(path);
+            }
             Navigator.pop(context);
 
             setState(() {
               surveys[0]["feedbackQuestion"][superIndex]["answer"]["video"] =
               "https://drive.google.com/uc?id=$link";
-              ApplicationData
-                  .multimediaUrls["https://drive.google.com/uc?id=$link"] =
-                  path;
+              ApplicationData.multimediaUrls["https://drive.google.com/uc?id=$link"] =
+              (kIsWeb ? name : path)!;
             });
 
-
             AlertDialog alert = AlertDialog(
-              backgroundColor: Colors.blue, // ✅ Background color
+              backgroundColor: Colors.blue,
               title: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Expanded(
-                    // ✅ Ensures text wraps properly inside Row
                     child: Text(
                       "Your Video has been uploaded! 🎉",
-                      textAlign: TextAlign.center, // ✅ Keeps it centered
+                      textAlign: TextAlign.center,
                       style: GoogleFonts.poppins(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white, // ✅ Title text color
+                        color: Colors.white,
                       ),
-                      softWrap: true, // ✅ Ensures wrapping
-                      overflow: TextOverflow.visible, // ✅ Prevents clipping
+                      softWrap: true,
+                      overflow: TextOverflow.visible,
                     ),
                   ),
                 ],
               ),
-
               content: Column(
-                mainAxisSize:
-                MainAxisSize.min, // ✅ Prevents unnecessary spacing
-                crossAxisAlignment:
-                CrossAxisAlignment.start, // ✅ Aligns content to the left
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Flexible(
-                    // ✅ Ensures text wraps within its available space
                     child: Text(
                       "Your Video file has been successfully uploaded. 🙌\nThank you for sharing!",
                       style: GoogleFonts.poppins(
                         fontSize: 16,
-                        color: Colors.white, // ✅ Content text color
+                        color: Colors.white,
                       ),
-                      softWrap:
-                      true, // ✅ Allows text to break into multiple lines
-                      overflow:
-                      TextOverflow.visible, // ✅ Ensures text is not clipped
+                      softWrap: true,
+                      overflow: TextOverflow.visible,
                     ),
                   ),
-                  SizedBox(height: 20), // ✅ Space between text and checklist
+                  SizedBox(height: 20),
                 ],
               ),
-
               actions: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
@@ -9204,19 +9296,17 @@ class _HomePageState extends State<HomePage>
                         });
                       },
                       child: Container(
-                        padding:
-                        EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                        padding: EdgeInsets.symmetric(vertical: 12, horizontal: 20),
                         decoration: BoxDecoration(
-                          color: Color(0xff003060), // ✅ Button color
-                          borderRadius:
-                          BorderRadius.circular(20), // ✅ Rounded corners
+                          color: Color(0xff003060),
+                          borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
                           "Ok",
                           style: GoogleFonts.poppins(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
-                            color: Colors.white, // ✅ Button text color
+                            color: Colors.white,
                           ),
                         ),
                       ),
@@ -9234,7 +9324,6 @@ class _HomePageState extends State<HomePage>
           } catch (e) {
             Navigator.pop(context);
 
-            // Show error dialog
             showDialog(
               context: context,
               builder: (BuildContext context) {
@@ -9252,8 +9341,12 @@ class _HomePageState extends State<HomePage>
                   ),
                   actions: [
                     GestureDetector(
-                      onTap: () =>
-                      {Navigator.pop(context), showFeedback = true},
+                      onTap: () {
+                        Navigator.pop(context);
+                        setState(() {
+                          showFeedback = true;
+                        });
+                      },
                       child: Container(
                         padding: const EdgeInsets.symmetric(
                             vertical: 12, horizontal: 20),
@@ -9277,6 +9370,7 @@ class _HomePageState extends State<HomePage>
             );
           }
         },
+
         onClose: () {
           print("``closed camera~~");
           setState(() {
@@ -9288,77 +9382,157 @@ class _HomePageState extends State<HomePage>
     );
   }
 
+
+  showNoCameraAlert() {
+
+    AlertDialog alert = AlertDialog(
+      backgroundColor: Colors.blue, // ✅ Background color
+      title: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Expanded(
+            // ✅ Ensures text wraps properly inside Row
+            child: Text(
+              "No Camera Detected",
+              textAlign: TextAlign.center,
+              // ✅ Keeps it centered
+              style: GoogleFonts.poppins(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.white, // ✅ Title text color
+              ),
+              softWrap: true,
+              // ✅ Ensures wrapping
+              overflow: TextOverflow
+                  .visible, // ✅ Prevents clipping
+            ),
+          ),
+        ],
+      ),
+
+      content: Column(
+        mainAxisSize:
+        MainAxisSize.min,
+        // ✅ Prevents unnecessary spacing
+        crossAxisAlignment:
+        CrossAxisAlignment.start,
+        // ✅ Aligns content to the left
+        children: [
+          Flexible(
+            // ✅ Ensures text wraps within its available space
+            child: Text(
+              "Could not find a camera with this device !",
+              style: GoogleFonts.poppins(
+                fontSize: 16,
+                color: Colors.white, // ✅ Content text color
+              ),
+              softWrap:
+              true,
+              // ✅ Allows text to break into multiple lines
+              overflow:
+              TextOverflow
+                  .visible, // ✅ Ensures text is not clipped
+            ),
+          ),
+          SizedBox(height: 20),
+          // ✅ Space between text and checklist
+        ],
+      ),
+
+      actions: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            GestureDetector(
+              onTap: () {
+                Navigator.pop(context);
+                setState(() {
+                  ApplicationData.showVideoPlayer = false;
+                  showFeedback = true;
+                  showSpinner = false;
+                  showSpinnerMyFeedback = false;
+                });
+              },
+              child: Container(
+                padding:
+                EdgeInsets.symmetric(
+                    vertical: 12, horizontal: 20),
+                decoration: BoxDecoration(
+                  color: Color(0xff003060), // ✅ Button color
+                  borderRadius:
+                  BorderRadius.circular(
+                      20), // ✅ Rounded corners
+                ),
+                child: Text(
+                  "Ok",
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white, // ✅ Button text color
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return alert;
+        });
+  }
+
+
   Future<void> _pickFiles(String? fileType) async {
-    FileType _pickingType = FileType.any;
+    FileType _pickingType = fileType == "image" ? FileType.image : FileType.video;
     List<String>? extns = [];
-
-    if (fileType == "image") {
-      _pickingType = FileType.image;
-    } else {
-      _pickingType = FileType.video;
-    }
-
     List<PlatformFile>? _paths;
 
     try {
-      String? _directoryPath;
       _paths = (await FilePicker.platform.pickFiles(
         type: _pickingType,
         allowMultiple: false,
-        onFileLoading: (FilePickerStatus status) => print(status),
         allowedExtensions: extns,
-      ))
-          ?.files;
-    } on PlatformException catch (e) {
-      if (kDebugMode) {
-        print('Unsupported operation$e');
-      }
+        onFileLoading: (FilePickerStatus status) => print(status),
+      ))?.files;
     } catch (e) {
-      if (kDebugMode) {
-        print(e.toString());
-      }
+      print("File picking error: $e");
+      return;
     }
-    if (!mounted) return;
+    if (!mounted || _paths == null || _paths.isEmpty) return;
 
     showDialog(
       context: context,
-      barrierDismissible: false, // Prevent dismissing while uploading
+      barrierDismissible: false,
       builder: (BuildContext context) {
         return Dialog(
           backgroundColor: Colors.transparent,
           child: Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Colors.blue.shade600, // Blue background
+              color: Colors.blue.shade600,
               borderRadius: BorderRadius.circular(16),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Column(
-                  children: [
-                    Column(
-                      children: [
-                        Text(
-                          "Uploading your file — almost ready for glory! 📁🌟",
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.poppins(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                          softWrap: true,
-                          overflow: TextOverflow.visible,
-                        ),
-                        const SizedBox(height: 24),
-                      ],
-                    ),
-                  ],
-                ),
-                const Center(
-                  child: CircularProgressIndicator(
+                Text(
+                  "Uploading your file — almost ready for glory! 📁🌟",
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.poppins(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
+                  softWrap: true,
+                  overflow: TextOverflow.visible,
+                ),
+                const SizedBox(height: 24),
+                const Center(
+                  child: CircularProgressIndicator(color: Colors.white),
                 ),
               ],
             ),
@@ -9366,82 +9540,59 @@ class _HomePageState extends State<HomePage>
         );
       },
     );
+
     try {
-      var link = await uploadMediaToDrive(_paths![0].path.toString());
-      Navigator.pop(context);
+      String? link;
+
+      if (kIsWeb) {
+        // WEB: Use bytes and filename for upload
+        final PlatformFile file = _paths[0];
+        if (file.bytes == null) throw Exception("No file bytes for web upload.");
+        link = await uploadMediaToDriveWeb(file.bytes!, file.name);
+      } else {
+        // MOBILE: Use path
+        final PlatformFile file = _paths[0];
+        if (file.path == null) throw Exception("No file path for mobile upload.");
+        link = await uploadMediaToDrive(file.path!);
+      }
+
+      Navigator.pop(context); // Close the uploading dialog
 
       setState(() {
-        if (_paths != null) {
-          if (fileType == "image") {
-            setState(() {
-              surveys[0]["feedbackQuestion"][superIndex]["answer"]["image"] =
-              "https://drive.google.com/uc?id=$link";
-              ApplicationData
-                  .multimediaUrls["https://drive.google.com/uc?id=$link"] =
-                  _paths![0].path.toString();
-            });
-          } else {
-            setState(() {
-              surveys[0]["feedbackQuestion"][superIndex]["answer"]["video"] =
-              "https://drive.google.com/uc?id=$link";
-              ApplicationData
-                  .multimediaUrls["https://drive.google.com/uc?id=$link"] =
-                  _paths![0].path.toString();
-            });
-          }
+        final driveUrl = "https://drive.google.com/uc?id=$link";
+        if (fileType == "image") {
+          surveys[0]["feedbackQuestion"][superIndex]["answer"]["image"] = driveUrl;
+        } else {
+          surveys[0]["feedbackQuestion"][superIndex]["answer"]["video"] = driveUrl;
         }
+        // Save the local reference for your app (optional)
+        ApplicationData.multimediaUrls[driveUrl] = (kIsWeb ? _paths![0].name : _paths![0].path.toString());
       });
 
-      AlertDialog alert = AlertDialog(
-        backgroundColor: Colors.blue, // ✅ Background color
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Expanded(
-              // ✅ Ensures text wraps properly inside Row
-              child: Text(
-                "Your file has been uploaded! 🎉",
-                textAlign: TextAlign.center, // ✅ Keeps it centered
-                style: GoogleFonts.poppins(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white, // ✅ Title text color
-                ),
-                softWrap: true, // ✅ Ensures wrapping
-                overflow: TextOverflow.visible, // ✅ Prevents clipping
+      // Success dialog
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            backgroundColor: Colors.blue,
+            title: Text(
+              "Your file has been uploaded! 🎉",
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
               ),
+              softWrap: true,
+              overflow: TextOverflow.visible,
             ),
-          ],
-        ),
-
-        content: Column(
-          mainAxisSize:
-          MainAxisSize.min, // ✅ Prevents unnecessary spacing
-          crossAxisAlignment:
-          CrossAxisAlignment.start, // ✅ Aligns content to the left
-          children: [
-            Flexible(
-              // ✅ Ensures text wraps within its available space
-              child: Text(
-                "Your file has been successfully uploaded. 🙌\nThank you for sharing!",
-                style: GoogleFonts.poppins(
-                  fontSize: 16,
-                  color: Colors.white, // ✅ Content text color
-                ),
-                softWrap:
-                true, // ✅ Allows text to break into multiple lines
-                overflow:
-                TextOverflow.visible, // ✅ Ensures text is not clipped
-              ),
+            content: Text(
+              "Your file has been successfully uploaded. 🙌\nThank you for sharing!",
+              style: GoogleFonts.poppins(fontSize: 16, color: Colors.white),
+              softWrap: true,
+              overflow: TextOverflow.visible,
             ),
-            SizedBox(height: 20), // ✅ Space between text and checklist
-          ],
-        ),
-
-        actions: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
+            actions: [
               GestureDetector(
                 onTap: () {
                   Navigator.pop(context);
@@ -9450,37 +9601,28 @@ class _HomePageState extends State<HomePage>
                   });
                 },
                 child: Container(
-                  padding:
-                  EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                  padding: EdgeInsets.symmetric(vertical: 12, horizontal: 20),
                   decoration: BoxDecoration(
-                    color: Color(0xff003060), // ✅ Button color
-                    borderRadius:
-                    BorderRadius.circular(20), // ✅ Rounded corners
+                    color: Color(0xff003060),
+                    borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
                     "Ok",
                     style: GoogleFonts.poppins(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white, // ✅ Button text color
+                      color: Colors.white,
                     ),
                   ),
                 ),
               ),
             ],
-          ),
-        ],
+          );
+        },
       );
-
-      showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return alert;
-          });
     } catch (e) {
       Navigator.pop(context);
-      print("Uplaod error - ${e.toString()}");
-      // Show error dialog
+      print("Upload error - ${e.toString()}");
       showDialog(
         context: context,
         builder: (BuildContext context) {
@@ -9498,11 +9640,14 @@ class _HomePageState extends State<HomePage>
             ),
             actions: [
               GestureDetector(
-                onTap: () =>
-                {Navigator.pop(context), showFeedback = true},
+                onTap: () {
+                  Navigator.pop(context);
+                  setState(() {
+                    showFeedback = true;
+                  });
+                },
                 child: Container(
-                  padding: const EdgeInsets.symmetric(
-                      vertical: 12, horizontal: 20),
+                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
                   decoration: BoxDecoration(
                     color: const Color(0xff003060),
                     borderRadius: BorderRadius.circular(20),
@@ -9597,7 +9742,7 @@ class _HomePageState extends State<HomePage>
     goingForwardMessage = "";
 
     for (var i = 0; i < currentSurvey.length; i++) {
-       if (currentSurvey[i]["answerType"].contains("Rating")) {
+      if (currentSurvey[i]["answerType"].contains("Rating")) {
         if (currentSurvey[i]["answer"] == "1") {
           setState(() {
             goingForwardMessage = "For one or more rating, your response is "
@@ -9687,33 +9832,31 @@ class _HomePageState extends State<HomePage>
       }
 
 
-       if (currentSurvey[i]["question"].contains("How many of these cars are")) {
+      if (currentSurvey[i]["question"].contains("How many of these cars are")) {
+        debugPrint("reached how many cars logic");
 
-         debugPrint("reached how many cars logic");
+        int? noOfVehicles = int.tryParse(currentSurvey[i - 1]["answer"]);
 
-        int? noOfVehicles = int.tryParse(currentSurvey[i-1]["answer"]);
-
-        debugPrint("currentSurvey[i-1] - ${currentSurvey[i-1]}");
+        debugPrint("currentSurvey[i-1] - ${currentSurvey[i - 1]}");
         debugPrint("noOfVehicles: $noOfVehicles");
 
-        if(noOfVehicles != null)
-          {
-            int? howManyVehicles = int.tryParse(currentSurvey[i]["answer"]);
+        if (noOfVehicles != null) {
+          int? howManyVehicles = int.tryParse(currentSurvey[i]["answer"]);
 
-            debugPrint("howManyVehicles: $howManyVehicles");
+          debugPrint("howManyVehicles: $howManyVehicles");
 
-            if(howManyVehicles != null && howManyVehicles > noOfVehicles)
-            {
-              setState(() {
-                goingForwardMessage = "You mentioned you have $noOfVehicles vehicles, "
-                    "but you selected $howManyVehicles as electric in the next question. "
-                    "Please select a number less than or equal to $noOfVehicles.";
-              });
-              return false;
-            }
+          if (howManyVehicles != null && howManyVehicles > noOfVehicles) {
+            setState(() {
+              goingForwardMessage =
+              "You mentioned you have $noOfVehicles vehicles, "
+                  "but you selected $howManyVehicles as electric in the next question. "
+                  "Please select a number less than or equal to $noOfVehicles.";
+            });
+            return false;
           }
+        }
 
-        if (currentSurvey[i-1]["answer"] == "") {
+        if (currentSurvey[i - 1]["answer"] == "") {
           setState(() {
             goingForwardMessage =
             "A response is needed to continue, please type your response.";
@@ -10038,8 +10181,7 @@ class _HomePageState extends State<HomePage>
         print('APNs Token not available after waiting.');
       }
       print('Authorization status: ${settings.authorizationStatus}');
-
-    }else{
+    } else {
       if (Platform.isAndroid) {
         // For Android, just get FCM token and subscribe
         String? token = await firebaseMessaging.getToken();
@@ -10048,7 +10190,6 @@ class _HomePageState extends State<HomePage>
         print("Subscribed to topic: ${widget.mobileNum}");
       }
     }
-
   }
 
   Future<void> setUpFlutterNotifications() async {
@@ -10089,6 +10230,47 @@ class _HomePageState extends State<HomePage>
       }
     });
   }
+
+  Future<bool> isCameraAvailable() async {
+    try {
+      List<CameraDescription> cameras = await availableCameras();
+      return cameras.isNotEmpty; // true if at least one camera is present
+    } catch (e) {
+      // If availableCameras throws (e.g., on web with no permission), treat as not available
+      return false;
+    }
+  }
+
+  Future<String> uploadMediaToDriveWeb(Uint8List bytes, String filename) async {
+    final client = await obtainAuthenticatedClient();
+    try {
+      final driveApi = drive.DriveApi(client);
+
+      final driveFile = drive.File()
+        ..name = filename
+        ..parents = ['116UnsCfRtRQp4ABdmqspsnI6WH4VQrUb'];
+
+      final uploadedFile = await driveApi.files.create(
+        driveFile,
+        uploadMedia: drive.Media(Stream.value(bytes), bytes.length),
+      );
+
+      // Set permission for anyone with link
+      final permission = drive.Permission()
+        ..role = 'reader'
+        ..type = 'anyone';
+      await driveApi.permissions.create(permission, uploadedFile.id!);
+
+      return uploadedFile.id!;
+    } catch (error, stackTrace) {
+      print('Error uploading file (web): $error');
+      print('Stack trace: $stackTrace');
+      return '';
+    } finally {
+      client.close();
+    }
+  }
+
 }
 
 

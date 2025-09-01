@@ -55,6 +55,19 @@ class _VideoAppState extends State<VideoApp> {
                 ElevatedButton(
                     style: ButtonStyle(
                         backgroundColor:
+                        MaterialStateProperty.all<Color>(Colors.blue),
+                        fixedSize: MaterialStateProperty.all(Size(50, 50)),
+                        shape: MaterialStateProperty.all(RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(100)))),
+                    onPressed: () {
+                      _controller.pause();
+                      Navigator.pop(context);
+                    },
+                    child: Icon(Icons.arrow_back),
+                ),
+                ElevatedButton(
+                    style: ButtonStyle(
+                        backgroundColor:
                             MaterialStateProperty.all<Color>(Colors.blue),
                         fixedSize: MaterialStateProperty.all(Size(50, 50)),
                         shape: MaterialStateProperty.all(RoundedRectangleBorder(

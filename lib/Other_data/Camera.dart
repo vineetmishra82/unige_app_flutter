@@ -8,6 +8,7 @@ class Camera extends StatefulWidget {
   Function(XFile)? onImageCaptured;
   Function(XFile)? onVideoRecorded;
   Function()? onClose;
+  Function()? onNoCameraDetected;
   final Duration? animationDuration;
   Camera(
       {Key? key,
@@ -16,6 +17,7 @@ class Camera extends StatefulWidget {
       this.onVideoRecorded,
       this.iconColor = Colors.white,
       this.onClose,
+      this.onNoCameraDetected,
       required this.color})
       : super(key: key);
   @override
@@ -36,7 +38,23 @@ class CameraState extends State<Camera> {
   }
 
   Future initCamera() async {
+
     cameras = await availableCameras();
+    try{
+      if(cameras == null || cameras!.isEmpty){
+        if (widget.onNoCameraDetected != null) {
+          widget.onNoCameraDetected!();
+        }
+        return;
+      }
+    }catch(e){
+      if (widget.onNoCameraDetected != null) {
+        widget.onNoCameraDetected!();
+      }
+      return;
+    }
+
+
     setState(() {});
   }
 
