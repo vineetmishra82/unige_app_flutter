@@ -1,0 +1,52 @@
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "unige-app",
+          "appId": "1:688815766660:android:c5a498d36a030caa8496d1",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "ios": {
+        "default": {
+          "projectId": "unige-app",
+          "appId": "1:688815766660:ios:94fcf470465668048496d1",
+          "uploadDebugSymbols": false,
+          "fileOutput": "ios/Runner/GoogleService-Info.plist"
+        }
+      },
+      "macos": {
+        "default": {
+          "projectId": "unige-app",
+          "appId": "1:688815766660:ios:51d3e927b56c4db98496d1",
+          "uploadDebugSymbols": false,
+          "fileOutput": "macos/Runner/GoogleService-Info.plist"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "unige-app",
+          "configurations": {
+            "android": "1:688815766660:android:c5a498d36a030caa8496d1",
+            "ios": "1:688815766660:ios:94fcf470465668048496d1",
+            "macos": "1:688815766660:ios:51d3e927b56c4db98496d1",
+            "web": "1:688815766660:web:f181f699b0da57228496d1",
+            "windows": "1:688815766660:web:55ccca5946f804678496d1"
+          }
+        }
+      }
+    }
+  },
+  "hosting": {
+    "source": ".",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "frameworksBackend": {
+      "region": "us-central1"
+    }
+  }
+}
